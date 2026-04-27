@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build / Output
+output/*.pdf
+dist/
+build/
+.next/
+.astro/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Typst
+*.pdf.tmp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Claude local
+.claude/settings.local.json
