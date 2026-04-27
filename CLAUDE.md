@@ -1,66 +1,41 @@
-# sungjin_book
+# sungjin_book — Claude 세션 시작 가이드
 
-한국어 단행본 자동조판 서비스. Typst 기반.
+> 이 파일은 매 세션마다 Claude가 자동으로 읽는다.
+> **세션 시작 시 반드시 `docs/ai-context/current-task.md`를 먼저 읽어 현재 위치를 파악할 것.**
 
-## 현재 단계
+## 1줄 요약
 
-**1단계 — Typst 템플릿 R&D**
+한국어 단행본 자동조판 서비스. **현재 1단계 — Typst 신국판 Classic 템플릿 R&D**.
+웹 없음. 같은 콘텐츠 JSON이 깨끗한 PDF로 컴파일되는지만 검증한다.
 
-웹·DB·결제·인쇄 연동 전부 없음. 신국판 Classic 한 조합으로
-"같은 콘텐츠 JSON이 깨끗한 PDF로 컴파일되는가" 만 검증.
+## 세션 시작 프로토콜 (필수)
 
-자세한 배경은 `README.md` 참고.
+```
+1. docs/ai-context/current-task.md  → 지금 어디에 있나
+2. docs/ai-context/checklist.md     → 다음 할 일
+3. 사용자 지시 받기 → 작업 시작
+4. 작업 끝나면 위 두 파일 갱신 + 커밋
+```
 
-## 핵심 원칙
+배경/사양 전체는 `README.md`. 핵심 원칙만 아래에.
+
+## 핵심 원칙 (절대 어기지 말 것)
 
 1. **데이터 ↔ 스타일 분리** — 콘텐츠 JSON은 렌더러 중립.
-   스타일은 (format_id, theme_id, separator_id) 세 축.
-2. **AI는 핵심 경로에 없다** — 조판은 결정론적. LLM 호출 금지.
+   스타일은 `(format_id, theme_id, separator_id)` 세 축.
+2. **AI는 핵심 경로에 없다** — 조판은 결정론적. **LLM API 호출 금지**.
 3. **스타일 먼저 → 콘텐츠 나중** — 빈 페이지부터 주지 않는다.
-4. **자유도 = 품질 리스크** — 폰트/자간/여백 사용자 노출 금지.
+4. **자유도 = 품질 리스크** — 폰트/자간/여백을 사용자에게 노출 금지.
    포맷팅은 단락·제목·강조·인용까지만.
 
-## 작업 규칙
+## 1단계 작업 규칙
 
-- 1단계는 신국판 Classic **한 조합만** 만든다.
+- **신국판 Classic 한 조합만** 만든다.
   데이터 스키마는 미래 확장 가능하게, 코드는 한 조합만.
-- 한국어 조판 미세 사항(금칙·한영 자간·양끝 정렬)은 KLREQ 기준.
-- PDF로 검증한다. 콘솔 로그가 아니라 PDF.
+- **PDF로 검증한다.** 콘솔 로그 아님.
+- 한국어 조판 미세사항(금칙·한영 자간·양끝 정렬)은 KLREQ 기준.
 
-## 하지 않을 것 (1단계)
-
-- 회원가입/로그인/프로젝트 목록
-- 자동저장/버전 히스토리
-- 결제/인쇄 연동
-- 표지 디자인
-- 표/이미지
-- WYSIWYG 에디터
-- LLM API 호출
-- IDML / InDesign
-
-## 폴더 구조
-
-```
-typst-templates/{format_id}/{theme_id}/template.typ
-typst-templates/{format_id}/{theme_id}/separators/{separator_id}.typ
-content/*.json    # 콘텐츠 (렌더러 중립)
-content/*.txt     # 원문 참고용
-output/*.pdf      # 컴파일 결과 (gitignored)
-scripts/*.ts      # JSON → Typst 변환기 등
-```
-
-## 기술 스택
-
-- 컴파일러: Typst (Apache-2.0)
-- 폰트: 노토 세리프 / 산스 CJK KR (SIL OFL)
-- 데이터: JSON
-- (2단계 이후) Astro/Next.js + Tiptap, Supabase, Vercel
-
-## 1단계 더미 원고
-
-채만식 「태평천하」 (1938, 저작권 만료) — 위키문헌.
-
-## 신국판 Classic 사양 (출발점)
+## 1단계 신국판 Classic 사양
 
 | 항목 | 값 |
 |------|-----|
@@ -72,14 +47,37 @@ scripts/*.ts      # JSON → Typst 변환기 등
 | 쪽번호 | 하단 바깥쪽, 노토 세리프 9pt |
 | 들여쓰기 | 첫 단락 없음, 둘째 단락부터 1글자 |
 
-## 검증 기준
+## 폴더 구조
 
-성범님이 PDF를 열어보고 "이거 책이네" 싶으면 1단계 통과.
-인쇄 출력은 1단계 범위 아님.
+```
+typst-templates/{format_id}/{theme_id}/template.typ
+typst-templates/{format_id}/{theme_id}/separators/{separator_id}.typ
+content/*.json           # 콘텐츠 (렌더러 중립)
+content/*.txt            # 원문 참고용
+output/*.pdf             # 컴파일 결과 (gitignored)
+scripts/*.ts             # JSON → Typst 변환기 등
+docs/ai-context/         # 세션 연속성 (current-task, checklist, decisions)
+```
 
-## 명령어
+## 1단계에 하지 않을 것
+
+회원가입/로그인 · 자동저장 · 결제/인쇄 연동 · 표지 디자인 ·
+표/이미지 · WYSIWYG 에디터 · LLM API 호출 · IDML/InDesign
+
+## 주요 명령어
 
 `.claude/commands/`:
 - `/check` — 통합 점검
-- `/work` — Planner→Generator→Evaluator 하네스
+- `/work {작업명}` — Planner→Generator→Evaluator 하네스
 - `/notion_시니어팀` — 시니어 디자이너 디자인 팀
+
+## 검증 기준
+
+성범님(`bongjin86@gmail.com`)이 PDF를 열어보고 "이거 책이네" 싶으면 1단계 통과.
+
+## 보고 형식 (필수)
+
+작업 끝마다:
+- **Discovery**: 무엇을 발견/확인했나
+- **Action**: 무엇을 어떻게 바꿨나
+- **Reasoning**: 왜 그 방법을 택했나
