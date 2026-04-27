@@ -5,18 +5,25 @@
 콘텐츠를 입력하면 Typst가 신국판 등 한국 표준 판형으로 자동 조판해 PDF를 생성한다.
 **현재 1단계 — Typst 템플릿 R&D.** 웹·결제·인쇄 연동 없음.
 
-## 빠른 시작
+## 빠른 시작 — 새 PC (집/사무실) 한 줄 셋업
 
-```bash
-# 1) Typst 설치 (Windows)
-winget install Typst.Typst
+처음 한 번 사전 도구 설치:
+1. [Git for Windows](https://git-scm.com/)
+2. [GitHub CLI](https://cli.github.com/) → 설치 후 `gh auth login`
+3. [Claude Code](https://claude.ai/code)
 
-# 2) Claude Code 시작 (시작메뉴 단축키 등록)
-setup-pc.bat
-
-# 3) 그 후 윈도우키 → "claude" 검색 → 실행
-#    또는 cc.bat 더블클릭
+그 후 PowerShell에서 한 줄:
+```powershell
+iwr -useb https://raw.githubusercontent.com/bongjin86-stack/sungjin_book/main/bootstrap.ps1 | iex
 ```
+
+자동으로:
+- `C:\projects` 폴더 생성
+- `sungjin_book` + `sungjin_wla` 두 레포 clone
+- 시작메뉴 단축키 등록 ("Claude (sungjin_book)", "Claude (sungjin_wla)")
+- Typst 자동 설치 + PATH 등록
+
+그 후 **윈도우키 → "claude" 검색** 해서 실행.
 
 Claude는 세션 시작 시 `CLAUDE.md` → `docs/ai-context/current-task.md` 순으로 읽고
 바로 다음 작업으로 들어간다.
