@@ -13,21 +13,10 @@
 // 변환: Typst 네이티브 json() 사용 (D-008). 별도 변환 스크립트 없음.
 
 // === 폰트 fallback 체인 ===
-// 1순위: 노토 세리프/산스 CJK KR
-// 2순위: 노토 세리프/산스 KR (Adobe 분기 이름)
-// 3순위: Source Han Serif/Sans (어도비 원본 이름)
-#let serif-fonts = (
-  "Noto Serif CJK KR",
-  "Noto Serif KR",
-  "Source Han Serif K",
-  "Source Han Serif KR",
-)
-#let sans-fonts = (
-  "Noto Sans CJK KR",
-  "Noto Sans KR",
-  "Source Han Sans K",
-  "Source Han Sans KR",
-)
+// 프로젝트 fonts/ 폴더에 OFL 노토 KR 4종 동봉 (D-009).
+// 컴파일 시 --font-path fonts 옵션 필수.
+#let serif-fonts = ("Noto Serif KR", "Noto Serif CJK KR")
+#let sans-fonts = ("Noto Sans KR", "Noto Sans CJK KR")
 
 // === 챕터 함수 ===
 // 홀수 페이지에서 시작하고, 그 페이지에 footer가 안 그려지도록 라벨을 박는다.

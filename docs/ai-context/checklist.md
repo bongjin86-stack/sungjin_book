@@ -9,8 +9,8 @@
 - [x] 폴더 스캐폴딩
 - [x] `.claude/commands/` (check, work, notion_시니어팀)
 - [x] 시작메뉴 단축키 스크립트 (`setup-pc.bat`)
-- [ ] Typst 설치 (`winget install Typst.Typst`)
-- [ ] 노토 세리프/산스 CJK KR 폰트 (시스템에 있는지 확인)
+- [x] Typst 0.14.2 설치 (`~/bin/typst/typst.exe`, PATH 등록)
+- [x] 폰트 5쌍 동봉 (`fonts/`, 38.8MB, OFL)
 
 ## 데이터
 
@@ -37,15 +37,27 @@
 
 ## 검증
 
-- [ ] `typst compile` 에러 없이 PDF 생성
-- [ ] PDF 육안 점검 — "이거 책이네" 통과
+- [x] `typst compile` 에러 없이 PDF 생성 (195KB, 노토 적용)
+- [ ] PDF 육안 점검 — "이거 책이네" 통과 (사용자 평가 대기)
 - [ ] 쪽번호 짝/홀수 위치 검증
 - [ ] 챕터 분기 검증
 - [ ] 첫 단락 들여쓰기/이후 들여쓰기 검증
 - [ ] 양끝 정렬 + 한영 자간 검증
 
-## 1단계 통과 후 (= 2단계 시작 전)
+## 트랙 B (웹 시스템) — 다음 세션 시작 시
 
-- [ ] decisions.md에 1단계 결론 정리 (KLREQ 미세 조정 결과 등)
-- [ ] CLAUDE.md "현재 단계" 표시 갱신
-- [ ] 다음 단계 (웹/JSON 입력 UI) 계획 수립
+- [ ] Next.js 15 프로젝트 생성 (App Router, TypeScript, Tailwind)
+- [ ] shadcn/ui 초기화
+- [ ] 분할 화면 레이아웃 (좌: Tiptap, 우: PDF 미리보기)
+- [ ] `/api/render` — 서버에서 typst CLI 호출 → PDF 응답
+- [ ] typst 바이너리 + fonts/ 를 Vercel Function에 어떻게 둘지 결정
+- [ ] 랜딩 카피: "진짜 무료 책 만들기, 지금 해보세요"
+- [ ] localStorage 자동저장
+- [ ] Supabase 연결 (가입 후 클라우드 저장)
+
+## 트랙 C (ISBN/POD) — 미래
+
+- [ ] 출판사 등록 (sungjinprint 또는 별도 법인)
+- [ ] KOLIS-NET 워크플로우
+- [ ] 납본 자동화
+- [ ] sungjinprint POD 연동
