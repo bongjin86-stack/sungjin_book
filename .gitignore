@@ -31,3 +31,7 @@ pnpm-debug.log*
 
 # Claude local
 .claude/settings.local.json
+
+# bkit/pdca 내부 상태 (도구 자체 캐시)
+docs/.bkit-memory.json
+docs/.pdca-status.json

@@ -45,11 +45,61 @@
 - "디자이너 없이 단행본 만들기"가 본 서비스의 핵심 약속.
 - 결과물 일관성으로 브랜드 만들기.
 
----
+### D-005. format_id = `sinkukpan`
 
-## 결정 미정 (1단계 진행하며 결정)
+**결정**: 신국판 식별자는 `sinkukpan` (한글 → 학술적 로마자 표기 ALA-LC 기반).
 
-- format_id 명명 규칙 (`sinkukpan` vs `b6` vs `shinkukpan`)
-- 콘텐츠 JSON 스키마 (블록 구조 / 인라인 마크업 표기법)
-- separator_id 1단계 기본값
-- 변환 스크립트 언어 (TypeScript / Python / Typst 자체)
+**이유**:
+- `b6` 같은 ISO 분류는 일본·국제 출판 분류라 한국 단행본 정체성과 어긋남. 신국판은 152×225로 B6(125×176)와 다름.
+- `shinkukpan`은 일본어 '신' 발음(sh-) 영향. 한국어 표기는 'sin-'.
+- `sinkukpan`은 ALA-LC/매큔라이샤워에 가까워 학술계에서 통용.
+- 미래에 `kukpan`(국판 148×210), `46pan`(46판 127×188) 추가 시 동일 규칙 적용 가능.
+
+### D-006. 콘텐츠 JSON 스키마 v1
+
+**결정**: 다음 구조로 고정. 1단계는 인라인 마크업 없음(plain text only).
+
+```json
+{
+  "schema": "sungjin-book/v1",
+  "meta": { "title": "...", "author": "..." },
+  "blocks": [
+    { "type": "chapter", "number": 1, "title": "..." },
+    { "type": "heading", "level": 2, "text": "..." },
+    { "type": "paragraph", "text": "..." },
+    { "type": "quote", "text": "...", "by": "..." }
+  ]
+}
+```
+
+**이유**:
+- **블록 배열 + type 디스크리미네이터**: 미래 블록 타입(image, table, footnote) 추가 시 호환. 렌더러 중립.
+- **schema 버전 필드**: 향후 v2로 마이그레이션 시 분기 가능.
+- **인라인 마크업 1단계 제외**: 태평천하 본문은 plain text + 따옴표만으로 충분. 인라인은 v2에서 `runs: [{text, style}]` 도입 예정. 1단계 가설 검증에 불필요.
+- **chapter는 별도 블록**: 챕터 분기·홀수페이지 시작 등 조판 로직이 챕터 단위이므로 paragraph와 평면 동거시키면 안 됨.
+
+**기각 대안**:
+- Markdown 문자열 1개로 다 표현 → 렌더러별 파싱 차이로 결정론 깨짐.
+- 인라인 마크업 즉시 도입 → 1단계 가설(콘텐츠↔PDF)과 무관한 복잡도 증가.
+
+### D-007. separator_id 1단계 기본값 = `plain`
+
+**결정**: 1단계는 챕터 사이 별도 분리자 없이 빈 줄만. id는 `plain`.
+
+**이유**:
+- `none`은 부정형이라 미래에 'none + 빈 줄' vs 'none + 아무것도 없음' 같은 모호함.
+- `plain`은 중립적 양수 의미. 미래 확장(`stars`, `dingbat`, `flourish`)과 동일 패밀리.
+
+### D-008. 변환 = Typst 네이티브 JSON 로드 (별도 스크립트 0개)
+
+**결정**: `template.typ`에서 `#json("../../../content/foo.json")`으로 직접 읽고 렌더. JSON→Typst 변환 스크립트 안 만든다.
+
+**이유**:
+- Typst는 `json()`/`yaml()` 빌트인 지원. 변환 단계 추가 = 의존성+버그 표면 추가.
+- 1단계 핵심 가설은 "JSON이 깨끗한 PDF로 컴파일되는가"인데, 중간 변환 스크립트가 끼면 가설 경로가 흐려짐.
+- Node/Bun/Python 의존성 0. `typst` 단일 바이너리로 끝.
+- 미래에 다른 렌더러(InDesign 자동화 등) 필요해지면 그때 별도 스크립트 추가. JSON 자체는 이미 렌더러 중립.
+
+**기각 대안**:
+- TypeScript 변환기 → 의존성·빌드 단계 증가, 1단계엔 오버엔지니어링.
+- Python 변환기 → 동일 이유 + 사용자 환경에 Python 강제.
