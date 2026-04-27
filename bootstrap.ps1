@@ -99,6 +99,22 @@ if ($current -notlike "*$add*") {
   Write-Host "-> PATH에 추가: $add" -ForegroundColor Yellow
 }
 
+# --- 6. sungjin_wla research-tools 의존성 (Playwright 경쟁사 분석 도구) ---
+$wlaTools = "$projects\sungjin_wla\research-tools"
+if (Test-Path "$wlaTools\package.json") {
+  if (Get-Command npm -ErrorAction SilentlyContinue) {
+    Write-Host "-> sungjin_wla research-tools 의존성 설치..." -ForegroundColor Yellow
+    Push-Location $wlaTools
+    npm install --silent 2>&1 | Out-Null
+    Write-Host "   playwright chromium 다운..." -ForegroundColor Yellow
+    npx playwright install chromium 2>&1 | Out-Null
+    Pop-Location
+    Write-Host "   OK research-tools ready" -ForegroundColor Green
+  } else {
+    Write-Host "-> npm 미설치, research-tools 셋업 건너뜀 (Node.js 설치 필요)" -ForegroundColor Yellow
+  }
+}
+
 Write-Host ""
 Write-Host "=== 셋업 완료 ===" -ForegroundColor Cyan
 Write-Host "윈도우키 -> 'claude' 검색 -> 'Claude (sungjin_book)' 또는 'Claude (sungjin_wla)' 실행"
