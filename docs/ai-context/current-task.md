@@ -1,50 +1,64 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-04-27 KST
-> 단계: **트랙 A 첫 컷 박음 / 트랙 B(웹) 진입 직전**
+> 마지막 업데이트: 2026-05-02 KST
+> 단계: **트랙 A 첫 컷 + 감사 보고서 + 시장 조사 완료. 사용자 결정 대기.**
 
 ---
 
 ## 다음 세션 시작 시 — 사용자에게 이렇게 가이드할 것
 
-> 사용자가 `git pull` 받고 다시 오면, **이 파일을 먼저 읽고 아래 요약을 한국어로 사용자에게 보고한다.**
+> 사용자가 "이어서 하자" / 그냥 다시 들어오면, 이 파일을 읽고 **아래 [재진입 보고]**를 한국어로 사용자에게 그대로 펼친다. "이어서 하자"라는 표현이 나오면 우선순위 최상.
 
-### 요약 (사용자에게 전달할 내용)
+### 재진입 보고 (한국어로 사용자에게 펼칠 내용)
 
-1. **지금 위치**: 트랙 A(PDF 템플릿) 첫 컷 박음. 트랙 B(웹 시스템) 코드 0줄.
-2. **결정 박힌 것 (decisions.md D-001~D-014)**:
-   - **D-009 북극성**: 전자책 + ISBN까지 무료, 인쇄(POD)만 유료
-   - **D-010 UX**: Vellum식 분할 화면 (좌:글, 우:미리보기) + 가입 게이트 X
-   - **D-011 사용자 자유도**: 판형 + 스타일 2개만 노출, 분리자는 스타일이 흡수
-   - **D-012 판형**: 신국판(있음) → 국판 → 4·6판 → 크라운판 (4종 단계적)
-   - **D-013 트랙 모델**: A 템플릿 / B 웹 / C 운영 (단계 아닌 트랙)
-   - **D-014 기술 스택**: Next.js 15 + Tiptap + 서버 typst 컴파일 + Supabase + Vercel + shadcn/ui
-3. **미해결**:
-   - 새 PDF(`output/taepyeongcheonha-ch01-noto.pdf`) 사용자 육안 평가 안 받음
-   - 콘텐츠 import 휴리스틱 v1 (빈 줄=단락, HTML 클립보드 우선) — 합의 후 D-015로 박을 후보
-   - 메타 정보 스키마(저자/ISBN/부제/헌사) — JSON v2에 추가 필요
-4. **다음 액션 후보 (사용자 결정)**:
-   - A. PDF 평가만 마치고 트랙 B 시작 (Next.js 프로젝트 생성)
-   - B. import 휴리스틱 결정 + D-015로 박기 → 트랙 B 시작
-   - C. 다른 우선순위 (사용자가 지정)
+#### 1. 지금 위치
+- 트랙 A 첫 컷(태평천하 1장 PDF) 박음. 트랙 B 코드 0줄.
+- **2026-05-02 세션 산출물 2개**:
+  - `docs/audits/2026-05-tech-audit.md` — 함정 50건 (P0 14 / P1 18 / P2 14 / P3 4)
+  - `docs/research/2026-05-typesetting-survey.md` — 해외 11개 도구 조사
+- 위생 정리: `/check` 명령 재작성(다른 프로젝트 잔재 제거), 스테일 참조 제거
+
+#### 2. 시장 조사 핵심 결론 (이거 보고 결정)
+- **자간을 작가에게 노출하는 도구 = 11개 중 0개**. 우리 D-011(노출 2개만) = **시장 표준에 부합**. 안 갈아엎어도 됨.
+- **여백은 inside/outside 2축**이 표준 (top/bottom은 자동).
+- **차별화 1개**: 한자 루비 인라인 (`[漢字]{ruby:한자}`) — Vellum/Atticus/부크크/퍼플 모두 못함. 한국 단행본 필수.
+- **1단계 블록 4종**: paragraph / scene_break / blockquote / image (Atticus·Vellum 합집합)
+
+#### 3. 사용자가 결정해야 할 것 (이번 세션이 멈춘 자리)
+1. **D-011 처리** — 시장 조사 결론대로 "유지" 박을지
+2. **JSON 스키마 v2 설계 시작** — 한자 루비 자리 포함
+3. **감사 보고서 PR 묶음 확정** — 보고서 끝의 추천 PR α/β/γ
+4. **트랙 B 착수 시점** — 위 3개 정리 후
+
+#### 4. 다음 액션 후보
+- A. **D-011 유지 박고 → JSON v2 설계 PR 시작** (감사 보고서 PR β와 결합)
+- B. **감사 보고서 PR α 먼저** (트랙 A "책 모양" 마무리: 블리드/프론트매터/쪽번호 로마자)
+- C. **트랙 B 곧장** (Next.js 프로젝트 생성)
+- D. 다른 우선순위 (사용자 지정)
 
 ---
 
-## 이번 세션에서 한 일 (요약)
+## 결정 박힌 것 (변동 없음)
 
-- ✅ Typst 0.14.2 설치 (`C:\Users\Owner\bin\typst\typst.exe`, PATH 등록)
-- ✅ 첫 PDF 컴파일 성공 (`output/taepyeongcheonha-ch01-noto.pdf`, 195KB)
-- ✅ 폰트 5쌍 동봉 (`fonts/`, 38.8MB, 모두 OFL):
-  - 노토 세리프 KR Regular/Bold (트랙 A 클래식 본문)
-  - 노토 산스 KR Regular/Bold (트랙 A 클래식 제목)
-  - 나눔명조 Regular/Bold
-  - 나눔고딕 Regular/Bold
-  - Pretendard Regular/Bold
-- ✅ 컴파일 명령 확정: `typst compile --root . --font-path fonts scripts/render-*.typ output/*.pdf`
-- ✅ template.typ fallback 체인 단순화 (Noto KR + CJK KR만)
-- ✅ decisions.md D-009 ~ D-014 박음
-- ✅ CLAUDE.md "말투" 섹션 추가 (짧게·쉽게·한국어)
-- ✅ 메모리 저장 (`memory/communication_style.md`)
+- D-009 북극성: 전자책 + ISBN까지 무료, 인쇄(POD)만 유료
+- D-010 UX: Vellum식 분할 화면 + 가입 게이트 X
+- D-011 자유도: 판형 + 스타일 2개만 노출 (← 시장 조사 결과 "유지" 권장)
+- D-012 판형: 신국판 → 국판 → 4·6판 → 크라운판
+- D-013 트랙 모델: A 템플릿 / B 웹 / C 운영
+- D-014 기술 스택: Next.js 15 + Tiptap + 서버 typst + Supabase + Vercel + shadcn/ui
+
+---
+
+## 이번 세션(2026-05-02)에서 한 일
+
+- ✅ 기술 감사 보고서 신규 (`docs/audits/2026-05-tech-audit.md`, 401줄, 함정 50건)
+- ✅ 해외 셀프출판/조판 11개 도구 시장 조사 (`docs/research/2026-05-typesetting-survey.md`)
+- ✅ `.claude/commands/check.md` 재작성 (398 → 97줄, sungjinprint 잔재 제거)
+- ✅ `.claude/commands/work.md` 정리 (`docs/guardrails/...` 참조 2곳 제거)
+- ✅ `docs/ai-context/checklist.md` 감사 후속 항목 추가 (A1~A11, B1~B10, K1~K8)
+- ✅ `docs/ai-context/current-task.md` 정리 (없는 `memory/...` 참조 제거 + 본 갱신)
+
+(이전 세션까지 한 일은 `git log --oneline` 참조)
 
 ---
 
@@ -52,39 +66,29 @@
 
 | 트랙 | 진척 | 다음 |
 |---|---|---|
-| **A. 템플릿 라이브러리** | 신국판 클래식 1조합 (첫 컷) | 국판/4·6판/크라운판은 트랙 B 만든 후 추가 |
-| **B. 웹 시스템** | 0% (IA·기술 스택만 합의) | Next.js 프로젝트 생성, 분할 화면 골격, 서버 typst 컴파일 API |
-| **C. 운영 (ISBN/POD)** | 0% | 트랙 B 안정화 후 |
+| **A. 템플릿 라이브러리** | 신국판 클래식 1조합 (첫 컷) | 감사 PR α (블리드/프론트매터/쪽번호) |
+| **B. 웹 시스템** | 0% | JSON v2 설계 → Next.js 골격 |
+| **C. 운영 (ISBN/POD)** | 0% | 트랙 B 안정화 후. 출판사 책임(C1) 결정이 1순위 |
 
 ---
 
-## 트랙 B 시작 시 즉시 할 일 (체크리스트)
+## 트랙 B 시작 전 결정 (감사 보고서 P1 / 시장 조사 결과 반영)
 
-1. `apps/web/` 또는 루트에 Next.js 15 프로젝트 생성 (App Router, TypeScript, Tailwind)
-2. shadcn/ui 초기화
-3. 분할 화면 레이아웃 (좌: Tiptap 에디터, 우: PDF 미리보기 iframe)
-4. `/api/render` Vercel Function — 요청 JSON 받아 typst 컴파일 → PDF 응답
-5. `fonts/` 폴더를 Function 환경에 함께 배포 (Vercel function bundle에 포함)
-6. typst CLI 바이너리를 Vercel Function에 어떻게 두느냐 결정 (이게 잠재 함정. node_modules에 prebuilt? Lambda Layer? Docker runtime?)
-7. 자동저장 = localStorage (가입 전), Supabase (가입 후)
-8. 랜딩 페이지 한 줄 카피: "진짜 무료 책 만들기, 지금 해보세요"
-
----
-
-## 잠재 함정 (트랙 B 시작 전 알아둘 것)
-
-- **typst CLI를 Vercel Function에 두기**: Vercel은 Lambda 기반이라 큰 바이너리(20MB+) 부담. typst-rs npm 래퍼 또는 Docker Runtime 검토 필요. 안 되면 별도 워커 (Cloudflare Workers + WASM, Fly.io 등).
-- **폰트 38.8MB**: Function bundle에 포함 시 cold start 느려짐. R2/S3에 두고 fetch가 나을 수도.
-- **Typst.ts(브라우저 WASM) R&D 트랙**: 트래픽 늘 때 점진 이전. 지금은 안 씀.
+1. **JSON 스키마 v2** — paragraph/scene_break/blockquote/image 4종 + 한자 루비 인라인 자리
+2. **typst CLI 배치** — Vercel Function / typst-ts WASM / 별도 워커 중 택 (감사 B1)
+3. **컴파일 진입점 동적화** — `--input` 또는 stdin (감사 B2)
+4. **콘텐츠 validator** (감사 B4)
+5. **PDF 캐싱 전략** (감사 B5)
+6. **모바일 PDF 미리보기** — PDF.js / PNG 썸네일 (감사 B8)
+7. **template_version 필드** — 트랙 C 폭발 방지 (감사 B10)
 
 ---
 
 ## 컨텍스트
 
 - 사용자: 성범 (`bongjin86@gmail.com`)
-- 사용자 컨텍스트: sungjinprint(인쇄 주문 시스템) 운영자.
-- Printology(인쇄 파이프라인)와 추후 트랙 C에서 연결.
-- 사용자 톤: 짧게·쉽게·한국어 (CLAUDE.md "말투" + memory/communication_style.md).
+- 사용자 컨텍스트: sungjinprint(인쇄 주문 시스템) 운영자. Printology와 트랙 C에서 연결.
+- 사용자 톤: 짧게·쉽게·한국어 (CLAUDE.md "말투" 섹션).
 
 ---
 
@@ -96,4 +100,5 @@ git pull
 cc.bat                     # 또는 시작메뉴 → claude
 ```
 
-Claude는 자동으로 이 파일을 읽고 위 "요약"을 한국어로 보고한 뒤 사용자 결정을 기다립니다.
+Claude는 자동으로 이 파일을 읽고 위 [재진입 보고]를 한국어로 펼친 뒤 사용자 결정을 기다립니다.
+사용자가 "이어서 하자"라고 하면 위 [재진입 보고] 섹션을 그대로 다시 보여주세요.

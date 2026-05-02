@@ -61,3 +61,43 @@
 - [ ] KOLIS-NET 워크플로우
 - [ ] 납본 자동화
 - [ ] sungjinprint POD 연동
+
+---
+
+## 감사 발견 — `docs/audits/2026-05-tech-audit.md` 후속 (사용자 검토 후 PR 분배)
+
+### P0 — 트랙 A 결함 (책 같지 않은 부분)
+- [ ] A1. 블리드 0mm — 페이지 158×231로 확장 + 안쪽 여백 +3mm 보정
+- [ ] A2. 프론트매터·백매터 (표제지/판권/차례/헌사) 추가
+- [ ] A3. 인용문 `emph()` 제거 (합성 italic, KLREQ 어긋남)
+- [ ] A4. quote block 위/아래 여백 추가
+- [ ] A5. 첫 챕터 `pagebreak(to: "odd")` — A2와 함께 해결
+- [ ] A6. 프론트매터 로마자 쪽번호, 본문은 아라비아 1로 리셋
+- [ ] A7. 러닝 헤드 (좌: 책 제목, 우: 챕터 제목)
+- [ ] A8. widow/orphan 제어
+- [ ] A9. CMYK·PDF/X-1a 후처리 (Ghostscript/pdfcpu)
+- [ ] A10. 면수 4의 배수 자동 패딩
+- [ ] A11. PDF 육안 검증 (사용자) — 위 "검증" 섹션과 동일
+
+### P1 — 트랙 B 시작 전 결정
+- [ ] B1. typst CLI 배치 (Vercel Function / typst-ts WASM / 별도 워커)
+- [ ] B2. 컴파일 진입점 동적화 (`--input` 플래그 또는 stdin)
+- [ ] B3. JSON 스키마 v2 설계 + v1 마이그레이션
+- [ ] B4. 콘텐츠 validator (사람 말 에러 메시지)
+- [ ] B5. PDF 캐싱 전략 (콘텐츠 해시 + 챕터 단위)
+- [ ] B6. localStorage → IndexedDB 전환 검토
+- [ ] B7. 자동저장 다중 탭 잠금 (BroadcastChannel)
+- [ ] B8. 모바일 PDF 미리보기 (PDF.js 또는 PNG 썸네일)
+- [ ] B9. API 타임아웃 대응 (잡 큐 또는 챕터 분할)
+- [ ] B10. 템플릿 버전닝 필드 (`template_version`)
+
+### P1 — 한국어 조판 미세사항 (트랙 A 다음 컷)
+- [ ] K1~K3. 금칙·자간·양끝 정렬 PDF 검증 (A11과 동일)
+- [ ] K4. 한자 병기 함수 (`#hanja[유민][流民]`)
+- [ ] K5. 드러냄 (방점)
+- [ ] K6. 시(verse) 블록
+- [ ] K7. 각주 (Typst `footnote` + JSON 스키마)
+- [ ] K8. 이미지·도판 블록 + 캡션
+
+### P2 — 트랙 C / P3 — 거버넌스
+- 보고서 그대로 참조. 시점이 오면 박는다.

@@ -18,7 +18,7 @@ $ARGUMENTS
 매 실행마다 이 파일(`work.md`)이 여전히 유효한지 점검한다:
 
 - `CLAUDE.md` 읽기 → 새로 추가된 규칙·아키텍처 변경
-- `docs/guardrails/shared/evolution-log.md` → 지난 세션의 `[자동반성]` / `[사용자발견]` 확인
+- `docs/ai-context/current-task.md` + `docs/ai-context/decisions.md` → 최근 결정·진행 상황
 - `git log --oneline -10` → 최근 변경된 도구 설정 확인
 - 최근 배운 교훈이 이 파일에 반영되어 있나? 아니면 STEP 5에서 추가할 것
 
@@ -268,7 +268,7 @@ Phase 3 실패 → Phase 2 수정 → Phase 3 재평가
 - **이 도구(`work.md`)가 놓친 패턴**이 있었나? → 이 파일을 직접 수정
 - **불필요해진 STEP**이 있나? → 제거
 - **순서가 비효율적**이었나? → 재정렬
-- 배운 교훈 → `docs/guardrails/shared/evolution-log.md`에 `[자동반성]`으로 기록
+- 배운 교훈 → `docs/ai-context/decisions.md`에 결정으로 박거나 `docs/ai-context/current-task.md`에 메모
 
 ---
 
