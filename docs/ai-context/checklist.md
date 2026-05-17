@@ -44,16 +44,46 @@
 - [ ] 첫 단락 들여쓰기/이후 들여쓰기 검증
 - [ ] 양끝 정렬 + 한영 자간 검증
 
-## 트랙 B (웹 시스템) — 다음 세션 시작 시
+## 메인 핵심 3개 (2026-05-18 확정 — Vellum 심층 분석 결과 반영)
 
+### ① JSON 스키마 v2 — 코드보다 먼저
+- [ ] Element 3종 정의 (Chapter / Copyright / Title Page)
+- [ ] Text Feature 인라인 6 (B/I/U/Smallcaps/Monospace/Strikethrough)
+- [ ] Text Feature 블록 6 자리 (Subhead/OrnBreak/Quote/Verse/List/Image)
+- [ ] 한자 루비 인라인 spec (`[漢字]{ruby:한자}`) — 차별화
+- [ ] `_locked` 섹션에 폰트/자간/마진 가두기
+- [ ] decisions.md 에 D-015로 박기
+- [ ] 태평천하 ch01.json 을 v2로 마이그레이션
+
+### ② 편집기 ↔ PDF 미리보기 라이브 파이프 (트랙 B MVP)
+- [ ] Typst CLI 배치 결정 (감사 B1) — Vercel Function / typst-ts WASM / 별도 워커 비교
 - [ ] Next.js 15 프로젝트 생성 (App Router, TypeScript, Tailwind)
 - [ ] shadcn/ui 초기화
-- [ ] 분할 화면 레이아웃 (좌: Tiptap, 우: PDF 미리보기)
-- [ ] `/api/render` — 서버에서 typst CLI 호출 → PDF 응답
-- [ ] typst 바이너리 + fonts/ 를 Vercel Function에 어떻게 둘지 결정
+- [ ] 3분할 레이아웃 (좌: 챕터 트리, 중: Tiptap, 우: PDF 미리보기) — Vellum 모범
+- [ ] `/api/render` — 서버 typst 호출 → PDF 응답
+- [ ] 컴파일 진입점 동적화 (감사 B2: `--input` 또는 stdin)
+- [ ] 콘텐츠 validator (감사 B4)
+- [ ] PDF 캐싱 (감사 B5)
 - [ ] 랜딩 카피: "진짜 무료 책 만들기, 지금 해보세요"
-- [ ] localStorage 자동저장
+
+### ③ 자동조판 6규칙 (트랙 A 마무리)
+- [ ] 위도우/오펀 방지 (감사 A8)
+- [ ] 좌우 페이지 baseline 균형 (Vellum Auto-Layout 모범)
+- [ ] 챕터 끝 페이지 최소 5줄 보장
+- [ ] 하이픈 과다 방지
+- [ ] Subhead 페이지 하단 회피
+- [ ] KLREQ 금칙 적용 (감사 K1)
+
+---
+
+## 트랙 B (웹 시스템) — 위 ② 외 부수 항목
+
+- [ ] localStorage 자동저장 (감사 B6: IndexedDB 전환 검토)
 - [ ] Supabase 연결 (가입 후 클라우드 저장)
+- [ ] 다중 탭 잠금 (감사 B7: BroadcastChannel)
+- [ ] 모바일 PDF 미리보기 (감사 B8)
+- [ ] API 타임아웃 대응 (감사 B9)
+- [ ] template_version 필드 (감사 B10)
 
 ## 트랙 C (ISBN/POD) — 미래
 
