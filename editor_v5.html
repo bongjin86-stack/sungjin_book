@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>성진북스 에디터 v5</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F5F4F0;
+      --surface: #FFFFFF;
+      --sidebar-bg: #F9F8F5;
+      --border: #E5E3DC;
+      --border-hover: #C8C4BA;
+      --text-primary: #18181B;
+      --text-secondary: #6B6860;
+      --text-muted: #A8A49C;
+      --accent: #1C4ED8;
+      --accent-light: #EFF4FF;
+      --accent-hover: #1741B6;
+      --purple: #7C3AED;
+      --purple-light: #F3EEFF;
+      --green: #16A34A;
+      --green-light: #F0FDF4;
+      --radius: 10px;
+      --sidebar-w: 260px;
+      --header-h: 54px;
+    }
+    html, body { height: 100%; font-family: 'Apple SD Gothic Neo', -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+    /* ════════════════════════════════
+       ONBOARDING
+    ════════════════════════════════ */
+    .ob-screen {
+      position: fixed; inset: 0; z-index: 300;
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #0F172A 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .ob-screen.hidden { display: none; }
+
+    .ob-wrap {
+      display: flex; gap: 48px; align-items: flex-start;
+      max-width: 900px; width: 100%;
+    }
+
+    /* Left — Brand */
+    .ob-brand { flex: 0 0 260px; padding-top: 8px; }
+    .ob-brand-logo { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 10px; }
+    .ob-brand-logo span { color: #60A5FA; }
+    .ob-brand-tagline { font-size: 14px; color: #94A3B8; line-height: 1.7; margin-bottom: 28px; }
+    .ob-brand-features { display: flex; flex-direction: column; gap: 10px; }
+    .ob-feat { display: flex; align-items: center; gap: 10px; }
+    .ob-feat-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .ob-feat-text { font-size: 13px; color: #CBD5E1; line-height: 1.4; }
+    .ob-feat-text strong { color: #E2E8F0; font-weight: 600; }
+
+    /* Right — Form Card */
+    .ob-card {
+      flex: 1; background: #fff; border-radius: 20px;
+      padding: 36px 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+    }
+    .ob-card-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .ob-card-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
+
+    /* Form Fields */
+    .ob-field { margin-bottom: 16px; }
+    .ob-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .ob-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px;
+    }
+    .ob-input {
+      width: 100%; padding: 10px 13px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--bg);
+      font-size: 14px; color: var(--text-primary); font-family: inherit; outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .ob-input:focus { border-color: var(--accent); background: #fff; }
+    .ob-input::placeholder { color: var(--text-muted); }
+
+    /* Trim Selector */
+    .trim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .trim-card {
+      padding: 10px 8px; border-radius: 8px; border: 1.5px solid var(--border);
+      cursor: pointer; text-align: center; transition: all 0.15s; background: var(--bg);
+    }
+    .trim-card:hover { border-color: var(--accent); }
+    .trim-card.selected { border-color: var(--accent); background: var(--accent-light); }
+    .trim-card-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .trim-card-size { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .trim-card.selected .trim-card-name { color: var(--accent); }
+
+    /* Book Type */
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .type-card {
+      padding: 12px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+      cursor: pointer; transition: all 0.15s; background: var(--bg); display: flex; align-items: center; gap: 10px;
+    }
+    .type-card:hover { border-color: var(--accent); }
+    .type-card.selected { border-color: var(--accent); background: var(--accent-light); }
+    .type-card-icon { font-size: 20px; }
+    .type-card-info {}
+    .type-card-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .type-card-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .type-card.selected .type-card-name { color: var(--accent); }
+    .type-badge { font-size: 10px; background: var(--border); color: var(--text-muted); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+
+    .ob-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .ob-submit {
+      width: 100%; padding: 13px; border-radius: var(--radius);
+      background: var(--accent); color: #fff; border: none;
+      font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+      transition: all 0.15s; letter-spacing: -0.2px;
+    }
+    .ob-submit:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(28,78,216,0.3); }
+    .ob-submit:active { transform: translateY(0); }
+
+    /* ════════════════════════════════
+       APP LAYOUT
+    ════════════════════════════════ */
+    .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── Header ── */
+    .header {
+      height: var(--header-h); background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 18px; gap: 10px;
+      flex-shrink: 0; z-index: 20;
+    }
+    .logo { font-size: 15px; font-weight: 800; letter-spacing: -0.4px; flex-shrink: 0; }
+    .logo span { color: var(--accent); }
+    .vdiv { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+    .book-info { display: flex; align-items: baseline; gap: 5px; flex: 1; min-width: 0; }
+    .book-title-h { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .book-author-h { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .book-trim-h {
+      font-size: 11px; color: var(--accent); background: var(--accent-light);
+      padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Progress Indicator */
+    .progress-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .prog-step {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--text-muted); padding: 4px 10px; border-radius: 20px;
+    }
+    .prog-step.active { color: var(--accent); background: var(--accent-light); font-weight: 600; }
+    .prog-step.done { color: var(--green); }
+    .prog-arrow { font-size: 10px; color: var(--text-muted); }
+
+    .header-spacer { flex: 1; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 13px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: none; font-family: inherit; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { background: var(--bg); color: var(--text-primary); }
+    .btn-dark { background: #18181B; color: #fff; }
+    .btn-dark:hover { background: #27272A; }
+    .btn-primary { background: var(--accent); color: #fff; font-weight: 600; }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    /* ── Body ── */
+    .body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w); background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+    }
+
+    /* Options */
+    .opts-section { padding: 12px 12px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+    .toggle-label { font-size: 12px; color: var(--text-secondary); }
+    .toggle { position: relative; width: 30px; height: 17px; cursor: pointer; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 9px; transition: background 0.2s; }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(13px); }
+
+    .style-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+    .style-pills { display: flex; gap: 4px; }
+    .s-pill {
+      padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500;
+      border: 1.5px solid var(--border); cursor: pointer; color: var(--text-muted);
+      background: transparent; transition: all 0.15s;
+    }
+    .s-pill.active { border-color: var(--purple); background: var(--purple-light); color: var(--purple); }
+
+    /* TOC */
+    .toc-section { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .toc-head { padding: 10px 12px 6px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .toc-count-badge { font-size: 10px; color: var(--text-muted); background: var(--border); padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+
+    .toc-list { flex: 1; overflow-y: auto; padding: 0 8px 4px; }
+    .toc-list::-webkit-scrollbar { width: 3px; }
+    .toc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .toc-empty { padding: 20px 10px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+    .toc-empty-icon { font-size: 24px; margin-bottom: 6px; }
+
+    .toc-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px; border-radius: 7px; cursor: pointer;
+      transition: background 0.1s; margin-bottom: 1px;
+    }
+    .toc-item:hover { background: var(--border); }
+    .toc-item.active { background: var(--accent-light); }
+    .toc-item.active .toc-name { color: var(--accent); font-weight: 600; }
+    .toc-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ch { background: var(--accent); }
+    .dot-il { background: var(--purple); }
+    .toc-info { flex: 1; min-width: 0; }
+    .toc-name { font-size: 12px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toc-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .toc-drag { font-size: 10px; color: var(--text-muted); opacity: 0; cursor: grab; }
+    .toc-item:hover .toc-drag { opacity: 1; }
+
+    .toc-footer { padding: 6px 8px 10px; flex-shrink: 0; }
+    .add-interlude-btn {
+      width: 100%; padding: 7px 10px;
+      border: 1.5px dashed var(--border); border-radius: 7px;
+      background: transparent; color: var(--text-muted);
+      font-size: 12px; font-family: inherit; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: all 0.15s;
+    }
+    .add-interlude-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
+
+    /* ── Editor Area ── */
+    .editor-wrap { flex: 1; display: flex; overflow: hidden; }
+
+    .editor-area {
+      flex: 1; overflow-y: auto; display: flex;
+      align-items: flex-start; justify-content: center;
+      padding: 44px 24px 80px; background: var(--bg);
+      transition: flex 0.3s;
+    }
+    .editor-area::-webkit-scrollbar { width: 5px; }
+    .editor-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Chapter Card */
+    .ch-card {
+      width: 100%; max-width: 620px;
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .ch-card-top { padding: 22px 26px 0; }
+    .ch-num-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .ch-badge { background: var(--accent-light); color: var(--accent); font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ch-num-input {
+      border: none; background: transparent; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); font-family: inherit; outline: none; width: 80px;
+    }
+    .ch-num-input:focus { color: var(--accent); }
+    .ch-num-hint { font-size: 11px; color: var(--text-muted); }
+
+    .ch-title-input {
+      width: 100%; border: none; outline: none;
+      font-size: 24px; font-weight: 700; color: var(--text-primary);
+      font-family: inherit; background: transparent; line-height: 1.3; padding: 0;
+    }
+    .ch-title-input::placeholder { color: #D4D0C8; font-weight: 400; }
+    .ch-divider { height: 1px; background: var(--border); margin: 16px 0 0; }
+
+    .ch-card-body { padding: 16px 26px; }
+    .ch-body-ta {
+      width: 100%; border: none; outline: none;
+      font-size: 15px; line-height: 1.9; color: var(--text-primary);
+      font-family: inherit; background: transparent; resize: none; min-height: 240px; padding: 0;
+    }
+    .ch-body-ta::placeholder { color: #D4D0C8; }
+
+    .ch-card-footer {
+      padding: 12px 26px 20px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .char-count { font-size: 12px; color: var(--text-muted); flex: 1; }
+    .save-ok { display: none; align-items: center; gap: 5px; font-size: 12px; color: var(--green); font-weight: 500; }
+    .save-ok.show { display: flex; }
+    .btn-spell {
+      padding: 7px 12px; border-radius: 7px;
+      border: 1px solid var(--border); background: transparent;
+      font-size: 12px; color: var(--text-secondary); font-family: inherit; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-spell:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+    .btn-save {
+      padding: 9px 22px; border-radius: 8px;
+      background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+      border: none; transition: all 0.15s;
+    }
+    .btn-save:hover { background: var(--accent-hover); }
+    .btn-save:active { transform: scale(0.97); }
+
+    /* ── Preview Panel ── */
+    .preview-panel {
+      width: 0; overflow: hidden; border-left: 0 solid var(--border);
+      background: #1A1A1A; transition: width 0.3s, border-width 0.3s;
+      display: flex; flex-direction: column;
+    }
+    .preview-panel.open { width: 380px; border-left-width: 1px; }
+    .preview-panel-head {
+      padding: 12px 16px; border-bottom: 1px solid #2A2A2A;
+      display: flex; align-items: center; flex-shrink: 0;
+    }
+    .preview-panel-title { font-size: 12px; color: #888; flex: 1; }
+    .preview-panel-close { background: transparent; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+    .preview-panel-close:hover { color: #fff; }
+    .preview-panel-body { flex: 1; overflow-y: auto; padding: 24px 16px; display: flex; justify-content: center; }
+    .preview-mini-page {
+      width: 100%; max-width: 300px; background: #fff; border-radius: 4px;
+      padding: 40px 32px; font-family: 'Noto Serif KR', 'Georgia', serif;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4); min-height: 420px;
+    }
+    .pm-ch-num { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .pm-ch-title { font-size: 17px; font-weight: 700; color: #111; margin-bottom: 18px; line-height: 1.3; }
+    .pm-body { font-size: 12.5px; line-height: 1.95; color: #2A2A2A; }
+    .pm-empty { font-size: 12px; color: #999; text-align: center; padding: 40px 0; line-height: 1.7; }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      height: 28px; background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 16px; gap: 14px; flex-shrink: 0;
+    }
+    .s-item { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .s-dot { width: 5px; height: 5px; border-radius: 50%; background: #22C55E; }
+
+    /* ── Full Preview Overlay ── */
+    .full-preview {
+      position: fixed; inset: 0; background: #111;
+      z-index: 100; display: none; flex-direction: column;
+    }
+    .full-preview.open { display: flex; }
+    .fp-header {
+      height: 52px; background: #1C1C1C; border-bottom: 1px solid #2A2A2A;
+      display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0;
+    }
+    .fp-info { flex: 1; }
+    .fp-title { font-size: 14px; color: #E0E0E0; font-weight: 600; }
+    .fp-meta { font-size: 11px; color: #666; margin-top: 1px; }
+    .fp-close { padding: 6px 14px; border-radius: 7px; border: 1px solid #3A3A3A; background: transparent; color: #999; font-size: 13px; font-family: inherit; cursor: pointer; }
+    .fp-close:hover { background: #2A2A2A; color: #fff; }
+    .fp-dl { background: var(--accent); color: #fff; border: none; padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    .fp-body { flex: 1; overflow-y: auto; display: flex; justify-content: center; padding: 40px 24px; gap: 20px; flex-wrap: wrap; }
+    .fp-page {
+      width: 360px; background: #fff; border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5); padding: 52px 44px;
+      font-family: 'Noto Serif KR', 'Georgia', serif; min-height: 510px;
+    }
+    .fp-ch-num { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .fp-ch-title { font-size: 20px; font-weight: 700; color: #111; margin-bottom: 20px; line-height: 1.3; }
+    .fp-body-text { font-size: 13px; line-height: 1.95; color: #2A2A2A; }
+    .fp-note { font-size: 11px; color: #666; text-align: center; margin-top: 16px; width: 100%; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     ONBOARDING
+════════════════════════════════ -->
+<div class="ob-screen" id="obScreen">
+  <div class="ob-wrap">
+
+    <!-- Left Brand -->
+    <div class="ob-brand">
+      <div class="ob-brand-logo">성진<span>북스</span></div>
+      <div class="ob-brand-tagline">원고를 넣으면<br>인쇄 가능한 책이 됩니다.</div>
+      <div class="ob-brand-features">
+        <div class="ob-feat">
+          <div class="ob-feat-icon">✦</div>
+          <div class="ob-feat-text"><strong>자동 조판</strong><br>한국어 출판 규격 자동 적용</div>
+        </div>
+        <div class="ob-feat">
+          <div class="ob-feat-icon">👁</div>
+          <div class="ob-feat-text"><strong>실시간 미리보기</strong><br>쓰면서 바로 확인</div>
+        </div>
+        <div class="ob-feat">
+          <div class="ob-feat-icon">⬇</div>
+          <div class="ob-feat-text"><strong>즉시 PDF 생성</strong><br>인쇄소 바로 전달 가능</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Form -->
+    <div class="ob-card">
+      <div class="ob-card-title">새 책 만들기</div>
+      <div class="ob-card-sub">기본 정보를 입력하면 바로 시작할 수 있습니다.</div>
+
+      <!-- 제목 / 부제목 -->
+      <div class="ob-field">
+        <label class="ob-label">책 제목 <span style="color:#E53E3E">*</span></label>
+        <input class="ob-input" type="text" id="obTitle" placeholder="예: 태평천하" />
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">부제목 <span style="color:var(--text-muted); font-weight:400; text-transform:none; letter-spacing:0;">(선택)</span></label>
+        <input class="ob-input" type="text" id="obSubtitle" placeholder="예: 채만식 장편소설" />
+      </div>
+
+      <!-- 저자 / 출판사 -->
+      <div class="ob-field-row">
+        <div>
+          <label class="ob-label">저자 <span style="color:#E53E3E">*</span></label>
+          <input class="ob-input" type="text" id="obAuthor" placeholder="예: 채만식" />
+        </div>
+        <div>
+          <label class="ob-label">출판사</label>
+          <input class="ob-input" type="text" id="obPublisher" placeholder="예: 성진북스" />
+        </div>
+      </div>
+
+      <!-- 판형 -->
+      <div class="ob-field">
+        <label class="ob-label">판형</label>
+        <div class="trim-grid">
+          <div class="trim-card selected" onclick="selectTrimOb(this)">
+            <div class="trim-card-name">신국판</div>
+            <div class="trim-card-size">152 × 225mm</div>
+          </div>
+          <div class="trim-card" onclick="selectTrimOb(this)">
+            <div class="trim-card-name">46배판</div>
+            <div class="trim-card-size">188 × 257mm</div>
+          </div>
+          <div class="trim-card" onclick="selectTrimOb(this)">
+            <div class="trim-card-name">문고판</div>
+            <div class="trim-card-size">105 × 148mm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 책 유형 -->
+      <div class="ob-field">
+        <label class="ob-label">책 유형</label>
+        <div class="type-grid">
+          <div class="type-card selected" onclick="selectTypeOb(this)">
+            <div class="type-card-icon">📚</div>
+            <div class="type-card-info">
+              <div class="type-card-name">챕터가 있는 책</div>
+              <div class="type-card-desc">소설, 에세이집 등</div>
+            </div>
+          </div>
+          <div class="type-card" onclick="selectTypeOb(this)">
+            <div class="type-card-icon">📄</div>
+            <div class="type-card-info">
+              <div class="type-card-name">통으로 된 책 <span class="type-badge">준비 중</span></div>
+              <div class="type-card-desc">강의자료, 단행본 등</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ob-divider"></div>
+      <button class="ob-submit" onclick="startEditor()">시작하기 →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     APP
+════════════════════════════════ -->
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">성진<span>북스</span></div>
+    <div class="vdiv"></div>
+    <div class="book-info">
+      <span class="book-title-h" id="hTitle">태평천하</span>
+      <span class="book-author-h" id="hAuthor">채만식</span>
+    </div>
+    <span class="book-trim-h" id="hTrim">신국판</span>
+    <div class="vdiv"></div>
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="prog-step active" id="progWrite">✏️ 집필 중</div>
+      <span class="prog-arrow">›</span>
+      <div class="prog-step" id="progReview">검토</div>
+      <span class="prog-arrow">›</span>
+      <div class="prog-step" id="progDone">완성</div>
+    </div>
+
+    <div class="header-spacer"></div>
+    <button class="btn btn-ghost" style="font-size:11px;">✓ 자동저장</button>
+    <button class="btn btn-dark" onclick="openFullPreview()">👁 전체 미리보기</button>
+    <button class="btn btn-primary">⬇ PDF 생성</button>
+  </header>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Options -->
+      <div class="opts-section">
+        <div class="section-label">옵션</div>
+        <div class="toggle-row">
+          <span class="toggle-label">챕터 번호 표시</span>
+          <label class="toggle"><input type="checkbox" checked /><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">미리보기 패널</span>
+          <label class="toggle"><input type="checkbox" id="previewToggle" onchange="togglePreviewPanel(this)" /><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">시리즈명 표시</span>
+          <label class="toggle"><input type="checkbox" /><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">영문 제목 병기</span>
+          <label class="toggle"><input type="checkbox" /><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">ISBN 포함</span>
+          <label class="toggle"><input type="checkbox" /><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+        </div>
+        <div class="style-row">
+          <span class="toggle-label">간지 스타일</span>
+          <div class="style-pills">
+            <div class="s-pill active" onclick="selectSPill(this)">1p</div>
+            <div class="s-pill" onclick="selectSPill(this)">2p</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOC -->
+      <div class="toc-section">
+        <div class="toc-head">
+          <span class="section-label" style="margin:0;">목차</span>
+          <span class="toc-count-badge" id="tocCount">0</span>
+        </div>
+        <div class="toc-list" id="tocList">
+          <div class="toc-empty" id="tocEmpty">
+            <div class="toc-empty-icon">📋</div>
+            챕터를 저장하면<br>여기에 쌓입니다.
+          </div>
+        </div>
+        <div class="toc-footer">
+          <button class="add-interlude-btn" onclick="addInterlude()">✦ 간지 추가</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Editor + Preview Panel -->
+    <div class="editor-wrap">
+
+      <!-- Editor -->
+      <div class="editor-area">
+        <div class="ch-card">
+          <div class="ch-card-top">
+            <div class="ch-num-row">
+              <span class="ch-badge">챕터</span>
+              <input class="ch-num-input" type="text" id="chNum" value="1장" />
+              <span class="ch-num-hint">직접 수정 가능 (프롤로그, 에필로그 등)</span>
+            </div>
+            <input class="ch-title-input" type="text" id="chTitle" placeholder="챕터 제목을 입력하세요" />
+            <div class="ch-divider"></div>
+          </div>
+          <div class="ch-card-body">
+            <textarea class="ch-body-ta" id="chBody" placeholder="본문을 여기에 붙여넣거나 입력하세요.
+
+Ctrl+V 로 기존 원고를 그대로 붙여넣기 하시면 됩니다."></textarea>
+          </div>
+          <div class="ch-card-footer">
+            <span class="char-count" id="charCount">0자</span>
+            <div class="save-ok" id="saveOk">✓ 저장됨</div>
+            <button class="btn-spell">✦ 맞춤법 검사 <span style="font-size:10px;color:var(--text-muted);">(준비 중)</span></button>
+            <button class="btn-save" onclick="saveChapter()">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="preview-panel" id="previewPanel">
+        <div class="preview-panel-head">
+          <span class="preview-panel-title">📖 실시간 미리보기</span>
+          <button class="preview-panel-close" onclick="closePreviewPanel()">✕</button>
+        </div>
+        <div class="preview-panel-body">
+          <div class="preview-mini-page" id="miniPage">
+            <div class="pm-empty">챕터를 입력하면<br>여기에 미리보기가 표시됩니다.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="s-item"><span class="s-dot"></span> 자동저장됨</div>
+    <div class="s-item" id="sBlocks">챕터 0개</div>
+    <div class="s-item" id="sChars">총 0자</div>
+    <div class="s-item" style="margin-left:auto; color:var(--text-secondary);" id="sTrim">신국판 · 챕터 모드</div>
+  </div>
+
+</div>
+
+<!-- Full Preview Overlay -->
+<div class="full-preview" id="fullPreview">
+  <div class="fp-header">
+    <div class="fp-info">
+      <div class="fp-title" id="fpTitle">태평천하</div>
+      <div class="fp-meta" id="fpMeta">신국판 152×225mm</div>
+    </div>
+    <button class="fp-dl">⬇ PDF 생성</button>
+    <button class="fp-close" onclick="closeFullPreview()">✕ 닫기</button>
+  </div>
+  <div class="fp-body" id="fpBody">
+    <div style="text-align:center; padding:60px 0; color:#666; font-size:13px; width:100%;">저장된 챕터가 없습니다.</div>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  let chapters = [];
+  let totalChars = 0;
+  let selectedTrim = '신국판';
+
+  // ── Onboarding ──
+  function selectTrimOb(el) {
+    document.querySelectorAll('.trim-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTrim = el.querySelector('.trim-card-name').textContent;
+  }
+  function selectTypeOb(el) {
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function startEditor() {
+    const title = document.getElementById('obTitle').value.trim() || '제목 없음';
+    const author = document.getElementById('obAuthor').value.trim() || '저자 미상';
+    document.getElementById('hTitle').textContent = title;
+    document.getElementById('hAuthor').textContent = author;
+    document.getElementById('hTrim').textContent = selectedTrim;
+    document.getElementById('sTrim').textContent = selectedTrim + ' · 챕터 모드';
+    document.getElementById('fpTitle').textContent = title;
+    document.getElementById('fpMeta').textContent = selectedTrim;
+    document.getElementById('obScreen').classList.add('hidden');
+  }
+
+  // ── Style Pills ──
+  function selectSPill(el) {
+    document.querySelectorAll('.s-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ── Preview Panel ──
+  function togglePreviewPanel(cb) {
+    const panel = document.getElementById('previewPanel');
+    if (cb.checked) panel.classList.add('open');
+    else panel.classList.remove('open');
+    updateMiniPreview();
+  }
+  function closePreviewPanel() {
+    document.getElementById('previewPanel').classList.remove('open');
+    document.getElementById('previewToggle').checked = false;
+  }
+
+  // ── Mini Preview Update ──
+  function updateMiniPreview() {
+    const num = document.getElementById('chNum').value;
+    const title = document.getElementById('chTitle').value;
+    const body = document.getElementById('chBody').value;
+    const mini = document.getElementById('miniPage');
+    if (!title && !body) {
+      mini.innerHTML = '<div class="pm-empty">챕터를 입력하면<br>여기에 미리보기가 표시됩니다.</div>';
+      return;
+    }
+    mini.innerHTML = `
+      <div class="pm-ch-num">${num || ''}</div>
+      <div class="pm-ch-title">${title || '(제목 없음)'}</div>
+      <div class="pm-body">${body.replace(/\n/g, '<br>')}</div>
+    `;
+  }
+
+  // ── Save Chapter ──
+  function saveChapter() {
+    const num = document.getElementById('chNum').value.trim() || `${chapters.length + 1}장`;
+    const title = document.getElementById('chTitle').value.trim();
+    const body = document.getElementById('chBody').value.trim();
+    if (!title && !body) return;
+
+    chapters.push({ num, title: title || '(제목 없음)', body, chars: body.length });
+    totalChars += body.length;
+
+    renderTOC();
+    document.getElementById('sBlocks').textContent = `챕터 ${chapters.length}개`;
+    document.getElementById('sChars').textContent = `총 ${totalChars.toLocaleString()}자`;
+
+    // Progress update
+    if (chapters.length >= 1) document.getElementById('progWrite').classList.add('done');
+
+    // Feedback
+    const ok = document.getElementById('saveOk');
+    ok.classList.add('show');
+    setTimeout(() => ok.classList.remove('show'), 1800);
+
+    // Reset
+    const next = chapters.length + 1;
+    document.getElementById('chNum').value = `${next}장`;
+    document.getElementById('chTitle').value = '';
+    document.getElementById('chBody').value = '';
+    document.getElementById('chBody').style.height = '240px';
+    document.getElementById('charCount').textContent = '0자';
+    document.getElementById('chTitle').focus();
+    updateMiniPreview();
+  }
+
+  // ── TOC ──
+  function renderTOC() {
+    const list = document.getElementById('tocList');
+    const empty = document.getElementById('tocEmpty');
+    const count = document.getElementById('tocCount');
+    count.textContent = chapters.length;
+    if (chapters.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    // Keep interlude items, re-render chapter items
+    const interludes = Array.from(list.querySelectorAll('.toc-item.interlude'));
+    list.innerHTML = '';
+    chapters.forEach((ch, i) => {
+      const el = document.createElement('div');
+      el.className = 'toc-item';
+      el.innerHTML = `<span class="toc-dot dot-ch"></span><div class="toc-info"><div class="toc-name">${ch.num}${ch.title ? ' — ' + ch.title : ''}</div><div class="toc-meta">챕터 · ${ch.chars.toLocaleString()}자</div></div><span class="toc-drag">⠿</span>`;
+      list.appendChild(el);
+    });
+    interludes.forEach(il => list.appendChild(il));
+  }
+
+  function addInterlude() {
+    const list = document.getElementById('tocList');
+    document.getElementById('tocEmpty').style.display = 'none';
+    const el = document.createElement('div');
+    el.className = 'toc-item interlude';
+    el.innerHTML = `<span class="toc-dot dot-il"></span><div class="toc-info"><div class="toc-name">간지</div><div class="toc-meta">간지 · 드래그로 위치 조정</div></div><span class="toc-drag">⠿</span>`;
+    list.appendChild(el);
+    const count = document.getElementById('tocCount');
+    count.textContent = parseInt(count.textContent || 0) + 1;
+  }
+
+  // ── Char Count + Auto Height ──
+  const bodyTA = document.getElementById('chBody');
+  bodyTA.addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length.toLocaleString() + '자';
+    this.style.height = 'auto';
+    this.style.height = Math.max(240, this.scrollHeight) + 'px';
+    if (document.getElementById('previewPanel').classList.contains('open')) updateMiniPreview();
+  });
+  document.getElementById('chTitle').addEventListener('input', () => {
+    if (document.getElementById('previewPanel').classList.contains('open')) updateMiniPreview();
+  });
+
+  // ── Full Preview ──
+  function openFullPreview() {
+    const overlay = document.getElementById('fullPreview');
+    overlay.classList.add('open');
+    const body = document.getElementById('fpBody');
+    if (chapters.length === 0) {
+      body.innerHTML = `<div style="text-align:center;padding:60px 0;color:#666;font-size:13px;width:100%;">저장된 챕터가 없습니다.<br>챕터를 저장하면 여기에 미리보기가 표시됩니다.</div>`;
+      return;
+    }
+    body.innerHTML = chapters.map(ch => `
+      <div class="fp-page">
+        <div class="fp-ch-num">${ch.num}</div>
+        <div class="fp-ch-title">${ch.title}</div>
+        <div class="fp-body-text">${ch.body.replace(/\n/g, '<br>')}</div>
+      </div>
+    `).join('') + `<div class="fp-note">실제 PDF는 Typst 엔진으로 생성됩니다. 폰트·여백·줄간격이 최종 결과물에 적용됩니다.</div>`;
+  }
+  function closeFullPreview() {
+    document.getElementById('fullPreview').classList.remove('open');
+  }
+
+  // ── Keyboard ──
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') saveChapter();
+    if (e.key === 'Escape') closeFullPreview();
+  });
+</script>
+</body>
+</html>

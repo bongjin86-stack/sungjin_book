@@ -35,3 +35,8 @@ pnpm-debug.log*
 # bkit/pdca 내부 상태 (도구 자체 캐시)
 docs/.bkit-memory.json
 docs/.pdca-status.json
+
+# Playwright 스크린샷 (재생성 가능, 용량)
+tools/playwright/shots/
+tools/playwright/shots-editor/
+tools/playwright/shots-vellum/

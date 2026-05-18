@@ -78,12 +78,35 @@
 
 ## 트랙 B (웹 시스템) — 위 ② 외 부수 항목
 
-- [ ] localStorage 자동저장 (감사 B6: IndexedDB 전환 검토)
+- [x] localStorage 자동저장 (debounce 1초, `web/hooks/useBookStore.ts`) — IndexedDB 전환은 Phase 2
 - [ ] Supabase 연결 (가입 후 클라우드 저장)
 - [ ] 다중 탭 잠금 (감사 B7: BroadcastChannel)
 - [ ] 모바일 PDF 미리보기 (감사 B8)
 - [ ] API 타임아웃 대응 (감사 B9)
 - [ ] template_version 필드 (감사 B10)
+
+## 트랙 B MVP v1 (2026-05-19 — Manus v5 HTML 초안 1:1 이식)
+
+- [x] `web/` Next.js 14 + TS strict + Tailwind 셋업
+- [x] v5 HTML CSS 변수 → Tailwind config
+- [x] BlockNote + dnd-kit 설치 (mantine 8 pin, React 18 호환)
+- [x] `types/book.ts` — BookMeta/BookOptions/ChapterBlock/InterludeBlock/BookData
+- [x] `hooks/useBookStore.ts` — localStorage 자동저장 + CRUD + 순서변경
+- [x] 공통 UI: Toggle (switch role), Badge, Toast
+- [x] BookSetupScreen (온보딩) — 브랜드 + 폼 + 판형 3종 + 책 유형 카드
+- [x] Header — 책 메타 + 진행 단계 + 자동저장 표시 + 전체 미리보기/PDF 버튼
+- [x] Sidebar — 옵션 토글 6 + 간지 스타일 핀 + 목차(dnd-kit 정렬) + 간지 추가
+- [x] ChapterForm — BlockNote(paragraph만, 툴바/슬래시메뉴 비활성), Ctrl+Enter 저장, 폼 초기화, 번호 자동증가, 텍스트-only 붙여넣기
+- [x] PreviewPanel — `previewContent` prop만 받는 독립 컴포넌트 (추후 Typst PDF 교체)
+- [x] FullPreviewOverlay — 모든 챕터 카드 나열, Escape 닫기
+- [x] StatusBar — 자동저장/챕터수/총자수/판형
+- [x] EditorLayout + `/editor` 라우트 — 컴포넌트 조립, 책 없으면 `/`로 리다이렉트
+- [x] 빌드 통과 (Next.js 14.2.35, type check pass)
+- [x] 스모크 골든 패스 (Playwright, 콘솔 에러 0)
+
+### TODO — 팀장(Manus) 확인 필요
+- BlockNote placeholder가 영어 ("Enter text or type '/' for commands") — 한국어로 바꿀지 결정
+- Phase 2: PDF 생성 버튼, "통으로 된 책" 모드, 챕터 클릭 시 에디터 포커스 이동, Supabase 연동
 
 ## 트랙 C (ISBN/POD) — 미래
 
