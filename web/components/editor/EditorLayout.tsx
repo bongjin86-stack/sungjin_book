@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChapterForm } from "@/components/editor/ChapterForm";
 import { Header } from "@/components/editor/Header";
-import { InlinePreview } from "@/components/editor/PreviewPanel";
+import { BookPreviewPanel } from "@/components/editor/PreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { useBookStore } from "@/hooks/useBookStore";
@@ -64,7 +64,7 @@ export function EditorLayout() {
           onAddInterlude={addInterlude}
         />
 
-        {/* 에디터 중앙 영역 — ChapterForm + 인라인 책 프레임 미리보기 */}
+        {/* 에디터 영역 — 좌측: ChapterForm (무한 스크롤) / 우측: 책 미리보기 패널 (고정) */}
         <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-11 pb-32 bg-bg">
           <ChapterForm
             key={chapterCount}
@@ -75,14 +75,13 @@ export function EditorLayout() {
             }}
             onChange={setPreviewContent}
           />
-
-          {/* 인라인 책 프레임 미리보기 — 판형 비율 정확 반영 */}
-          <InlinePreview
-            options={meta.options}
-            trim={meta.trim}
-            previewContent={previewContent}
-          />
         </div>
+
+        <BookPreviewPanel
+          options={meta.options}
+          trim={meta.trim}
+          previewContent={previewContent}
+        />
       </div>
 
       <StatusBar
