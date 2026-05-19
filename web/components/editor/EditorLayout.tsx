@@ -6,6 +6,7 @@ import { BlockEditor } from "@/components/editor/BlockEditor";
 import { ChapterForm, type ChapterFormMode } from "@/components/editor/ChapterForm";
 import { Header } from "@/components/editor/Header";
 import { BookPreviewPanel } from "@/components/editor/PreviewPanel";
+import { TypstPreviewPanel } from "@/components/editor/TypstPreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { useBookStore } from "@/hooks/useBookStore";
@@ -204,14 +205,14 @@ export function EditorLayout() {
             )}
           </div>
 
-          {/* 미리보기 영역 (50%) */}
+          {/* 미리보기 영역 (50%) — typst 엔진 실패 시 자동 폴백 */}
           <div className="flex-1 min-w-0 overflow-hidden flex">
-            <BookPreviewPanel
+            <PreviewSwitcher
+              bookData={bookData}
               options={meta.options}
               trim={meta.trim}
-              bookData={bookData}
               previewContent={previewContent}
-              resetPageKey={activeBlockId ?? "new"}
+              activeBlockId={activeBlockId}
             />
           </div>
         </div>
@@ -271,4 +272,56 @@ function getPreviewContent(block: BookBlock, bookData: BookData) {
 
 function formatChapterNum(n: number) {
   return `제${n}장`;
+}
+
+/**
+ * S3-6: 미리보기 엔진 스위처.
+ * NEXT_PUBLIC_PREVIEW_ENGINE=typst 이면 Typst 엔진 시도, 실패 시 react 폴백.
+ * 기본값은 react (안전한 옛 미리보기).
+ */
+function PreviewSwitcher({
+  bookData,
+  options,
+  trim,
+  previewContent,
+  activeBlockId,
+}: {
+  bookData: BookData;
+  options: BookData["meta"]["options"];
+  trim: BookData["meta"]["trim"];
+  previewContent: {
+    chapterNum: string;
+    title: string;
+    subtitle?: string;
+    body: string;
+    showChapterNumber?: boolean;
+  };
+  activeBlockId: string | null;
+}) {
+  const engine = process.env.NEXT_PUBLIC_PREVIEW_ENGINE === "typst" ? "typst" : "react";
+  const [fellBack, setFellBack] = useState(false);
+
+  const useTypst = engine === "typst" && !fellBack;
+
+  if (useTypst) {
+    return (
+      <TypstPreviewPanel
+        bookData={bookData}
+        onFallback={(err) => {
+          console.warn("[preview] typst 실패 → react 폴백", err);
+          setFellBack(true);
+        }}
+      />
+    );
+  }
+
+  return (
+    <BookPreviewPanel
+      options={options}
+      trim={trim}
+      bookData={bookData}
+      previewContent={previewContent}
+      resetPageKey={activeBlockId ?? "new"}
+    />
+  );
 }
