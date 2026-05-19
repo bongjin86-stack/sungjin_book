@@ -75,8 +75,6 @@ const LINE_HEIGHT: Record<BookOptions["lineSpacing"], string> = {
   wide: "2.0",
 };
 
-// 패널 220px - 좌우 패딩 22px×2 = 176px
-const FRAME_WIDTH = 176; // px — 모든 기기 프레임의 너비 고정
 
 export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
@@ -179,7 +177,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   );
 
   return (
-    <aside className="w-[220px] flex-shrink-0 bg-[#1C1C1E] border-l border-[#2A2A2A] flex flex-col overflow-hidden">
+    <aside className="w-full h-full bg-[#1C1C1E] border-l border-[#2A2A2A] flex flex-col overflow-hidden">
       {/* 상단 툴바 — 기기 라벨 */}
       <div className="h-10 px-3 flex items-center justify-between border-b border-[#2A2A2A] flex-shrink-0">
         <span className="text-[11px] text-[#BBB] font-medium">
@@ -190,18 +188,22 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
         </span>
       </div>
 
-      {/* 프레임 영역 */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-[22px] py-4">
+      {/* 프레임 영역 — 패널 너비의 65%를 프레임 너비로 사용 */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-6">
         {device === "print" ? (
-          <PrintFrame
-            ratio={ratio}
-            paddingInner={padding.inner}
-            innerBody={innerBody}
-            pnVisible={pnVisible && !isEmpty}
-            pnPositionStyle={pnPositionStyle}
-          />
+          <div className="w-[65%] min-w-[140px] max-w-[320px]">
+            <PrintFrame
+              ratio={ratio}
+              paddingInner={padding.inner}
+              innerBody={innerBody}
+              pnVisible={pnVisible && !isEmpty}
+              pnPositionStyle={pnPositionStyle}
+            />
+          </div>
         ) : (
-          <DeviceFrame device={device} ratio={ratio} innerBody={innerBody} />
+          <div className="w-[65%] min-w-[140px] max-w-[320px]">
+            <DeviceFrame device={device} ratio={ratio} innerBody={innerBody} />
+          </div>
         )}
       </div>
 
@@ -251,7 +253,7 @@ function PrintFrame({
   return (
     <div
       className="relative flex-shrink-0"
-      style={{ width: `${FRAME_WIDTH}px`, aspectRatio: `${ratio}` }}
+      style={{ width: "100%", aspectRatio: `${ratio}` }}
     >
       {/* 페이지 뒷장 두께 효과 */}
       <div
@@ -330,7 +332,7 @@ function DeviceFrame({
     <div
       className="relative flex-shrink-0"
       style={{
-        width: `${FRAME_WIDTH}px`,
+        width: "100%",
         aspectRatio: `${ratio}`,
         background: bezelColor,
         borderRadius: radius,

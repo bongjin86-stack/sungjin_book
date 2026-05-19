@@ -27,6 +27,8 @@ interface SidebarProps {
   blocks: BookBlock[];
   onReorder: (next: BookBlock[]) => void;
   onAddInterlude: () => void;
+  activeBlockId?: string | null;
+  onSelectBlock?: (id: string) => void;
 }
 
 export function Sidebar({
@@ -35,6 +37,8 @@ export function Sidebar({
   blocks,
   onReorder,
   onAddInterlude,
+  activeBlockId,
+  onSelectBlock,
 }: SidebarProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const [activeTab, setActiveTab] = useState<SidebarTab>("writing");
@@ -103,7 +107,12 @@ export function Sidebar({
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
                   {blocks.map((b) => (
-                    <SortableTocItem key={b.id} block={b} />
+                    <SortableTocItem
+                      key={b.id}
+                      block={b}
+                      isActive={activeBlockId === b.id}
+                      onSelect={() => onSelectBlock?.(b.id)}
+                    />
                   ))}
                 </SortableContext>
               </DndContext>
@@ -323,7 +332,15 @@ function ToggleRow({
   );
 }
 
-function SortableTocItem({ block }: { block: BookBlock }) {
+function SortableTocItem({
+  block,
+  isActive = false,
+  onSelect,
+}: {
+  block: BookBlock;
+  isActive?: boolean;
+  onSelect?: () => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   });
@@ -346,12 +363,16 @@ function SortableTocItem({ block }: { block: BookBlock }) {
     ? "bg-[#F59E0B]"
     : "bg-[#10B981]";
 
-  // TODO: Phase 2 — 목차 항목 클릭 시 해당 챕터로 에디터 포커스 이동
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-2 px-2 py-[7px] rounded-[7px] cursor-pointer transition-colors hover:bg-border mb-px"
+      onClick={onSelect}
+      className={`group flex items-center gap-2 px-2 py-[7px] rounded-[7px] cursor-pointer transition-colors mb-px ${
+        isActive
+          ? "bg-accent/10 ring-1 ring-accent/30"
+          : "hover:bg-border"
+      }`}
     >
       <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${dotColor}`} />
       <div className="flex-1 min-w-0">
