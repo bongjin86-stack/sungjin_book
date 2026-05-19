@@ -48,3 +48,4 @@ docs/.pdca-status.json
 tools/playwright/shots/
 tools/playwright/shots-editor/
 tools/playwright/shots-vellum/
+tools/playwright/shots-typst/
