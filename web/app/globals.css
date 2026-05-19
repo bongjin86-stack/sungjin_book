@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 디자인 토큰 — D-021 + Vellum 디자인 분석. 자세한 의미는 web/styles/tokens.ts */
+:root {
+  --accent: #2a3a5a;
+  --bg-page: #f4f4f3;
+  --bg-pane-left: #f7f6f4;
+  --bg-pane-center: #ffffff;
+  --bg-pane-right: #e8e6e3;
+  --text-body: #222;
+  --text-muted: #777;
+  --text-on-accent: #ffffff;
+}
+
 *,
 *::before,
 *::after {
