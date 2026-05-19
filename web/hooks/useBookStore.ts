@@ -7,14 +7,71 @@ import type {
   BookMeta,
   ChapterBlock,
   InterludeBlock,
+  MatterBlock,
 } from "@/types/book";
-import { DEFAULT_OPTIONS } from "@/types/book";
+import { BLOCK_META, DEFAULT_OPTIONS } from "@/types/book";
 
 const STORAGE_KEY = "sungjin-book/v1";
 const SAVE_DEBOUNCE_MS = 1000;
 
 function newId() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+function createSystemMatterBlock(type: MatterBlock["type"]): MatterBlock {
+  return {
+    id: newId(),
+    type,
+    title: BLOCK_META[type].defaultTitle,
+    isSystem: true,
+  };
+}
+
+function normalizeBlock(block: BookBlock): BookBlock {
+  if (block.type !== "chapter") return block;
+  return {
+    ...block,
+    subtitle: block.subtitle ?? "",
+    includeInToc: block.includeInToc ?? true,
+    tocTitle: block.tocTitle ?? "",
+    showChapterNumber: block.showChapterNumber ?? true,
+    charCount: block.body.length,
+  };
+}
+
+function normalizeBookData(book: BookData): BookData {
+  const normalizedBlocks = book.blocks.map(normalizeBlock);
+  const hasType = (type: MatterBlock["type"]) => normalizedBlocks.some((b) => b.type === type);
+  const firstBodyIndex = normalizedBlocks.findIndex(
+    (b) => b.type === "chapter" || b.type === "interlude",
+  );
+  const frontInsertIndex = firstBodyIndex >= 0 ? firstBodyIndex : normalizedBlocks.length;
+  const frontBlocks: BookBlock[] = [];
+
+  if (!hasType("half-title")) frontBlocks.push(createSystemMatterBlock("half-title"));
+  if (!hasType("copyright")) frontBlocks.push(createSystemMatterBlock("copyright"));
+  if (!hasType("toc")) frontBlocks.push(createSystemMatterBlock("toc"));
+
+  const withFront =
+    frontBlocks.length > 0
+      ? [
+          ...normalizedBlocks.slice(0, frontInsertIndex),
+          ...frontBlocks,
+          ...normalizedBlocks.slice(frontInsertIndex),
+        ]
+      : normalizedBlocks;
+
+  const hasAuthorBio = withFront.some((b) => b.type === "author-bio");
+  const blocks = hasAuthorBio ? withFront : [...withFront, createSystemMatterBlock("author-bio")];
+
+  return {
+    ...book,
+    meta: {
+      ...book.meta,
+      options: { ...DEFAULT_OPTIONS, ...(book.meta.options ?? {}) },
+    },
+    blocks,
+  };
 }
 
 function readStorage(): BookData | null {
@@ -24,8 +81,7 @@ function readStorage(): BookData | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as BookData;
     if (!parsed.meta) return null;
-    parsed.meta.options = { ...DEFAULT_OPTIONS, ...(parsed.meta.options ?? {}) };
-    return parsed;
+    return normalizeBookData(parsed);
   } catch {
     return null;
   }
@@ -88,13 +144,34 @@ export function useBookStore() {
   );
 
   const addChapter = useCallback(
-    (input: Omit<ChapterBlock, "id" | "createdAt" | "type">) => {
+    (
+      input: Omit<
+        ChapterBlock,
+        | "id"
+        | "createdAt"
+        | "type"
+        | "subtitle"
+        | "includeInToc"
+        | "tocTitle"
+        | "showChapterNumber"
+      > &
+        Partial<
+          Pick<
+            ChapterBlock,
+            "subtitle" | "includeInToc" | "tocTitle" | "showChapterNumber"
+          >
+        >,
+    ) => {
       setBookData((prev) => {
         if (!prev) return prev;
         const block: ChapterBlock = {
           id: newId(),
           type: "chapter",
           createdAt: Date.now(),
+          subtitle: "",
+          includeInToc: true,
+          tocTitle: "",
+          showChapterNumber: true,
           ...input,
         };
         return {
@@ -138,7 +215,15 @@ export function useBookStore() {
   const updateChapter = useCallback(
     (
       id: string,
-      patch: { chapterNum?: string; title?: string; body?: string },
+      patch: {
+        chapterNum?: string;
+        title?: string;
+        subtitle?: string;
+        body?: string;
+        includeInToc?: boolean;
+        tocTitle?: string;
+        showChapterNumber?: boolean;
+      },
     ) => {
       setBookData((prev) => {
         if (!prev) return prev;
@@ -151,7 +236,11 @@ export function useBookStore() {
               ...b,
               chapterNum: patch.chapterNum ?? b.chapterNum,
               title: patch.title ?? b.title,
+              subtitle: patch.subtitle ?? b.subtitle ?? "",
               body,
+              includeInToc: patch.includeInToc ?? b.includeInToc ?? true,
+              tocTitle: patch.tocTitle ?? b.tocTitle ?? "",
+              showChapterNumber: patch.showChapterNumber ?? b.showChapterNumber ?? true,
               charCount: body.length,
             };
           }),

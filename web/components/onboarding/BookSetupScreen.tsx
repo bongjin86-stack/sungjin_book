@@ -19,6 +19,7 @@ import {
 // ─── 온보딩 구성 요소 정의 ────────────────────────────────────────────────────
 const FRONT_MATTER_OPTIONS: { type: BlockType; label: string; desc: string; defaultChecked: boolean }[] = [
   { type: "half-title",  label: "속표지",       desc: "본문 앞 제목 페이지",  defaultChecked: true  },
+  { type: "copyright",   label: "판권지",       desc: "저작권·발행 정보",     defaultChecked: true  },
   { type: "toc",         label: "목차",         desc: "챕터 목록 자동 생성",  defaultChecked: true  },
   { type: "preface",     label: "서문 / 머리말", desc: "저자의 글",           defaultChecked: false },
   { type: "dedication",  label: "헌정사",       desc: "누군가에게 바치는 글", defaultChecked: false },
@@ -84,13 +85,30 @@ export function BookSetupScreen() {
 
   function handleFinish() {
     const blocks: BookBlock[] = [];
-    const frontOrder: BlockType[] = ["half-title", "toc", "preface", "dedication", "prologue", "blurb"];
+    const frontOrder: BlockType[] = ["half-title", "copyright", "toc", "preface", "dedication", "prologue", "blurb"];
     for (const type of frontOrder) {
       if (selectedFront.includes(type)) {
-        blocks.push({ id: newId(), type: type as MatterBlock["type"], title: BLOCK_META[type].defaultTitle });
+        blocks.push({
+          id: newId(),
+          type: type as MatterBlock["type"],
+          title: BLOCK_META[type].defaultTitle,
+          isSystem: type === "half-title" || type === "copyright" || type === "toc",
+        });
       }
     }
-    blocks.push({ id: newId(), type: "chapter", chapterNum: "제1장", title: "", body: "", charCount: 0, createdAt: Date.now() });
+    blocks.push({
+      id: newId(),
+      type: "chapter",
+      chapterNum: "제1장",
+      title: "",
+      subtitle: "",
+      body: "",
+      charCount: 0,
+      includeInToc: true,
+      tocTitle: "",
+      showChapterNumber: true,
+      createdAt: Date.now(),
+    });
     const backOrder: BlockType[] = ["epilogue", "acknowledgments", "author-bio", "bibliography"];
     for (const type of backOrder) {
       if (selectedBack.includes(type)) {

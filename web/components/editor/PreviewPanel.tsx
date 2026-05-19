@@ -22,7 +22,9 @@ interface BookPreviewPanelProps {
   previewContent: {
     chapterNum: string;
     title: string;
+    subtitle?: string;
     body: string;
+    showChapterNumber?: boolean;
   };
   /** 챕터 전환 식별자 — 바뀌면 currentPage가 0으로 리셋 */
   resetPageKey?: string | null;
@@ -56,7 +58,7 @@ export function BookPreviewPanel({
   const [currentPage, setCurrentPage] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { chapterNum, title, body } = previewContent;
+  const { chapterNum, title, subtitle = "", body } = previewContent;
   const isEmpty = !title.trim() && !body.trim();
   const paragraphs = body.split(/\n+/).filter((p) => p.trim().length > 0);
 
@@ -66,7 +68,9 @@ export function BookPreviewPanel({
     paragraphs,
     linesPerPage: layout.linesPerPage,
     charsPerLine: layout.charsPerLine,
-    chapterHeaderLines: estimateChapterHeaderLines(options.showChapterNumber),
+    chapterHeaderLines: estimateChapterHeaderLines(
+      previewContent.showChapterNumber ?? options.showChapterNumber,
+    ),
   });
 
   // 챕터 전환 시 0으로 리셋
@@ -159,7 +163,8 @@ export function BookPreviewPanel({
             renderEmptyMessage={isEmpty}
             chapterNum={chapterNum}
             title={title}
-            showChapterNumber={options.showChapterNumber}
+            subtitle={subtitle}
+            showChapterNumber={previewContent.showChapterNumber ?? options.showChapterNumber}
             dropCaps={options.dropCaps}
             paragraphIndent={options.paragraphIndent}
             paragraphTexts={visibleParagraphIdx.map((i) => paragraphs[i])}
@@ -253,6 +258,7 @@ interface BookFrameProps {
   renderEmptyMessage: boolean;
   chapterNum: string;
   title: string;
+  subtitle?: string;
   showChapterNumber: boolean;
   dropCaps: boolean;
   paragraphIndent: boolean;
@@ -277,6 +283,7 @@ function BookFrame(props: BookFrameProps) {
     renderEmptyMessage,
     chapterNum,
     title,
+    subtitle = "",
     showChapterNumber,
     dropCaps,
     paragraphIndent,
@@ -419,6 +426,20 @@ function BookFrame(props: BookFrameProps) {
                       >
                         {title || "(제목 없음)"}
                       </div>
+                      {subtitle && (
+                        <div
+                          className="text-center"
+                          style={{
+                            fontFamily: "sans-serif",
+                            fontSize: `${fontSizePx * 0.82}px`,
+                            color: "#555",
+                            marginTop: `${fontSizePx * -0.35}px`,
+                            marginBottom: `${fontSizePx * 0.8}px`,
+                          }}
+                        >
+                          {subtitle}
+                        </div>
+                      )}
                     </>
                   )}
                   <div style={{ textAlign: "justify" }}>

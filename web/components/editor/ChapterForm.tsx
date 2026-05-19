@@ -13,7 +13,15 @@ export type ChapterFormMode =
   | {
       kind: "edit";
       blockId: string;
-      initial: { chapterNum: string; title: string; body: string };
+      initial: {
+        chapterNum: string;
+        title: string;
+        subtitle?: string;
+        body: string;
+        includeInToc?: boolean;
+        tocTitle?: string;
+        showChapterNumber?: boolean;
+      };
     };
 
 interface ChapterFormProps {
@@ -21,14 +29,35 @@ interface ChapterFormProps {
   onSaveNew: (data: {
     chapterNum: string;
     title: string;
+    subtitle: string;
     body: string;
     charCount: number;
+    includeInToc: boolean;
+    tocTitle: string;
+    showChapterNumber: boolean;
   }) => void;
   onSaveEdit: (
     blockId: string,
-    patch: { chapterNum: string; title: string; body: string; charCount: number },
+    patch: {
+      chapterNum: string;
+      title: string;
+      subtitle: string;
+      body: string;
+      charCount: number;
+      includeInToc: boolean;
+      tocTitle: string;
+      showChapterNumber: boolean;
+    },
   ) => void;
-  onChange?: (data: { chapterNum: string; title: string; body: string }) => void;
+  onChange?: (data: {
+    chapterNum: string;
+    title: string;
+    subtitle?: string;
+    body: string;
+    includeInToc?: boolean;
+    tocTitle?: string;
+    showChapterNumber?: boolean;
+  }) => void;
 }
 
 function blocksToPlainText(blocks: Block[]): string {
@@ -57,12 +86,21 @@ function plainToBlocks(text: string): PartialBlock[] {
 export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFormProps) {
   const initialChapterNum = mode.kind === "new" ? mode.nextChapterNum : mode.initial.chapterNum;
   const initialTitle = mode.kind === "edit" ? mode.initial.title : "";
+  const initialSubtitle = mode.kind === "edit" ? mode.initial.subtitle ?? "" : "";
   const initialBody = mode.kind === "edit" ? mode.initial.body : "";
+  const initialIncludeInToc = mode.kind === "edit" ? mode.initial.includeInToc ?? true : true;
+  const initialTocTitle = mode.kind === "edit" ? mode.initial.tocTitle ?? "" : "";
+  const initialShowChapterNumber =
+    mode.kind === "edit" ? mode.initial.showChapterNumber ?? true : true;
 
   const [chapterNum, setChapterNum] = useState(initialChapterNum);
   const [title, setTitle] = useState(initialTitle);
+  const [subtitle, setSubtitle] = useState(initialSubtitle);
   const [body, setBody] = useState(initialBody);
   const [charCount, setCharCount] = useState(initialBody.length);
+  const [includeInToc, setIncludeInToc] = useState(initialIncludeInToc);
+  const [tocTitle, setTocTitle] = useState(initialTocTitle);
+  const [showChapterNumber, setShowChapterNumber] = useState(initialShowChapterNumber);
   const [showSaved, setShowSaved] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -76,9 +114,21 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
   useEffect(() => {
     setChapterNum(initialChapterNum);
     setTitle(initialTitle);
+    setSubtitle(initialSubtitle);
     setBody(initialBody);
     setCharCount(initialBody.length);
-  }, [initialChapterNum, initialTitle, initialBody]);
+    setIncludeInToc(initialIncludeInToc);
+    setTocTitle(initialTocTitle);
+    setShowChapterNumber(initialShowChapterNumber);
+  }, [
+    initialChapterNum,
+    initialTitle,
+    initialSubtitle,
+    initialBody,
+    initialIncludeInToc,
+    initialTocTitle,
+    initialShowChapterNumber,
+  ]);
 
   // 붙여넣기 plaintext만 허용
   useEffect(() => {
@@ -104,7 +154,15 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
     const plain = blocksToPlainText(editor.document);
     setBody(plain);
     setCharCount(plain.length);
-    onChange?.({ chapterNum, title, body: plain });
+    onChange?.({
+      chapterNum,
+      title,
+      subtitle,
+      body: plain,
+      includeInToc,
+      tocTitle,
+      showChapterNumber,
+    });
   }
 
   function handleSave() {
@@ -112,8 +170,12 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
     const payload = {
       chapterNum: chapterNum.trim() || "1장",
       title: title.trim() || "(제목 없음)",
+      subtitle: subtitle.trim(),
       body: body.trim(),
       charCount,
+      includeInToc,
+      tocTitle: tocTitle.trim(),
+      showChapterNumber,
     };
 
     if (mode.kind === "new") {
@@ -144,7 +206,7 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, body, charCount, chapterNum, mode]);
+  }, [title, subtitle, body, charCount, chapterNum, includeInToc, tocTitle, showChapterNumber, mode]);
 
   const isEdit = mode.kind === "edit";
 
@@ -164,7 +226,15 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
             value={chapterNum}
             onChange={(e) => {
               setChapterNum(e.target.value);
-              onChange?.({ chapterNum: e.target.value, title, body });
+              onChange?.({
+                chapterNum: e.target.value,
+                title,
+                subtitle,
+                body,
+                includeInToc,
+                tocTitle,
+                showChapterNumber,
+              });
             }}
             className="border-none bg-transparent text-[13px] font-semibold text-text-secondary outline-none w-20 focus:text-accent"
           />
@@ -178,11 +248,97 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
           value={title}
           onChange={(e) => {
             setTitle(e.target.value);
-            onChange?.({ chapterNum, title: e.target.value, body });
+            onChange?.({
+              chapterNum,
+              title: e.target.value,
+              subtitle,
+              body,
+              includeInToc,
+              tocTitle,
+              showChapterNumber,
+            });
           }}
           placeholder="챕터 제목을 입력하세요"
           className="w-full border-none outline-none text-[24px] font-bold text-text-primary bg-transparent leading-[1.3] placeholder:text-[#D4D0C8] placeholder:font-normal"
         />
+        <input
+          type="text"
+          value={subtitle}
+          onChange={(e) => {
+            setSubtitle(e.target.value);
+            onChange?.({
+              chapterNum,
+              title,
+              subtitle: e.target.value,
+              body,
+              includeInToc,
+              tocTitle,
+              showChapterNumber,
+            });
+          }}
+          placeholder="부제목 또는 소제목 (선택)"
+          className="mt-2 w-full border-none outline-none text-[14px] font-medium text-text-secondary bg-transparent leading-[1.5] placeholder:text-[#D4D0C8] placeholder:font-normal"
+        />
+        <div className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[12px] text-text-secondary">
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={includeInToc}
+              onChange={(e) => {
+                setIncludeInToc(e.target.checked);
+                onChange?.({
+                  chapterNum,
+                  title,
+                  subtitle,
+                  body,
+                  includeInToc: e.target.checked,
+                  tocTitle,
+                  showChapterNumber,
+                });
+              }}
+              className="w-4 h-4 accent-accent"
+            />
+            목차에 표시
+          </label>
+          <input
+            type="text"
+            value={tocTitle}
+            onChange={(e) => {
+              setTocTitle(e.target.value);
+              onChange?.({
+                chapterNum,
+                title,
+                subtitle,
+                body,
+                includeInToc,
+                tocTitle: e.target.value,
+                showChapterNumber,
+              });
+            }}
+            placeholder="목차에 다르게 보일 이름 (선택)"
+            className="min-w-0 rounded-[7px] border border-border bg-bg px-3 py-[6px] outline-none focus:border-accent focus:bg-white"
+          />
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showChapterNumber}
+              onChange={(e) => {
+                setShowChapterNumber(e.target.checked);
+                onChange?.({
+                  chapterNum,
+                  title,
+                  subtitle,
+                  body,
+                  includeInToc,
+                  tocTitle,
+                  showChapterNumber: e.target.checked,
+                });
+              }}
+              className="w-4 h-4 accent-accent"
+            />
+            챕터 번호 표시
+          </label>
+        </div>
         <div className="h-px bg-border mt-4" />
       </div>
 

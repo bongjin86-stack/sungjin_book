@@ -53,6 +53,7 @@ export type BlockType =
   | "interlude"
   // Front Matter (앞부분)
   | "half-title"    // 속표지
+  | "copyright"     // 판권지
   | "toc"           // 목차
   | "preface"       // 서문/머리말
   | "dedication"    // 헌정사
@@ -69,8 +70,12 @@ export interface ChapterBlock {
   type: "chapter";
   chapterNum: string;
   title: string;
+  subtitle?: string;
   body: string;
   charCount: number;
+  includeInToc: boolean;
+  tocTitle?: string;
+  showChapterNumber?: boolean;
   createdAt: number;
 }
 
@@ -87,6 +92,7 @@ export interface MatterBlock {
   type: Exclude<BlockType, "chapter" | "interlude">;
   title?: string;
   body?: string;
+  isSystem?: boolean;
 }
 
 export type BookBlock = ChapterBlock | InterludeBlock | MatterBlock;
@@ -99,6 +105,7 @@ export const BLOCK_META: Record<
   "chapter":        { label: "챕터",     section: "body",  defaultTitle: "제1장" },
   "interlude":      { label: "간지",     section: "body",  defaultTitle: "간지" },
   "half-title":     { label: "속표지",   section: "front", defaultTitle: "속표지" },
+  "copyright":      { label: "판권지",   section: "front", defaultTitle: "판권지" },
   "toc":            { label: "목차",     section: "front", defaultTitle: "목차" },
   "preface":        { label: "서문",     section: "front", defaultTitle: "서문" },
   "dedication":     { label: "헌정사",   section: "front", defaultTitle: "헌정사" },

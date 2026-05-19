@@ -43,6 +43,20 @@ export function Sidebar({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const [activeTab, setActiveTab] = useState<SidebarTab>("writing");
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const groupedBlocks = [
+    {
+      title: "앞부분",
+      blocks: blocks.filter((b) => b.type !== "chapter" && b.type !== "interlude" && BLOCK_META[b.type].section === "front"),
+    },
+    {
+      title: "본문",
+      blocks: blocks.filter((b) => b.type === "chapter" || b.type === "interlude"),
+    },
+    {
+      title: "뒷부분",
+      blocks: blocks.filter((b) => b.type !== "chapter" && b.type !== "interlude" && BLOCK_META[b.type].section === "back"),
+    },
+  ];
 
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
@@ -106,14 +120,23 @@ export function Sidebar({
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-                  {blocks.map((b) => (
-                    <SortableTocItem
-                      key={b.id}
-                      block={b}
-                      isActive={activeBlockId === b.id}
-                      onSelect={() => onSelectBlock?.(b.id)}
-                    />
-                  ))}
+                  {groupedBlocks.map((section) =>
+                    section.blocks.length > 0 ? (
+                      <div key={section.title} className="mb-3">
+                        <div className="px-2 pb-1 text-[10px] font-bold text-text-muted uppercase tracking-[0.7px]">
+                          {section.title}
+                        </div>
+                        {section.blocks.map((b) => (
+                          <SortableTocItem
+                            key={b.id}
+                            block={b}
+                            isActive={activeBlockId === b.id}
+                            onSelect={() => onSelectBlock?.(b.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : null,
+                  )}
                 </SortableContext>
               </DndContext>
             )}

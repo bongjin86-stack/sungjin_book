@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BlockEditor } from "@/components/editor/BlockEditor";
 import { ChapterForm, type ChapterFormMode } from "@/components/editor/ChapterForm";
 import { Header } from "@/components/editor/Header";
 import { BookPreviewPanel } from "@/components/editor/PreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { useBookStore } from "@/hooks/useBookStore";
+import type { BookBlock, BookData, ChapterBlock } from "@/types/book";
 
 export function EditorLayout() {
   const router = useRouter();
@@ -15,9 +17,11 @@ export function EditorLayout() {
     bookData,
     hydrated,
     isSaved,
+    updateMeta,
     updateOptions,
     addChapter,
     addInterlude,
+    updateBlock,
     updateChapter,
     reorderBlocks,
     totalChars,
@@ -26,11 +30,14 @@ export function EditorLayout() {
 
   // 현재 편집 중인 블록 ID (null = 새 챕터 작성 모드)
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+  const didSelectInitialBlock = useRef(false);
 
   const [previewContent, setPreviewContent] = useState({
     chapterNum: "1장",
     title: "",
+    subtitle: "",
     body: "",
+    showChapterNumber: true,
   });
 
   // 책 데이터 없으면 온보딩으로
@@ -51,6 +58,13 @@ export function EditorLayout() {
     if (!exists) setActiveBlockId(null);
   }, [bookData, activeBlockId]);
 
+  useEffect(() => {
+    if (!bookData || didSelectInitialBlock.current || bookData.blocks.length === 0) return;
+    didSelectInitialBlock.current = true;
+    setActiveBlockId(bookData.blocks[0].id);
+    setPreviewContent(getPreviewContent(bookData.blocks[0], bookData));
+  }, [bookData]);
+
   if (!hydrated || !bookData) {
     return (
       <div className="h-screen flex items-center justify-center text-text-muted">
@@ -65,13 +79,27 @@ export function EditorLayout() {
 
   // 사이드바에서 블록 클릭 시 — 챕터면 편집 모드 진입, 미리보기에 내용 반영
   function handleSelectBlock(id: string) {
+    if (!bookData) return;
     setActiveBlockId(id);
     const block = blocks.find((b) => b.id === id);
     if (!block) return;
-    const chapterNum = block.type === "chapter" ? (block.chapterNum ?? "") : "";
-    const title = (block as { title?: string }).title ?? "";
-    const body = (block as { body?: string }).body ?? "";
-    setPreviewContent({ chapterNum, title, body });
+    setPreviewContent(getPreviewContent(block, bookData));
+  }
+
+  function handlePreviewChange(data: {
+    chapterNum: string;
+    title: string;
+    subtitle?: string;
+    body: string;
+    showChapterNumber?: boolean;
+  }) {
+    setPreviewContent({
+      chapterNum: data.chapterNum,
+      title: data.title,
+      subtitle: data.subtitle ?? "",
+      body: data.body,
+      showChapterNumber: data.showChapterNumber ?? true,
+    });
   }
 
   // ChapterForm mode 결정 — 챕터 블록이 활성화돼 있으면 edit, 아니면 new
@@ -82,7 +110,12 @@ export function EditorLayout() {
         initial: {
           chapterNum: activeBlock!.type === "chapter" ? activeBlock!.chapterNum : "",
           title: activeBlock!.type === "chapter" ? activeBlock!.title : "",
+          subtitle: activeBlock!.type === "chapter" ? activeBlock!.subtitle : "",
           body: activeBlock!.type === "chapter" ? activeBlock!.body : "",
+          includeInToc: activeBlock!.type === "chapter" ? activeBlock!.includeInToc : true,
+          tocTitle: activeBlock!.type === "chapter" ? activeBlock!.tocTitle : "",
+          showChapterNumber:
+            activeBlock!.type === "chapter" ? activeBlock!.showChapterNumber : true,
         },
       }
     : { kind: "new", nextChapterNum };
@@ -119,7 +152,13 @@ export function EditorLayout() {
                   type="button"
                   onClick={() => {
                     setActiveBlockId(null);
-                    setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
+                    setPreviewContent({
+                      chapterNum: nextChapterNum,
+                      title: "",
+                      subtitle: "",
+                      body: "",
+                      showChapterNumber: true,
+                    });
                   }}
                   className="text-[12px] text-text-muted hover:text-accent transition-colors"
                 >
@@ -128,24 +167,43 @@ export function EditorLayout() {
               </div>
             )}
 
-            <ChapterForm
-              key={activeBlockId ?? `new-${chapterCount}`}
-              mode={formMode}
-              onSaveNew={(data) => {
-                addChapter(data);
-                setActiveBlockId(null);
-                setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
-              }}
-              onSaveEdit={(blockId, patch) => {
-                updateChapter(blockId, patch);
-                setPreviewContent({
-                  chapterNum: patch.chapterNum,
-                  title: patch.title,
-                  body: patch.body,
-                });
-              }}
-              onChange={setPreviewContent}
-            />
+            {activeIsChapter || !activeBlock ? (
+              <ChapterForm
+                key={activeBlockId ?? `new-${chapterCount}`}
+                mode={formMode}
+                onSaveNew={(data) => {
+                  addChapter(data);
+                  setActiveBlockId(null);
+                  setPreviewContent({
+                    chapterNum: nextChapterNum,
+                    title: "",
+                    subtitle: "",
+                    body: "",
+                    showChapterNumber: true,
+                  });
+                }}
+                onSaveEdit={(blockId, patch) => {
+                  updateChapter(blockId, patch);
+                  setPreviewContent({
+                    chapterNum: patch.chapterNum,
+                    title: patch.title,
+                    subtitle: patch.subtitle,
+                    body: patch.body,
+                    showChapterNumber: patch.showChapterNumber,
+                  });
+                }}
+                onChange={handlePreviewChange}
+              />
+            ) : (
+              <BlockEditor
+                block={activeBlock}
+                bookData={bookData}
+                onUpdateMeta={updateMeta}
+                onUpdateBlock={updateBlock}
+                onUpdateChapter={updateChapter}
+                onPreviewChange={handlePreviewChange}
+              />
+            )}
           </div>
 
           {/* 미리보기 영역 (50%) */}
@@ -168,4 +226,46 @@ export function EditorLayout() {
       />
     </div>
   );
+}
+
+function getPreviewContent(block: BookBlock, bookData: BookData) {
+  if (block.type === "chapter") {
+    return {
+      chapterNum: block.chapterNum,
+      title: block.title,
+      subtitle: block.subtitle ?? "",
+      body: block.body,
+      showChapterNumber: block.showChapterNumber ?? true,
+    };
+  }
+
+  if (block.type === "half-title") {
+    return {
+      chapterNum: "",
+      title: bookData.meta.title,
+      subtitle: bookData.meta.subtitle ?? bookData.meta.author,
+      body: bookData.meta.publisher ?? "",
+      showChapterNumber: false,
+    };
+  }
+
+  if (block.type === "toc") {
+    const body = bookData.blocks
+      .filter((b): b is ChapterBlock => b.type === "chapter")
+      .filter((chapter) => chapter.includeInToc)
+      .map((chapter) => {
+        const label = chapter.tocTitle?.trim() || chapter.title.trim() || "(제목 없음)";
+        return `${chapter.chapterNum}  ${label}`;
+      })
+      .join("\n\n");
+    return { chapterNum: "", title: "목차", subtitle: "", body, showChapterNumber: false };
+  }
+
+  return {
+    chapterNum: "",
+    title: (block as { title?: string }).title ?? "책 구성",
+    subtitle: "",
+    body: (block as { body?: string }).body ?? "",
+    showChapterNumber: false,
+  };
 }
