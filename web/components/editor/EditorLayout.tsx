@@ -84,6 +84,7 @@ export function EditorLayout() {
           <PreviewPanel
             open={meta.options.showPreviewPanel}
             onClose={() => updateOptions({ showPreviewPanel: false })}
+            options={meta.options}
             previewContent={previewContent}
           />
         </div>

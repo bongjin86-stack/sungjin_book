@@ -79,8 +79,10 @@ export function useBookStore() {
   }, []);
 
   const updateOptions = useCallback(
-    (options: Partial<BookMeta["options"]>) => {
-      updateMeta({ options: { ...DEFAULT_OPTIONS, ...options } as BookMeta["options"] });
+    (patch: Partial<BookMeta["options"]>) => {
+      // updateMeta가 내부에서 prev.meta.options와 머지하므로 patch만 그대로 넘긴다.
+      // (이전 구현은 DEFAULT_OPTIONS로 prev 값을 덮어쓰는 버그가 있었음)
+      updateMeta({ options: patch as BookMeta["options"] });
     },
     [updateMeta]
   );

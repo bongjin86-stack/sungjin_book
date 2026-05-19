@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -34,6 +35,7 @@ export function Sidebar({
   onAddInterlude,
 }: SidebarProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
@@ -49,7 +51,7 @@ export function Sidebar({
   return (
     <aside className="w-[260px] bg-sidebar-bg border-r border-border flex flex-col flex-shrink-0 overflow-hidden">
       {/* Options */}
-      <div className="px-3 pt-3 pb-[10px] border-b border-border flex-shrink-0">
+      <div className="px-3 pt-3 pb-[10px] border-b border-border flex-shrink-0 overflow-y-auto max-h-[55vh]">
         <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mb-2">
           옵션
         </div>
@@ -78,28 +80,84 @@ export function Sidebar({
           checked={options.includeISBN}
           onChange={(v) => onChangeOptions({ includeISBN: v })}
         />
-        <div className="flex items-center justify-between py-1">
-          <span className="text-[12px] text-text-secondary">간지 스타일</span>
-          <div className="flex gap-1">
-            {(["1p", "2p"] as const).map((s) => {
-              const active = options.interludeStyle === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => onChangeOptions({ interludeStyle: s })}
-                  className={`px-[9px] py-[3px] rounded-[20px] text-[11px] font-medium border-[1.5px] transition-all ${
-                    active
-                      ? "border-purple bg-purple-light text-purple"
-                      : "border-border bg-transparent text-text-muted"
-                  }`}
-                >
-                  {s}
-                </button>
-              );
-            })}
+        <PillGroup
+          label="간지 스타일"
+          value={options.interludeStyle}
+          options={[
+            { value: "1p", label: "1p" },
+            { value: "2p", label: "2p" },
+          ]}
+          onChange={(v) => onChangeOptions({ interludeStyle: v })}
+        />
+
+        {/* 고급 설정 아코디언 */}
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen((p) => !p)}
+          className="w-full mt-3 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] py-1 hover:text-text-secondary transition-colors"
+        >
+          <span>조판 · 고급</span>
+          <span className="text-[10px]">{advancedOpen ? "▾" : "▸"}</span>
+        </button>
+
+        {advancedOpen && (
+          <div className="pt-1">
+            <PillGroup
+              label="본문 폰트"
+              value={options.bodyFont}
+              options={[
+                { value: "serif", label: "바탕" },
+                { value: "sans", label: "돋움" },
+              ]}
+              onChange={(v) => onChangeOptions({ bodyFont: v })}
+            />
+            <PillGroup
+              label="본문 크기"
+              value={options.bodyFontSize}
+              options={[
+                { value: "9pt", label: "9" },
+                { value: "10pt", label: "10" },
+                { value: "11pt", label: "11" },
+              ]}
+              onChange={(v) => onChangeOptions({ bodyFontSize: v })}
+            />
+            <PillGroup
+              label="줄간격"
+              value={options.lineSpacing}
+              options={[
+                { value: "narrow", label: "좁게" },
+                { value: "normal", label: "보통" },
+                { value: "wide", label: "넓게" },
+              ]}
+              onChange={(v) => onChangeOptions({ lineSpacing: v })}
+            />
+            <ToggleRow
+              label="단락 들여쓰기"
+              checked={options.paragraphIndent}
+              onChange={(v) => onChangeOptions({ paragraphIndent: v })}
+            />
+            <ToggleRow
+              label="쪽번호 표시"
+              checked={options.showPageNumber}
+              onChange={(v) => onChangeOptions({ showPageNumber: v })}
+            />
+            <PillGroup
+              label="쪽번호 위치"
+              value={options.pageNumberPosition}
+              options={[
+                { value: "bottom-outside", label: "밖↓" },
+                { value: "bottom-center", label: "중↓" },
+                { value: "top-outside", label: "밖↑" },
+              ]}
+              onChange={(v) => onChangeOptions({ pageNumberPosition: v })}
+            />
+            <ToggleRow
+              label="챕터 시작 쪽번호 숨김"
+              checked={options.hideChapterStartPageNumber}
+              onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v })}
+            />
           </div>
-        </div>
+        )}
       </div>
 
       {/* TOC */}
@@ -143,6 +201,43 @@ export function Sidebar({
         </div>
       </div>
     </aside>
+  );
+}
+
+function PillGroup<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1 gap-2">
+      <span className="text-[12px] text-text-secondary flex-shrink-0">{label}</span>
+      <div className="flex gap-1 flex-wrap justify-end">
+        {options.map((opt) => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={`px-[9px] py-[3px] rounded-[20px] text-[11px] font-medium border-[1.5px] transition-all ${
+                active
+                  ? "border-purple bg-purple-light text-purple"
+                  : "border-border bg-transparent text-text-muted"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
