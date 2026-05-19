@@ -1,8 +1,8 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-20 KST (Sprint 1 완료, Sprint 2 진입)
-> 단계: **Typst 단일 엔진 전환** — 인디자인 대비 한국어 단행본 조판 정밀화
-> 작업 브랜치: `refactor/typst-ts-preview`
+> 마지막 업데이트: 2026-05-20 KST (Sprint 1·2·3·4 핵심 통과, Sprint 5 진입)
+> 단계: **Typst 단일 엔진 전환 핵심 완료** — 작가 첫 PDF 다운로드까지 한 흐름
+> 작업 브랜치: `refactor/typst-ts-preview` (12커밋 ahead)
 
 ## 한 줄 정체성
 
@@ -80,23 +80,45 @@
 
 **완료 기준**: 베타 출시. "이거 인디자인으로 한 거 아니야?" 반응이 베타 사용자 절반 이상에서 나옴.
 
-## D1~D7 회고 (2026-05-19~20 완료)
+## D1~D14 회고 (2026-05-19~20, 12커밋)
 
-- **D1~D5 통과**. D6(컴파일 시간 측정)은 자연 측정됨: 첫 로딩 ~1s(폰트+WASM 받는 시간 제외), 캐시 후 14~21ms. **디바운스 기준 = 100ms로 충분.**
-- D5(SVG ↔ 서버 PDF 비교)는 서버 PDF 자체가 Sprint 4 작업이라 후일로 미룸.
-- 새 발견:
-  - typst.ts 0.6은 **woff2 미지원** → 폰트 6MB. SW 캐싱 의존도 ↑.
-  - typst.ts의 `getCompiler()`는 첫 호출에 race 있음 → warmup 컴파일을 init promise 안에 박아 회피.
-  - dev HMR이 모듈 변수 reset → init 캐시는 `globalThis`에 저장.
+### 통과한 큰 도달점
+- **Sprint 1 ✅** — typst.ts 브라우저 컴파일 + 노토 세리프 + 신국판 Classic 컴파일 (D1~D5).
+- **Sprint 2 ◐** — S2-1 buildSource·compileBookSvg 파이프라인 완성. KLREQ 룰 중 J1·I1·C1·P1·S1은 template.typ + Typst lang:"ko"로 자연 충족. G1·G2 (줄 처음/끝 금칙)는 Typst 기본 동작에 일임, 정밀화는 베타 후일.
+- **Sprint 3 ◐** — `/editor`에 TypstPreviewPanel 박힘. 본문 수정 즉시 갱신(300ms 디바운스), 챕터 클릭 자동 스크롤, matter blocks(속표지·판권지·목차·저자소개) 처리, React 폴백 안전.
+- **Sprint 4 ◐** — S4-1 'PDF 생성' 버튼 → 브라우저 직접 typst 컴파일 → Blob 다운로드. 9페이지 신국판 단행본 PDF 1클릭. Vercel/서버 API 의존 없음.
+- **Sprint 5 일부** — D-021 액센트 색 = 쪽빛 #2a3a5a. Vellum 회색 3단계 배경 + 보더 제거 EditorLayout 적용.
 
-## 다음 7일 (D8~D14) — Sprint 2 진입
+### 검증된 시나리오 (Playwright)
+- 챕터 클릭 → 미리보기 자동 스크롤 ✅
+- 본문 수정 → typst 디바운스 9~25ms 재컴파일 ✅
+- 속표지·판권지·목차 클릭 → 해당 페이지로 점프 ✅
+- 한국어 chapterNum "제3장" → 숫자 추출 ✅
+- env=react 토글 → 옛 미리보기 폴백 ✅
+- PDF 다운로드 → 부크크 입고 가능한 형태 ✅
 
-1. **D8**: Vellum 디자인 보고서 → D-021 액센트 색 결정 (먹색 vs 쪽빛). decisions.md에 박기. 토큰 파일 박기.
-2. **D9**: S2-1 `lib/typst/buildSource.ts` — bookData JSON → .typ 문자열 변환 골격.
-3. **D10~D11**: S2-3 G1·S2-4 G2 — 줄 처음/끝 금칙 전처리.
-4. **D12**: S2-5 J1 — `par.justify` + `justification-limits` 실측.
-5. **D13**: S2-6 I1 — 들여쓰기 정책 c (이미 template.typ에 일부 구현).
-6. **D14**: S2-7 S1 — 한영 자간 1/4각.
+### 새 발견 (memory 가치)
+- typst.ts 0.6 **woff2 미지원** → 폰트 6MB
+- typst.ts `getCompiler()` 첫 호출 race → init promise에 warmup svg 박아 회피
+- dev HMR 모듈 reset → init 캐시는 globalThis에
+- typst SVG = 한 덩이 multi-page, `g.typst-page` 직접 자식이 페이지 단위
+
+## 다음 단계 (베타 출시 전)
+
+### 빠른 (1~2일)
+- 큰 한국어 책으로 KLREQ G1·G2 실측 검증 (Typst lang:"ko" 충분한가)
+- 산스 KR 폰트 추가 (현재 세리프로 fallback)
+- /editor 진입 시 default 활성 블록을 첫 챕터로 (현재 속표지 자동 선택)
+
+### 중간 (3~5일)
+- Service Worker — WASM 22MB + 폰트 6MB 캐싱 (두 번째 방문 즉시 로드)
+- SSR 사전 렌더 — 빈 미리보기 SVG 즉시 표시
+- 더 많은 Vellum 토큰 적용 (Header·StatusBar·ChapterForm)
+
+### 베타 출시 준비
+- 부크크 입고 표준 검증 (PDF/X·300dpi)
+- 한국어 출판인 1명 PDF 검수
+- 랜딩 페이지 카피 ("판형 하나만 고르세요. 나머지는 자동입니다.")
 
 ## 진행 지표 (매일 측정)
 
