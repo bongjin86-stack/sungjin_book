@@ -17,6 +17,7 @@
 - [x] 사이드바 `간지 추가` 버튼 임시 제거
 - [x] 미리보기 하단 문구 한국어화
 - [x] 미리보기 조판 보정: 긴 문단 줄 단위 분할
+- [x] 미리보기 조판 보정: 신국판 실제 mm 여백 적용
 - [x] Atticus/Vellum 공식 기준 문서 작성: `docs/research/atticus-vellum-workflow-official.md`
 - [x] 기존 localStorage 데이터 기본값 보정
 - [x] 빌드 통과: `npm.cmd run build`

@@ -22,14 +22,14 @@ const TRIM_MM: Record<TrimSize, { w: number; h: number }> = {
   "문고판": { w: 105, h: 148 },
 };
 
-// 판형별 여백 비율 (소수, 신국판: 안20/밖16/위20/아래25 mm 기준 — width/height 대비)
-const TRIM_PADDING_PCT: Record<
+// 판형별 실제 여백 mm. 신국판은 1단계 Classic 사양을 그대로 쓴다.
+const TRIM_MARGIN_MM: Record<
   TrimSize,
   { top: number; bottom: number; inner: number; outer: number }
 > = {
-  "신국판": { top: 0.132, bottom: 0.145, inner: 0.132, outer: 0.105 },
-  "46배판": { top: 0.117, bottom: 0.133, inner: 0.117, outer: 0.096 },
-  "문고판": { top: 0.133, bottom: 0.152, inner: 0.133, outer: 0.114 },
+  "신국판": { top: 22, bottom: 25, inner: 20, outer: 18 },
+  "46배판": { top: 30, bottom: 34, inner: 22, outer: 18 },
+  "문고판": { top: 20, bottom: 23, inner: 14, outer: 12 },
 };
 
 const MARGIN_MULT: Record<BookOptions["marginPreset"], number> = {
@@ -131,18 +131,18 @@ export function usePreviewLayout(input: UsePreviewLayoutInput): PreviewLayout {
     const fontSizePx = fontSizeMm * scaleFactor;
     const lineHeightPx = fontSizePx * (LINE_HEIGHT_MULT[options.lineSpacing] ?? 1.8);
 
-    // 패딩 — print는 판형별 비율 × marginPreset 배율, 기기는 공통값(10% / 10% / 9% / 9%)
+    // 패딩 — print는 실제 mm 여백 × marginPreset 배율, 기기는 공통값(10% / 10% / 9% / 9%)
     const mult = MARGIN_MULT[options.marginPreset] ?? 1.0;
-    const pctSafe = (n: number) => Math.max(0, n * mult);
+    const mmSafe = (n: number) => Math.max(0, n * mult * scaleFactor);
 
     let paddingPx;
     if (device === "print") {
-      const pct = TRIM_PADDING_PCT[trim];
+      const margin = TRIM_MARGIN_MM[trim];
       paddingPx = {
-        top: bookHeight * pctSafe(pct.top),
-        bottom: bookHeight * pctSafe(pct.bottom),
-        inner: bookWidth * pctSafe(pct.inner),
-        outer: bookWidth * pctSafe(pct.outer),
+        top: mmSafe(margin.top),
+        bottom: mmSafe(margin.bottom),
+        inner: mmSafe(margin.inner),
+        outer: mmSafe(margin.outer),
       };
     } else {
       paddingPx = {
