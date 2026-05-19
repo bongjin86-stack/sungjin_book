@@ -56,7 +56,7 @@ export function Sidebar({
   const chapterCountForLabel = blocks.length;
 
   return (
-    <aside className="w-[260px] bg-sidebar-bg border-r border-border flex flex-col flex-shrink-0 overflow-hidden">
+    <aside className="w-sidebar-w flex-shrink-0 bg-sidebar-bg border-r border-border flex flex-col overflow-hidden">
       {/* 탭 */}
       <div className="flex border-b border-border flex-shrink-0">
         <button

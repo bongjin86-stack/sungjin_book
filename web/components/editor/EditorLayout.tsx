@@ -90,7 +90,7 @@ export function EditorLayout() {
         {/* 가운데 영역 — 에디터(flex-1) + 미리보기(flex-1) 5:5 분할 */}
         <div className="flex-1 flex overflow-hidden bg-bg">
           {/* 에디터 영역 (50%) */}
-          <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-6 pb-24 border-r border-border">
+          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col items-center px-8 pt-8 pb-24 border-r border-border">
             <ChapterForm
               key={activeBlockId ?? `new-${chapterCount}`}
               initialChapterNum={nextChapterNum}
@@ -103,9 +103,8 @@ export function EditorLayout() {
             />
           </div>
 
-          {/* 미리보기 영역 (50%) — BookPreviewPanel이 내부에서 aside w-[220px] 를 갖고 있으므로
-              여기서는 flex-1 wrapper 로 감싸 5:5 비율을 강제한다 */}
-          <div className="flex-1 overflow-hidden flex">
+          {/* 미리보기 영역 (50%) */}
+          <div className="flex-1 min-w-0 overflow-hidden flex">
             <BookPreviewPanel
               options={meta.options}
               trim={meta.trim}

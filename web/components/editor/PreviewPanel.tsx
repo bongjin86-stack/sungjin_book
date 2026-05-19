@@ -3,10 +3,6 @@
 // BookPreviewPanel — 에디터 우측에 항상 고정되는 미리보기 패널 (Vellum/Atticus 스타일).
 // 인쇄본(판형 비율)과 전자기기(Kindle/iPad/Smartphone) 프레임을 전환할 수 있다.
 //
-// 크기 결정:
-//   기기 프레임 너비는 160px 고정, 높이는 비율로 자동 계산.
-//   세로가 패널보다 길면 overflow-y-auto 스크롤, 짧으면 세로 중앙 정렬.
-//
 // 판형 여백 기준 (Typst 표준 근사치 — 절대 변경 금지):
 //   신국판(152×225): top 20mm / bottom 22mm / inner 20mm / outer 16mm
 //   46배판(188×257): top 22mm / bottom 25mm / inner 22mm / outer 18mm
@@ -75,6 +71,11 @@ const LINE_HEIGHT: Record<BookOptions["lineSpacing"], string> = {
   wide: "2.0",
 };
 
+function deviceLabel(device: Exclude<PreviewDevice, "print">): string {
+  if (device === "kindle") return "Kindle Paperwhite";
+  if (device === "ipad") return "iPad";
+  return "스마트폰";
+}
 
 export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
@@ -177,21 +178,22 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   );
 
   return (
-    <aside className="w-full h-full bg-[#1C1C1E] border-l border-[#2A2A2A] flex flex-col overflow-hidden">
-      {/* 상단 툴바 — 기기 라벨 */}
-      <div className="h-10 px-3 flex items-center justify-between border-b border-[#2A2A2A] flex-shrink-0">
-        <span className="text-[11px] text-[#BBB] font-medium">
+    /* 밝은 크림색 배경 — 에디터 영역과 자연스럽게 이어지도록 */
+    <aside className="w-full h-full bg-[#EDEBE5] border-l border-border flex flex-col overflow-hidden">
+      {/* 상단 툴바 */}
+      <div className="h-10 px-4 flex items-center justify-between border-b border-border flex-shrink-0">
+        <span className="text-[11px] text-text-secondary font-medium">
           {device === "print" ? `${trim} ${TRIM_SIZE_LABEL[trim]}` : deviceLabel(device)}
         </span>
-        <span className="text-[11px] text-[#888]">
+        <span className="text-[11px] text-text-muted">
           {device === "print" ? "인쇄본" : "전자책"}
         </span>
       </div>
 
-      {/* 프레임 영역 — 패널 너비의 65%를 프레임 너비로 사용 */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-6">
+      {/* 프레임 영역 — 패널 너비의 75% 를 프레임 너비로 사용, max-w 제한 없음 */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-8">
         {device === "print" ? (
-          <div className="w-[65%] min-w-[140px] max-w-[320px]">
+          <div className="w-[75%] min-w-[140px]">
             <PrintFrame
               ratio={ratio}
               paddingInner={padding.inner}
@@ -201,18 +203,18 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
             />
           </div>
         ) : (
-          <div className="w-[65%] min-w-[140px] max-w-[320px]">
+          <div className="w-[75%] min-w-[140px]">
             <DeviceFrame device={device} ratio={ratio} innerBody={innerBody} />
           </div>
         )}
       </div>
 
       {/* 하단 — 기기 전환 드롭다운 */}
-      <div className="h-10 px-3 flex items-center justify-center border-t border-[#2A2A2A] flex-shrink-0">
+      <div className="h-11 px-4 flex items-center justify-center border-t border-border flex-shrink-0">
         <select
           value={device}
           onChange={(e) => setDevice(e.target.value as PreviewDevice)}
-          className="bg-transparent text-[11px] text-[#BBB] outline-none cursor-pointer"
+          className="bg-surface border border-border text-[11px] text-text-secondary rounded-[6px] px-2 py-1 outline-none cursor-pointer hover:border-border-hover transition-colors"
         >
           <optgroup label="인쇄본">
             <option value="print">
@@ -228,12 +230,6 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
       </div>
     </aside>
   );
-}
-
-function deviceLabel(device: Exclude<PreviewDevice, "print">): string {
-  if (device === "kindle") return "Kindle Paperwhite";
-  if (device === "ipad") return "iPad";
-  return "스마트폰";
 }
 
 // ─── 인쇄본 프레임 (종이/제본선/쪽번호) ──────────────────────────────────────
@@ -260,14 +256,14 @@ function PrintFrame({
         className="absolute inset-0 rounded-[2px]"
         style={{
           transform: "translate(3px, 4px)",
-          background: "#3A3633",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
+          background: "#C8C4BC",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
         }}
         aria-hidden
       />
       <div
         className="absolute inset-0 rounded-[2px]"
-        style={{ transform: "translate(1.5px, 2px)", background: "#4D4843" }}
+        style={{ transform: "translate(1.5px, 2px)", background: "#D8D4CC" }}
         aria-hidden
       />
 
@@ -276,7 +272,7 @@ function PrintFrame({
         className="absolute inset-0 rounded-[2px] overflow-hidden"
         style={{
           background: "#FAFAFA",
-          boxShadow: "0 10px 28px rgba(0,0,0,0.55), 0 3px 10px rgba(0,0,0,0.35)",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)",
         }}
       >
         {/* 제본선(spine) 음영 */}
@@ -285,13 +281,13 @@ function PrintFrame({
           style={{
             width: paddingInner,
             background:
-              "linear-gradient(to right, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.06) 40%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.04) 40%, rgba(0,0,0,0) 100%)",
           }}
           aria-hidden
         />
         <div
           className="absolute top-0 bottom-0 left-0 pointer-events-none"
-          style={{ width: "1px", background: "rgba(0,0,0,0.12)" }}
+          style={{ width: "1px", background: "rgba(0,0,0,0.08)" }}
           aria-hidden
         />
 
@@ -321,10 +317,9 @@ function DeviceFrame({
   innerBody: React.ReactNode;
 }) {
   const isKindle = device === "kindle";
-  // Kindle: 회색 베젤, iPad/Smartphone: 검은 베젤
-  const bezelColor = isKindle ? "#A8A29A" : "#1A1A1A";
+  // Kindle: 따뜻한 회색 베젤, iPad/Smartphone: 어두운 베젤
+  const bezelColor = isKindle ? "#8A8480" : "#2A2A2A";
   const screenBg = isKindle ? "#F2EFE9" : "#FFFFFF";
-  // 베젤 두께(% width 기준) — 폰은 얇게, 패드/킨들은 살짝 두껍게
   const bezel = device === "smartphone" ? "5%" : "6%";
   const radius = device === "smartphone" ? "14px" : "8px";
 
@@ -337,7 +332,7 @@ function DeviceFrame({
         background: bezelColor,
         borderRadius: radius,
         padding: bezel,
-        boxShadow: "0 10px 24px rgba(0,0,0,0.5), 0 3px 8px rgba(0,0,0,0.35)",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
       }}
     >
       {/* 화면 */}

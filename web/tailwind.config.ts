@@ -40,6 +40,7 @@ const config: Config = {
       spacing: {
         "sidebar-w": "260px",
         "header-h": "54px",
+        "preview-w": "50%",
       },
     },
   },

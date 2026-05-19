@@ -108,7 +108,7 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
   }, [title, body, charCount, chapterNum]);
 
   return (
-    <div className="w-full max-w-[620px] bg-surface rounded-[16px] border border-border shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">
+    <div className="w-full min-w-0 max-w-[680px] bg-surface rounded-[16px] border border-border shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">
       <div className="px-[26px] pt-[22px]">
         <div className="flex items-center gap-2 mb-3">
           <span className="bg-accent-light text-accent text-[10px] font-bold uppercase tracking-[0.5px] px-[9px] py-[3px] rounded-[20px]">
