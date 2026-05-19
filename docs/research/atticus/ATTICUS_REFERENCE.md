@@ -2,6 +2,9 @@
 > Claude Code가 PreviewPanel 및 Formatting 탭 구현 시 참고할 Atticus 분석 자료 인덱스
 > 수집일: 2026-05-19 | 경로: `C:\projects\sungjin_book\docs\research\atticus\`
 
+> 최신 공식 판단 기준은 `docs/research/atticus-vellum-workflow-official.md`를 우선한다.
+> 이 문서는 스크린샷/기능 인덱스이고, 제품 흐름 결정은 공식 기준 문서에서 관리한다.
+
 ---
 
 ## 1. Atticus란
