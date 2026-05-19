@@ -3,14 +3,14 @@
 import { useMemo } from "react";
 
 /**
- * usePagination — 단락 단위로 페이지 분할 (결정론적).
+ * usePagination — 줄 단위 페이지 분할 (결정론적).
  *
  * 1단계 정책:
- *   - 단락이 한 페이지보다 길어도 쪼개지 않음. 다음 페이지로 넘김.
- *   - 챕터 시작 페이지(첫 페이지)는 헤더(번호+제목)가 차지하는 줄 수만큼 본문 예산을 차감.
- *   - 한 줄 글자수는 한글 정사각 가정 (charsPerLine 입력으로 외부에서 계산해 전달).
+ *   - 단락을 화면용 줄 배열로 먼저 쪼갠 뒤, 페이지 남은 줄 수만큼 배치한다.
+ *   - 긴 단락은 페이지 아래에서 잘리지 않고 다음 페이지로 이어진다.
+ *   - 한 줄 폭은 한글 1칸 기준의 가중치 계산을 쓴다.
  *
- * 정확한 줄바꿈 측정은 2단계 canvas.measureText로 교체 예정.
+ * 정확한 줄바꿈 측정은 다음 단계에서 canvas.measureText로 교체 가능.
  */
 
 interface PaginationInput {
@@ -20,16 +20,98 @@ interface PaginationInput {
   chapterHeaderLines: number; // 첫 페이지에서만 차감되는 줄 수
 }
 
+export interface PageParagraph {
+  paragraphIndex: number;
+  lines: string[];
+  startsParagraph: boolean;
+}
+
 export interface PaginationResult {
-  pages: number[][]; // 각 페이지가 담는 paragraph 인덱스 배열
+  pages: PageParagraph[][];
   totalPages: number;
+}
+
+function charUnits(char: string): number {
+  if (/\s/.test(char)) return 0.35;
+  if (/[\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF]/.test(char)) return 1;
+  if (/[\u4E00-\u9FFF]/.test(char)) return 1;
+  if (/[A-Za-z0-9]/.test(char)) return 0.55;
+  return 0.5;
+}
+
+function textUnits(text: string): number {
+  return Array.from(text).reduce((sum, char) => sum + charUnits(char), 0);
+}
+
+function pushLine(lines: string[], line: string) {
+  const clean = line.trimEnd();
+  if (clean) lines.push(clean);
+}
+
+function appendLongToken(
+  lines: string[],
+  current: string,
+  currentUnits: number,
+  token: string,
+  maxUnits: number,
+) {
+  let line = current;
+  let units = currentUnits;
+
+  for (const char of Array.from(token)) {
+    const nextUnits = charUnits(char);
+    if (units + nextUnits > maxUnits && line.trim()) {
+      pushLine(lines, line);
+      line = char.trimStart();
+      units = textUnits(line);
+    } else {
+      line += char;
+      units += nextUnits;
+    }
+  }
+
+  return { line, units };
+}
+
+function wrapParagraph(paragraph: string, charsPerLine: number): string[] {
+  const maxUnits = Math.max(4, charsPerLine);
+  const normalized = paragraph.trim().replace(/[ \t]+/g, " ");
+  if (!normalized) return [""];
+
+  const tokens = normalized.match(/\S+\s*/g) ?? [normalized];
+  const lines: string[] = [];
+  let line = "";
+  let units = 0;
+
+  for (const token of tokens) {
+    const tokenUnits = textUnits(token);
+
+    if (tokenUnits > maxUnits) {
+      const result = appendLongToken(lines, line, units, token, maxUnits);
+      line = result.line;
+      units = result.units;
+      continue;
+    }
+
+    if (units + tokenUnits <= maxUnits) {
+      line += token;
+      units += tokenUnits;
+      continue;
+    }
+
+    pushLine(lines, line);
+    line = token.trimStart();
+    units = textUnits(line);
+  }
+
+  pushLine(lines, line);
+  return lines.length > 0 ? lines : [normalized];
 }
 
 export function usePagination(input: PaginationInput): PaginationResult {
   const { paragraphs, linesPerPage, charsPerLine, chapterHeaderLines } = input;
 
   return useMemo(() => {
-    // 가드: 입력이 비정상이면 단일 빈 페이지
     if (
       !paragraphs ||
       paragraphs.length === 0 ||
@@ -41,29 +123,42 @@ export function usePagination(input: PaginationInput): PaginationResult {
       return { pages: [[]], totalPages: 1 };
     }
 
-    const linesOf = (p: string) => {
-      const len = p.length || 1;
-      return Math.max(1, Math.ceil(len / charsPerLine));
+    const pages: PageParagraph[][] = [[]];
+    let currentPage = 0;
+    let usedLines = 0;
+
+    const firstPageBudget = Math.max(1, linesPerPage - chapterHeaderLines);
+    const pageBudget = () => (currentPage === 0 ? firstPageBudget : linesPerPage);
+    const nextPage = () => {
+      pages.push([]);
+      currentPage += 1;
+      usedLines = 0;
     };
 
-    const pages: number[][] = [[]];
-    let cur = 0;
-    let used = 0;
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+      const lines = wrapParagraph(paragraph, charsPerLine);
+      let lineIndex = 0;
 
-    const headerBudget = Math.max(1, linesPerPage - chapterHeaderLines);
+      while (lineIndex < lines.length) {
+        const remaining = pageBudget() - usedLines;
+        if (remaining <= 0) {
+          nextPage();
+          continue;
+        }
 
-    for (let i = 0; i < paragraphs.length; i++) {
-      const lines = linesOf(paragraphs[i]);
-      const budget = cur === 0 ? headerBudget : linesPerPage;
+        const take = Math.min(remaining, lines.length - lineIndex);
+        pages[currentPage].push({
+          paragraphIndex,
+          lines: lines.slice(lineIndex, lineIndex + take),
+          startsParagraph: lineIndex === 0,
+        });
 
-      if (used + lines > budget && pages[cur].length > 0) {
-        pages.push([]);
-        cur += 1;
-        used = 0;
+        usedLines += take;
+        lineIndex += take;
+
+        if (lineIndex < lines.length) nextPage();
       }
-      pages[cur].push(i);
-      used += lines;
-    }
+    });
 
     return { pages, totalPages: pages.length };
   }, [paragraphs, linesPerPage, charsPerLine, chapterHeaderLines]);

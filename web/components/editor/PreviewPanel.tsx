@@ -14,7 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { BookOptions, PreviewDevice, TrimSize } from "@/types/book";
 import { usePreviewLayout } from "@/hooks/usePreviewLayout";
-import { usePagination } from "@/hooks/usePagination";
+import { usePagination, type PageParagraph } from "@/hooks/usePagination";
 
 interface BookPreviewPanelProps {
   options: BookOptions;
@@ -97,7 +97,7 @@ export function BookPreviewPanel({
   const goPage = (delta: number) =>
     setCurrentPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
 
-  const visibleParagraphIdx = pages[currentPage] ?? [];
+  const visibleParagraphs = pages[currentPage] ?? [];
   const showChapterHeader = currentPage === 0;
 
   // 쪽번호 (인쇄본만). 챕터 시작 페이지(0)에서 hideChapterStartPageNumber 적용
@@ -167,8 +167,7 @@ export function BookPreviewPanel({
             showChapterNumber={previewContent.showChapterNumber ?? options.showChapterNumber}
             dropCaps={options.dropCaps}
             paragraphIndent={options.paragraphIndent}
-            paragraphTexts={visibleParagraphIdx.map((i) => paragraphs[i])}
-            paragraphAbsoluteIndices={visibleParagraphIdx}
+            paragraphChunks={visibleParagraphs}
             currentPage={currentPage}
             pnVisible={pnVisible && !isEmpty}
             pnPositionStyle={pnPositionStyle}
@@ -264,8 +263,7 @@ interface BookFrameProps {
   showChapterNumber: boolean;
   dropCaps: boolean;
   paragraphIndent: boolean;
-  paragraphTexts: string[];
-  paragraphAbsoluteIndices: number[];
+  paragraphChunks: PageParagraph[];
   currentPage: number;
   pnVisible: boolean;
   pnPositionStyle: React.CSSProperties;
@@ -289,8 +287,7 @@ function BookFrame(props: BookFrameProps) {
     showChapterNumber,
     dropCaps,
     paragraphIndent,
-    paragraphTexts,
-    paragraphAbsoluteIndices,
+    paragraphChunks,
     currentPage,
     pnVisible,
     pnPositionStyle,
@@ -445,19 +442,27 @@ function BookFrame(props: BookFrameProps) {
                     </>
                   )}
                   <div style={{ textAlign: "justify" }}>
-                    {paragraphTexts.map((p, localIdx) => {
-                      const absIdx = paragraphAbsoluteIndices[localIdx];
-                      const isFirstParagraphOfChapter = absIdx === 0;
+                    {paragraphChunks.map((chunk, localIdx) => {
+                      const isFirstParagraphOfChapter =
+                        chunk.paragraphIndex === 0 && chunk.startsParagraph;
                       return (
                         <p
                           key={`${currentPage}-${localIdx}`}
                           style={{
-                            textIndent: paragraphIndent && !isFirstParagraphOfChapter ? "1em" : "0",
+                            textIndent:
+                              paragraphIndent && chunk.startsParagraph && !isFirstParagraphOfChapter
+                                ? "1em"
+                                : "0",
                             margin: 0,
                           }}
                           className={dropCaps && isFirstParagraphOfChapter ? "drop-caps-para" : ""}
                         >
-                          {p}
+                          {chunk.lines.map((line, lineIdx) => (
+                            <span key={`${localIdx}-${lineIdx}`}>
+                              {line}
+                              {lineIdx < chunk.lines.length - 1 && <br />}
+                            </span>
+                          ))}
                         </p>
                       );
                     })}
