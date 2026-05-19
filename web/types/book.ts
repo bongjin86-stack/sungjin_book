@@ -28,6 +28,10 @@ export interface BookOptions {
   pageNumberPosition: "bottom-outside" | "bottom-center" | "top-outside";
   hideChapterStartPageNumber: boolean;
   paragraphIndent: boolean;
+
+  // 챕터 스타일 (개인 취향 — 테마와 무관)
+  dropCaps: boolean;
+  sceneBreakStyle: "asterisk" | "line" | "none";
 }
 
 export interface BookMeta {
@@ -161,6 +165,9 @@ export const DEFAULT_OPTIONS: BookOptions = {
   pageNumberPosition: "bottom-outside",
   hideChapterStartPageNumber: true,
   paragraphIndent: true,
+
+  dropCaps: false,
+  sceneBreakStyle: "asterisk",
 };
 
 export function createEmptyBook(

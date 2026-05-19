@@ -95,9 +95,23 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
         <span className="text-[11px] text-[#888]">인쇄본</span>
       </div>
 
-      {/* 책 프레임 영역 — 세로 중앙 정렬 */}
-      <div className="flex-1 flex items-center justify-center px-4 py-6 overflow-hidden">
-        <div className="relative w-full max-w-[220px]" style={{ aspectRatio: `${ratio}` }}>
+      {/* 책 프레임 영역 — 높이 기준 크기 결정, 세로 중앙 정렬 */}
+      <div className="flex-1 flex items-center justify-center px-5 py-5 overflow-hidden">
+        {/*
+          높이 기준으로 책 크기를 결정한다.
+          패널 높이(flex-1)에서 상하 padding(py-5 = 40px)과 상하 툴바(h-10 × 2 = 80px),
+          헤더/상태바 합산을 빼서 실제 사용 가능 높이를 산출. 90% 사용, 너비는 aspect-ratio로 자동.
+          max-w는 패널 너비(300px) - 좌우 패딩(40px) = 260px로 제한.
+        */}
+        <div
+          className="relative"
+          style={{
+            aspectRatio: `${ratio}`,
+            height: "min(90%, calc(90vh - 220px))",
+            maxWidth: "260px",
+            width: "auto",
+          }}
+        >
           {/* 페이지 뒷장 두께 효과 */}
           <div
             className="absolute inset-0 rounded-[2px]"
@@ -195,6 +209,8 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
                           textIndent: options.paragraphIndent && i > 0 ? "1em" : "0",
                           margin: 0,
                         }}
+                        // Drop Caps는 ::first-letter라 inline style 불가 → 클래스로 처리
+                        className={options.dropCaps && i === 0 ? "drop-caps-para" : ""}
                       >
                         {p}
                       </p>

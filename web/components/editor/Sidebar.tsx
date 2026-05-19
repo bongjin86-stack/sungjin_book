@@ -19,6 +19,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { Toggle } from "@/components/ui/Toggle";
 import { BLOCK_META, THEME_PRESETS, type BookBlock, type BookOptions, type BookTheme } from "@/types/book";
 
+type SidebarTab = "writing" | "formatting";
+
 interface SidebarProps {
   options: BookOptions;
   onChangeOptions: (patch: Partial<BookOptions>) => void;
@@ -35,6 +37,7 @@ export function Sidebar({
   onAddInterlude,
 }: SidebarProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const [activeTab, setActiveTab] = useState<SidebarTab>("writing");
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   function handleDragEnd(e: DragEndEvent) {
@@ -50,165 +53,215 @@ export function Sidebar({
 
   return (
     <aside className="w-[260px] bg-sidebar-bg border-r border-border flex flex-col flex-shrink-0 overflow-hidden">
-      {/* Options */}
-      <div className="px-3 pt-3 pb-[10px] border-b border-border flex-shrink-0 overflow-y-auto max-h-[55vh]">
-        <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mb-2">
-          테마
-        </div>
-        <PillGroup<BookTheme>
-          label="스타일"
-          value={options.theme}
-          options={[
-            { value: "classic", label: "클래식" },
-            { value: "modern", label: "모던" },
-            { value: "minimal", label: "미니멀" },
-          ]}
-          onChange={(v) => onChangeOptions({ theme: v, ...THEME_PRESETS[v] })}
-        />
-
-        <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
-          옵션
-        </div>
-        <ToggleRow
-          label="챕터 번호 표시"
-          checked={options.showChapterNumber}
-          onChange={(v) => onChangeOptions({ showChapterNumber: v })}
-        />
-        <ToggleRow
-          label="시리즈명 표시"
-          checked={options.showSeriesName}
-          onChange={(v) => onChangeOptions({ showSeriesName: v })}
-        />
-        <ToggleRow
-          label="영문 제목 병기"
-          checked={options.showEnglishTitle}
-          onChange={(v) => onChangeOptions({ showEnglishTitle: v })}
-        />
-        <ToggleRow
-          label="ISBN 포함"
-          checked={options.includeISBN}
-          onChange={(v) => onChangeOptions({ includeISBN: v })}
-        />
-        <PillGroup
-          label="간지 스타일"
-          value={options.interludeStyle}
-          options={[
-            { value: "1p", label: "1p" },
-            { value: "2p", label: "2p" },
-          ]}
-          onChange={(v) => onChangeOptions({ interludeStyle: v })}
-        />
-
-        {/* 고급 설정 아코디언 */}
+      {/* 탭 */}
+      <div className="flex border-b border-border flex-shrink-0">
         <button
           type="button"
-          onClick={() => setAdvancedOpen((p) => !p)}
-          className="w-full mt-3 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] py-1 hover:text-text-secondary transition-colors"
+          onClick={() => setActiveTab("writing")}
+          className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
+            activeTab === "writing"
+              ? "text-accent border-b-2 border-accent bg-accent-light/30"
+              : "text-text-muted hover:text-text-secondary"
+          }`}
         >
-          <span>조판 · 고급</span>
-          <span className="text-[10px]">{advancedOpen ? "▾" : "▸"}</span>
+          ✏️ 집필
         </button>
-
-        {advancedOpen && (
-          <div className="pt-1">
-            <PillGroup
-              label="본문 폰트"
-              value={options.bodyFont}
-              options={[
-                { value: "serif", label: "바탕" },
-                { value: "sans", label: "돋움" },
-              ]}
-              onChange={(v) => onChangeOptions({ bodyFont: v })}
-            />
-            <PillGroup
-              label="본문 크기"
-              value={options.bodyFontSize}
-              options={[
-                { value: "9pt", label: "9" },
-                { value: "10pt", label: "10" },
-                { value: "11pt", label: "11" },
-              ]}
-              onChange={(v) => onChangeOptions({ bodyFontSize: v })}
-            />
-            <PillGroup
-              label="줄간격"
-              value={options.lineSpacing}
-              options={[
-                { value: "narrow", label: "좁게" },
-                { value: "normal", label: "보통" },
-                { value: "wide", label: "넓게" },
-              ]}
-              onChange={(v) => onChangeOptions({ lineSpacing: v })}
-            />
-            <ToggleRow
-              label="단락 들여쓰기"
-              checked={options.paragraphIndent}
-              onChange={(v) => onChangeOptions({ paragraphIndent: v })}
-            />
-            <ToggleRow
-              label="쪽번호 표시"
-              checked={options.showPageNumber}
-              onChange={(v) => onChangeOptions({ showPageNumber: v })}
-            />
-            <PillGroup
-              label="쪽번호 위치"
-              value={options.pageNumberPosition}
-              options={[
-                { value: "bottom-outside", label: "밖↓" },
-                { value: "bottom-center", label: "중↓" },
-                { value: "top-outside", label: "밖↑" },
-              ]}
-              onChange={(v) => onChangeOptions({ pageNumberPosition: v })}
-            />
-            <ToggleRow
-              label="챕터 시작 쪽번호 숨김"
-              checked={options.hideChapterStartPageNumber}
-              onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v })}
-            />
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setActiveTab("formatting")}
+          className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
+            activeTab === "formatting"
+              ? "text-accent border-b-2 border-accent bg-accent-light/30"
+              : "text-text-muted hover:text-text-secondary"
+          }`}
+        >
+          🎨 포맷팅
+        </button>
       </div>
 
-      {/* TOC */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <div className="px-3 pt-[10px] pb-[6px] flex items-center justify-between flex-shrink-0">
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px]">
-            목차
-          </span>
-          <span className="text-[10px] text-text-muted bg-border px-[7px] py-[2px] rounded-[10px] font-semibold">
-            {chapterCountForLabel}
-          </span>
-        </div>
+      {/* Writing 탭 — 목차 */}
+      {activeTab === "writing" && (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="px-3 pt-[10px] pb-[6px] flex items-center justify-between flex-shrink-0">
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px]">
+              목차
+            </span>
+            <span className="text-[10px] text-text-muted bg-border px-[7px] py-[2px] rounded-[10px] font-semibold">
+              {chapterCountForLabel}
+            </span>
+          </div>
 
-        <div className="flex-1 overflow-y-auto px-2 pb-1">
-          {blocks.length === 0 ? (
-            <div className="py-5 px-[10px] text-center text-[12px] text-text-muted leading-[1.7]">
-              <div className="text-[24px] mb-[6px]">📋</div>
-              챕터를 저장하면
-              <br />
-              여기에 쌓입니다.
-            </div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-                {blocks.map((b) => (
-                  <SortableTocItem key={b.id} block={b} />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
+          <div className="flex-1 overflow-y-auto px-2 pb-1">
+            {blocks.length === 0 ? (
+              <div className="py-5 px-[10px] text-center text-[12px] text-text-muted leading-[1.7]">
+                <div className="text-[24px] mb-[6px]">📋</div>
+                챕터를 저장하면
+                <br />
+                여기에 쌓입니다.
+              </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                  {blocks.map((b) => (
+                    <SortableTocItem key={b.id} block={b} />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
 
-        <div className="px-2 pt-[6px] pb-[10px] flex-shrink-0">
+          <div className="px-2 pt-[6px] pb-[10px] flex-shrink-0">
+            <button
+              type="button"
+              onClick={onAddInterlude}
+              className="w-full px-[10px] py-[7px] border-[1.5px] border-dashed border-border rounded-[7px] bg-transparent text-text-muted text-[12px] flex items-center gap-[6px] justify-center transition-all hover:border-purple hover:text-purple hover:bg-purple-light"
+            >
+              ✦ 간지 추가
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Formatting 탭 — 옵션 패널 */}
+      {activeTab === "formatting" && (
+        <div className="flex-1 overflow-y-auto px-3 pt-3 pb-[10px]">
+          <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mb-2">
+            테마
+          </div>
+          <PillGroup<BookTheme>
+            label="스타일"
+            value={options.theme}
+            options={[
+              { value: "classic", label: "클래식" },
+              { value: "modern", label: "모던" },
+              { value: "minimal", label: "미니멀" },
+            ]}
+            onChange={(v) => onChangeOptions({ theme: v, ...THEME_PRESETS[v] })}
+          />
+
+          <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
+            옵션
+          </div>
+          <ToggleRow
+            label="챕터 번호 표시"
+            checked={options.showChapterNumber}
+            onChange={(v) => onChangeOptions({ showChapterNumber: v })}
+          />
+          <ToggleRow
+            label="시리즈명 표시"
+            checked={options.showSeriesName}
+            onChange={(v) => onChangeOptions({ showSeriesName: v })}
+          />
+          <ToggleRow
+            label="영문 제목 병기"
+            checked={options.showEnglishTitle}
+            onChange={(v) => onChangeOptions({ showEnglishTitle: v })}
+          />
+          <ToggleRow
+            label="ISBN 포함"
+            checked={options.includeISBN}
+            onChange={(v) => onChangeOptions({ includeISBN: v })}
+          />
+          <PillGroup
+            label="간지 스타일"
+            value={options.interludeStyle}
+            options={[
+              { value: "1p", label: "1p" },
+              { value: "2p", label: "2p" },
+            ]}
+            onChange={(v) => onChangeOptions({ interludeStyle: v })}
+          />
+
+          {/* 고급 설정 아코디언 */}
           <button
             type="button"
-            onClick={onAddInterlude}
-            className="w-full px-[10px] py-[7px] border-[1.5px] border-dashed border-border rounded-[7px] bg-transparent text-text-muted text-[12px] flex items-center gap-[6px] justify-center transition-all hover:border-purple hover:text-purple hover:bg-purple-light"
+            onClick={() => setAdvancedOpen((p) => !p)}
+            className="w-full mt-3 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] py-1 hover:text-text-secondary transition-colors"
           >
-            ✦ 간지 추가
+            <span>조판 · 고급</span>
+            <span className="text-[10px]">{advancedOpen ? "▾" : "▸"}</span>
           </button>
+
+          {advancedOpen && (
+            <div className="pt-1">
+              <PillGroup
+                label="본문 폰트"
+                value={options.bodyFont}
+                options={[
+                  { value: "serif", label: "바탕" },
+                  { value: "sans", label: "돋움" },
+                ]}
+                onChange={(v) => onChangeOptions({ bodyFont: v })}
+              />
+              <PillGroup
+                label="본문 크기"
+                value={options.bodyFontSize}
+                options={[
+                  { value: "9pt", label: "9" },
+                  { value: "10pt", label: "10" },
+                  { value: "11pt", label: "11" },
+                ]}
+                onChange={(v) => onChangeOptions({ bodyFontSize: v })}
+              />
+              <PillGroup
+                label="줄간격"
+                value={options.lineSpacing}
+                options={[
+                  { value: "narrow", label: "좁게" },
+                  { value: "normal", label: "보통" },
+                  { value: "wide", label: "넓게" },
+                ]}
+                onChange={(v) => onChangeOptions({ lineSpacing: v })}
+              />
+              <ToggleRow
+                label="단락 들여쓰기"
+                checked={options.paragraphIndent}
+                onChange={(v) => onChangeOptions({ paragraphIndent: v })}
+              />
+              <ToggleRow
+                label="쪽번호 표시"
+                checked={options.showPageNumber}
+                onChange={(v) => onChangeOptions({ showPageNumber: v })}
+              />
+              <PillGroup
+                label="쪽번호 위치"
+                value={options.pageNumberPosition}
+                options={[
+                  { value: "bottom-outside", label: "밖↓" },
+                  { value: "bottom-center", label: "중↓" },
+                  { value: "top-outside", label: "밖↑" },
+                ]}
+                onChange={(v) => onChangeOptions({ pageNumberPosition: v })}
+              />
+              <ToggleRow
+                label="챕터 시작 쪽번호 숨김"
+                checked={options.hideChapterStartPageNumber}
+                onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v })}
+              />
+
+              {/* 챕터 스타일 */}
+              <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
+                챕터 스타일
+              </div>
+              <ToggleRow
+                label="드롭 캡 (첫 글자 장식)"
+                checked={options.dropCaps}
+                onChange={(v) => onChangeOptions({ dropCaps: v })}
+              />
+              <PillGroup
+                label="장면 전환 구분자"
+                value={options.sceneBreakStyle}
+                options={[
+                  { value: "asterisk", label: "* * *" },
+                  { value: "line", label: "───" },
+                  { value: "none", label: "없음" },
+                ]}
+                onChange={(v) => onChangeOptions({ sceneBreakStyle: v })}
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </aside>
   );
 }

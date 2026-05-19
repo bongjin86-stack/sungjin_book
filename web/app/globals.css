@@ -14,3 +14,15 @@ body {
   font-family: "Apple SD Gothic Neo", -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Drop Caps — 미리보기 패널 첫 단락 첫 글자 장식 */
+.drop-caps-para::first-letter {
+  float: left;
+  font-size: 3.2em;
+  line-height: 0.82;
+  margin-right: 0.06em;
+  margin-top: 0.04em;
+  font-family: serif;
+  font-weight: bold;
+  color: #1f1b16;
+}
