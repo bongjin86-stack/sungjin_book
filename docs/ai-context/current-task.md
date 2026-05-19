@@ -102,11 +102,13 @@
 - typst.ts `getCompiler()` 첫 호출 race → init promise에 warmup svg 박아 회피
 - dev HMR 모듈 reset → init 캐시는 globalThis에
 - typst SVG = 한 덩이 multi-page, `g.typst-page` 직접 자식이 페이지 단위
+- **Typst lang:"ko"는 어절 단위 줄바꿈 안 함** → 단어 가운데서 글자 단위 잘림 ("어/떤", "동일/한"). 한국어 단행본 표준 위반. 베타 전 정밀화 필요.
+- 산스 KR Regular + Bold 추가 필요 (세리프 fallback만으론 챕터 식자 불명확)
 
 ## 다음 단계 (베타 출시 전)
 
 ### 빠른 (1~2일)
-- 큰 한국어 책으로 KLREQ G1·G2 실측 검증 (Typst lang:"ko" 충분한가)
+- **KLREQ G3 (어절 단위 줄바꿈)** — Typst lang:"ko"가 글자 단위 줄바꿈만. 본문 전처리(공백 → break opportunity) 또는 Typst show rule 검토. shots-klreq/klreq.pdf 페이지 7 참조.
 - 산스 KR 폰트 추가 (현재 세리프로 fallback)
 - /editor 진입 시 default 활성 블록을 첫 챕터로 (현재 속표지 자동 선택)
 
