@@ -137,19 +137,24 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   }
 
   const innerBody = (
+    // 바깥 div: padding으로 사방 여백 확보. overflow:hidden은 안쪽 wrapper로 옮긴다.
+    // (padding 영역에 content가 침범하는 CSS 기본 동작을 막기 위함)
     <div
-      className="absolute inset-0 overflow-hidden"
+      className="absolute inset-0"
       style={{
         paddingTop: padding.top,
         paddingBottom: padding.bottom,
         paddingLeft: padding.inner,
         paddingRight: padding.outer,
+        boxSizing: "border-box",
         fontFamily,
         fontSize,
         lineHeight,
         color: "#1F1B16",
       }}
     >
+      {/* content area — padding 안쪽 영역 100%×100%. 본문이 넘쳐도 여기서만 잘림. */}
+      <div className="w-full h-full overflow-hidden">
       {isEmpty ? (
         <div
           className="text-center leading-[1.7]"
@@ -201,6 +206,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
           </div>
         </>
       )}
+      </div>
     </div>
   );
 
