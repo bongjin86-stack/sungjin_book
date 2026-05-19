@@ -60,7 +60,7 @@ export function Sidebar({
           onClick={() => setActiveTab("writing")}
           className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
             activeTab === "writing"
-              ? "text-accent border-b-2 border-accent bg-accent-light/30"
+              ? "text-accent border-b-2 border-accent bg-accent-light"
               : "text-text-muted hover:text-text-secondary"
           }`}
         >
@@ -71,7 +71,7 @@ export function Sidebar({
           onClick={() => setActiveTab("formatting")}
           className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
             activeTab === "formatting"
-              ? "text-accent border-b-2 border-accent bg-accent-light/30"
+              ? "text-accent border-b-2 border-accent bg-accent-light"
               : "text-text-muted hover:text-text-secondary"
           }`}
         >

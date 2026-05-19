@@ -65,7 +65,7 @@ export function EditorLayout() {
         />
 
         {/* 에디터 영역 — 좌측: ChapterForm (무한 스크롤) / 우측: 책 미리보기 패널 (고정) */}
-        <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-11 pb-32 bg-bg">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-6 pb-24 bg-bg">
           <ChapterForm
             key={chapterCount}
             initialChapterNum={nextChapterNum}

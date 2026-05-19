@@ -1,15 +1,18 @@
 "use client";
 
 // BookPreviewPanel — 에디터 우측에 항상 고정되는 책 미리보기 패널 (Vellum/Atticus 스타일).
-// 다크 배경 안에 판형 비율 책 프레임을 세로 중앙 정렬로 표시.
-// 판형 여백은 한국 단행본 출판 규격 기준의 mm 비율을 그대로 적용.
+// 다크 배경 안에 판형 비율 책 프레임을 표시.
 //
-// 여백 기준 (Typst 표준 근사치):
+// 크기 결정 방식:
+//   패널 너비 300px - 좌우 패딩 32px = 268px 를 책 너비로 사용.
+//   높이는 aspect-ratio 가 자동 계산.
+//   패널이 책보다 세로로 길면 → 세로 중앙 정렬.
+//   책이 패널보다 세로로 길면 → overflow-y-auto 스크롤.
+//
+// 판형 여백 기준 (Typst 표준 근사치):
 //   신국판(152×225): top 20mm / bottom 22mm / inner 20mm / outer 16mm
 //   46배판(188×257): top 22mm / bottom 25mm / inner 22mm / outer 18mm
 //   문고판(105×148): top 14mm / bottom 16mm / inner 14mm / outer 12mm
-//
-// Phase 2에서 책 프레임 내용은 Typst PDF 응답으로 교체될 예정.
 
 import type { BookOptions, TrimSize } from "@/types/book";
 
@@ -30,7 +33,7 @@ const TRIM_RATIO: Record<TrimSize, number> = {
   "문고판": 105 / 148,
 };
 
-// 판형별 여백 — CSS padding %는 width 기준이므로 width로 통일하여 근사.
+// 판형별 여백 — CSS padding %는 부모 너비 기준이므로 너비 기준 % 로 환산.
 const TRIM_PADDING: Record<
   TrimSize,
   { top: string; bottom: string; inner: string; outer: string }
@@ -70,7 +73,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   const ratio = TRIM_RATIO[trim];
   const padding = TRIM_PADDING[trim];
 
-  // 쪽번호 위치 (미리보기는 1페이지 = 챕터 시작 = 홀수 가정 → 외측 = 오른쪽)
+  // 쪽번호 위치 (미리보기 1페이지 = 챕터 시작 = 홀수 → 외측 = 오른쪽)
   const isChapterStartPage = true;
   const pnVisible =
     options.showPageNumber &&
@@ -95,22 +98,18 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
         <span className="text-[11px] text-[#888]">인쇄본</span>
       </div>
 
-      {/* 책 프레임 영역 — 높이 기준 크기 결정, 세로 중앙 정렬 */}
-      <div className="flex-1 flex items-center justify-center px-5 py-5 overflow-hidden">
-        {/*
-          높이 기준으로 책 크기를 결정한다.
-          패널 높이(flex-1)에서 상하 padding(py-5 = 40px)과 상하 툴바(h-10 × 2 = 80px),
-          헤더/상태바 합산을 빼서 실제 사용 가능 높이를 산출. 90% 사용, 너비는 aspect-ratio로 자동.
-          max-w는 패널 너비(300px) - 좌우 패딩(40px) = 260px로 제한.
-        */}
+      {/*
+        책 프레임 스크롤 영역.
+        - 패널 너비(300px) - 좌우 패딩(px-4 = 32px) = 268px 를 책 너비로 사용.
+        - 높이는 aspect-ratio 가 자동 계산 (신국판 268 × 225/152 ≈ 397px).
+        - 패널이 책보다 높으면 세로 중앙 정렬(items-center).
+        - 책이 패널보다 높으면 overflow-y-auto 스크롤.
+      */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-5">
+        {/* 책 프레임 — 너비 100% (패딩 제외), 높이 aspect-ratio 자동 */}
         <div
-          className="relative"
-          style={{
-            aspectRatio: `${ratio}`,
-            height: "min(90%, calc(90vh - 220px))",
-            maxWidth: "260px",
-            width: "auto",
-          }}
+          className="relative w-full flex-shrink-0"
+          style={{ aspectRatio: `${ratio}` }}
         >
           {/* 페이지 뒷장 두께 효과 */}
           <div
@@ -209,7 +208,6 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
                           textIndent: options.paragraphIndent && i > 0 ? "1em" : "0",
                           margin: 0,
                         }}
-                        // Drop Caps는 ::first-letter라 inline style 불가 → 클래스로 처리
                         className={options.dropCaps && i === 0 ? "drop-caps-para" : ""}
                       >
                         {p}
