@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChapterForm } from "@/components/editor/ChapterForm";
+import { ChapterForm, type ChapterFormMode } from "@/components/editor/ChapterForm";
 import { Header } from "@/components/editor/Header";
 import { BookPreviewPanel } from "@/components/editor/PreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
@@ -18,6 +18,7 @@ export function EditorLayout() {
     updateOptions,
     addChapter,
     addInterlude,
+    updateChapter,
     reorderBlocks,
     totalChars,
     chapterCount,
@@ -43,6 +44,13 @@ export function EditorLayout() {
     return `${n}장`;
   }, [bookData]);
 
+  // activeBlockId가 가리키는 블록이 삭제됐다면 null로
+  useEffect(() => {
+    if (!bookData || !activeBlockId) return;
+    const exists = bookData.blocks.some((b) => b.id === activeBlockId);
+    if (!exists) setActiveBlockId(null);
+  }, [bookData, activeBlockId]);
+
   if (!hydrated || !bookData) {
     return (
       <div className="h-screen flex items-center justify-center text-text-muted">
@@ -52,19 +60,32 @@ export function EditorLayout() {
   }
 
   const { meta, blocks } = bookData;
+  const activeBlock = activeBlockId ? blocks.find((b) => b.id === activeBlockId) : null;
+  const activeIsChapter = activeBlock?.type === "chapter";
 
-  // 사이드바에서 블록 클릭 시 해당 블록 활성화
+  // 사이드바에서 블록 클릭 시 — 챕터면 편집 모드 진입, 미리보기에 내용 반영
   function handleSelectBlock(id: string) {
     setActiveBlockId(id);
-    // 해당 블록의 현재 내용을 미리보기에 반영
     const block = blocks.find((b) => b.id === id);
-    if (block) {
-      const chapterNum = block.type === "chapter" ? (block.chapterNum ?? "") : "";
-      const title = (block as { title?: string }).title ?? "";
-      const body = (block as { body?: string }).body ?? "";
-      setPreviewContent({ chapterNum, title, body });
-    }
+    if (!block) return;
+    const chapterNum = block.type === "chapter" ? (block.chapterNum ?? "") : "";
+    const title = (block as { title?: string }).title ?? "";
+    const body = (block as { body?: string }).body ?? "";
+    setPreviewContent({ chapterNum, title, body });
   }
+
+  // ChapterForm mode 결정 — 챕터 블록이 활성화돼 있으면 edit, 아니면 new
+  const formMode: ChapterFormMode = activeIsChapter
+    ? {
+        kind: "edit",
+        blockId: activeBlock!.id,
+        initial: {
+          chapterNum: activeBlock!.type === "chapter" ? activeBlock!.chapterNum : "",
+          title: activeBlock!.type === "chapter" ? activeBlock!.title : "",
+          body: activeBlock!.type === "chapter" ? activeBlock!.body : "",
+        },
+      }
+    : { kind: "new", nextChapterNum };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -91,13 +112,37 @@ export function EditorLayout() {
         <div className="flex-1 flex overflow-hidden bg-bg">
           {/* 에디터 영역 (50%) */}
           <div className="flex-1 min-w-0 overflow-y-auto flex flex-col items-center px-8 pt-8 pb-24 border-r border-border">
+            {/* 활성 챕터가 있으면 "새 챕터로 돌아가기" 버튼 노출 */}
+            {activeIsChapter && (
+              <div className="w-full max-w-[680px] mb-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveBlockId(null);
+                    setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
+                  }}
+                  className="text-[12px] text-text-muted hover:text-accent transition-colors"
+                >
+                  + 새 챕터 쓰기
+                </button>
+              </div>
+            )}
+
             <ChapterForm
               key={activeBlockId ?? `new-${chapterCount}`}
-              initialChapterNum={nextChapterNum}
-              onSave={(data) => {
+              mode={formMode}
+              onSaveNew={(data) => {
                 addChapter(data);
                 setActiveBlockId(null);
                 setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
+              }}
+              onSaveEdit={(blockId, patch) => {
+                updateChapter(blockId, patch);
+                setPreviewContent({
+                  chapterNum: patch.chapterNum,
+                  title: patch.title,
+                  body: patch.body,
+                });
               }}
               onChange={setPreviewContent}
             />
@@ -109,6 +154,7 @@ export function EditorLayout() {
               options={meta.options}
               trim={meta.trim}
               previewContent={previewContent}
+              resetPageKey={activeBlockId ?? "new"}
             />
           </div>
         </div>

@@ -15,6 +15,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 미리보기 페이지 전환 페이드 */
+@keyframes previewFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Drop Caps — 미리보기 패널 첫 단락 첫 글자 장식 */
 .drop-caps-para::first-letter {
   float: left;

@@ -4,13 +4,30 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import type { Block } from "@blocknote/core";
+import type { Block, PartialBlock } from "@blocknote/core";
 import { useEffect, useRef, useState } from "react";
 import { showToast } from "@/components/ui/Toast";
 
+export type ChapterFormMode =
+  | { kind: "new"; nextChapterNum: string }
+  | {
+      kind: "edit";
+      blockId: string;
+      initial: { chapterNum: string; title: string; body: string };
+    };
+
 interface ChapterFormProps {
-  initialChapterNum: string;
-  onSave: (data: { chapterNum: string; title: string; body: string; charCount: number }) => void;
+  mode: ChapterFormMode;
+  onSaveNew: (data: {
+    chapterNum: string;
+    title: string;
+    body: string;
+    charCount: number;
+  }) => void;
+  onSaveEdit: (
+    blockId: string,
+    patch: { chapterNum: string; title: string; body: string; charCount: number },
+  ) => void;
   onChange?: (data: { chapterNum: string; title: string; body: string }) => void;
 }
 
@@ -26,28 +43,44 @@ function blocksToPlainText(blocks: Block[]): string {
       else parts.push("");
     }
   }
-  // collapse trailing empties
   while (parts.length && parts[parts.length - 1] === "") parts.pop();
   return parts.join("\n\n");
 }
 
-export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterFormProps) {
+function plainToBlocks(text: string): PartialBlock[] {
+  if (!text || !text.trim()) return [{ type: "paragraph", content: "" }];
+  return text
+    .split(/\n{2,}/)
+    .map((p): PartialBlock => ({ type: "paragraph", content: p }));
+}
+
+export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFormProps) {
+  const initialChapterNum = mode.kind === "new" ? mode.nextChapterNum : mode.initial.chapterNum;
+  const initialTitle = mode.kind === "edit" ? mode.initial.title : "";
+  const initialBody = mode.kind === "edit" ? mode.initial.body : "";
+
   const [chapterNum, setChapterNum] = useState(initialChapterNum);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [charCount, setCharCount] = useState(0);
+  const [title, setTitle] = useState(initialTitle);
+  const [body, setBody] = useState(initialBody);
+  const [charCount, setCharCount] = useState(initialBody.length);
   const [showSaved, setShowSaved] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  const editor = useCreateBlockNote();
+  // BlockNote는 마운트 시점의 initialContent 만 본다. 모드 전환 시 부모가 key를 바꿔
+  // ChapterForm을 재마운트하므로 여기서는 첫 마운트만 책임진다.
+  const editor = useCreateBlockNote({
+    initialContent: plainToBlocks(initialBody),
+  });
 
-  // initialChapterNum 변경 시 동기화 (저장 후 다음 번호)
+  // 모드/initial 변경 시 폼 state 동기화 (key가 안 바뀌어 재마운트 안 될 가능성 대비)
   useEffect(() => {
     setChapterNum(initialChapterNum);
-  }, [initialChapterNum]);
+    setTitle(initialTitle);
+    setBody(initialBody);
+    setCharCount(initialBody.length);
+  }, [initialChapterNum, initialTitle, initialBody]);
 
-  // 본문 텍스트만 허용 — 붙여넣기 서식 제거는 BlockNote 기본 동작에서 비교적 깔끔하지만,
-  // paste 이벤트를 가로채 plaintext만 삽입한다.
+  // 붙여넣기 plaintext만 허용
   useEffect(() => {
     const dom = editor.domElement;
     if (!dom) return;
@@ -76,21 +109,27 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
 
   function handleSave() {
     if (!title.trim() && !body.trim()) return;
-    onSave({
+    const payload = {
       chapterNum: chapterNum.trim() || "1장",
       title: title.trim() || "(제목 없음)",
       body: body.trim(),
       charCount,
-    });
-    // 폼 초기화
-    setTitle("");
-    setBody("");
-    setCharCount(0);
-    editor.replaceBlocks(editor.document, [{ type: "paragraph", content: "" }]);
-    // 저장 피드백
+    };
+
+    if (mode.kind === "new") {
+      onSaveNew(payload);
+      // 폼 초기화
+      setTitle("");
+      setBody("");
+      setCharCount(0);
+      editor.replaceBlocks(editor.document, [{ type: "paragraph", content: "" }]);
+    } else {
+      onSaveEdit(mode.blockId, payload);
+      // 편집 모드는 폼 유지
+    }
+
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 1800);
-    // 제목 포커스
     setTimeout(() => titleRef.current?.focus(), 0);
   }
 
@@ -105,22 +144,33 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, body, charCount, chapterNum]);
+  }, [title, body, charCount, chapterNum, mode]);
+
+  const isEdit = mode.kind === "edit";
 
   return (
     <div className="w-full min-w-0 max-w-[680px] bg-surface rounded-[16px] border border-border shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">
       <div className="px-[26px] pt-[22px]">
         <div className="flex items-center gap-2 mb-3">
-          <span className="bg-accent-light text-accent text-[10px] font-bold uppercase tracking-[0.5px] px-[9px] py-[3px] rounded-[20px]">
-            챕터
+          <span
+            className={`text-[10px] font-bold uppercase tracking-[0.5px] px-[9px] py-[3px] rounded-[20px] ${
+              isEdit ? "bg-purple-light text-purple" : "bg-accent-light text-accent"
+            }`}
+          >
+            {isEdit ? "편집" : "챕터"}
           </span>
           <input
             type="text"
             value={chapterNum}
-            onChange={(e) => setChapterNum(e.target.value)}
+            onChange={(e) => {
+              setChapterNum(e.target.value);
+              onChange?.({ chapterNum: e.target.value, title, body });
+            }}
             className="border-none bg-transparent text-[13px] font-semibold text-text-secondary outline-none w-20 focus:text-accent"
           />
-          <span className="text-[11px] text-text-muted">직접 수정 가능 (프롤로그, 에필로그 등)</span>
+          <span className="text-[11px] text-text-muted">
+            {isEdit ? "기존 챕터 편집 중" : "직접 수정 가능 (프롤로그, 에필로그 등)"}
+          </span>
         </div>
         <input
           ref={titleRef}
@@ -136,8 +186,6 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
         <div className="h-px bg-border mt-4" />
       </div>
 
-      {/* 본문 영역 — 글 길이에 따라 자연스럽게 늘어나는 무한 스크롤.
-          좌우 분할 레이아웃에서는 좌측 컨테이너가 overflow-y-auto를 담당한다. */}
       <div className="px-[26px] py-4 min-h-[260px]">
         <div className="ch-blocknote text-[15px] leading-[1.9] text-text-primary">
           <BlockNoteView
@@ -172,7 +220,7 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
           onClick={handleSave}
           className="px-[22px] py-[9px] rounded-[8px] bg-accent text-white text-[13px] font-bold transition-all hover:bg-accent-hover active:scale-[0.97]"
         >
-          저장
+          {isEdit ? "수정 저장" : "저장"}
         </button>
       </div>
     </div>

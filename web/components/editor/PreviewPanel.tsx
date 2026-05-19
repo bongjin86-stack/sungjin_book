@@ -1,15 +1,20 @@
 "use client";
 
-// BookPreviewPanel — 에디터 우측에 항상 고정되는 미리보기 패널 (Vellum/Atticus 스타일).
-// 인쇄본(판형 비율)과 전자기기(Kindle/iPad/Smartphone) 프레임을 전환할 수 있다.
+// BookPreviewPanel — Atticus 스타일 미리보기 (페이지 분할 + 네비게이션).
 //
-// 판형 여백 기준 (Typst 표준 근사치 — 절대 변경 금지):
-//   신국판(152×225): top 20mm / bottom 22mm / inner 20mm / outer 16mm
-//   46배판(188×257): top 22mm / bottom 25mm / inner 22mm / outer 18mm
-//   문고판(105×148): top 14mm / bottom 16mm / inner 14mm / outer 12mm
+// 구조:
+//   ┌ 상단 툴바 (판형/기기 라벨)
+//   ├ 책 프레임 영역 (flex-1, ResizeObserver 측정 대상)
+//   ├ (N pages) 페이지 수 표시
+//   ├ 네비 2×2 (◀ Page / Page ▶ / |◀ Chapter / Chapter ▶|)
+//   └ 하단 기기 전환 드롭다운
+//
+// 페이지 분할은 usePreviewLayout → usePagination 으로 결정. 현재 활성 챕터 1개만 분할.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BookOptions, PreviewDevice, TrimSize } from "@/types/book";
+import { usePreviewLayout } from "@/hooks/usePreviewLayout";
+import { usePagination } from "@/hooks/usePagination";
 
 interface BookPreviewPanelProps {
   options: BookOptions;
@@ -19,79 +24,14 @@ interface BookPreviewPanelProps {
     title: string;
     body: string;
   };
+  /** 챕터 전환 식별자 — 바뀌면 currentPage가 0으로 리셋 */
+  resetPageKey?: string | null;
 }
-
-// 판형별 비율 (width / height)
-const TRIM_RATIO: Record<TrimSize, number> = {
-  "신국판": 152 / 225,
-  "46배판": 188 / 257,
-  "문고판": 105 / 148,
-};
-
-// 판형별 여백 — CSS padding % 는 부모 너비 기준이므로 너비 기준 % 로 환산.
-const TRIM_PADDING: Record<
-  TrimSize,
-  { top: string; bottom: string; inner: string; outer: string }
-> = {
-  "신국판": { top: "13.2%", bottom: "14.5%", inner: "13.2%", outer: "10.5%" },
-  "46배판": { top: "11.7%", bottom: "13.3%", inner: "11.7%", outer: "9.6%" },
-  "문고판": { top: "13.3%", bottom: "15.2%", inner: "13.3%", outer: "11.4%" },
-};
 
 const TRIM_SIZE_LABEL: Record<TrimSize, string> = {
   "신국판": "152 × 225",
   "46배판": "188 × 257",
   "문고판": "105 × 148",
-};
-
-// 전자기기 비율 (width / height)
-const DEVICE_RATIO: Record<Exclude<PreviewDevice, "print">, number> = {
-  kindle: 3 / 4,         // 0.75
-  ipad: 3 / 4,           // 0.75
-  smartphone: 9 / 19.5,  // ≈ 0.461
-};
-
-// 전자기기 본문 padding — 베젤 안쪽 본문 영역 (% width 기준)
-const DEVICE_PADDING = {
-  top: "10%",
-  bottom: "10%",
-  inner: "9%",
-  outer: "9%",
-} as const;
-
-// 미리보기 폰트 크기 — 책 프레임 너비가 작아 실제 mm 비율보다 키워서 옵션 차이가 눈에 보이게.
-// (정확한 mm→px 변환은 2단계 동적 레이아웃에서 처리)
-const FONT_SIZE_PX: Record<BookOptions["bodyFontSize"], string> = {
-  "9pt": "13px",
-  "10pt": "15px",
-  "11pt": "17px",
-};
-
-// 여백 프리셋 배율 — 판형별 기준 여백에 곱하는 계수
-const MARGIN_MULTIPLIER: Record<BookOptions["marginPreset"], number> = {
-  narrow: 0.7,
-  normal: 1.0,
-  wide: 1.3,
-};
-
-function scalePadding(
-  base: { top: string; bottom: string; inner: string; outer: string },
-  mult: number,
-) {
-  // 옛 localStorage에 marginPreset이 없을 수 있어 NaN 방어 — 기본 1.0
-  const safeMult = Number.isFinite(mult) && mult > 0 ? mult : 1.0;
-  const scale = (s: string) => {
-    const n = parseFloat(s);
-    if (!Number.isFinite(n)) return s;
-    return `${(n * safeMult).toFixed(2)}%`;
-  };
-  return { top: scale(base.top), bottom: scale(base.bottom), inner: scale(base.inner), outer: scale(base.outer) };
-}
-
-const LINE_HEIGHT: Record<BookOptions["lineSpacing"], string> = {
-  narrow: "1.6",
-  normal: "1.8",
-  wide: "2.0",
 };
 
 function deviceLabel(device: Exclude<PreviewDevice, "print">): string {
@@ -100,147 +40,167 @@ function deviceLabel(device: Exclude<PreviewDevice, "print">): string {
   return "스마트폰";
 }
 
-export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewPanelProps) {
+// 챕터 헤더(번호+제목+여백)가 차지하는 줄 수 추정값.
+// 정확한 측정은 2단계에서 동적으로.
+function estimateChapterHeaderLines(showChapterNumber: boolean): number {
+  return showChapterNumber ? 4 : 3;
+}
+
+export function BookPreviewPanel({
+  options,
+  trim,
+  previewContent,
+  resetPageKey,
+}: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
+  const [currentPage, setCurrentPage] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { chapterNum, title, body } = previewContent;
   const isEmpty = !title.trim() && !body.trim();
-
-  const fontFamily = options.bodyFont === "sans" ? "sans-serif" : "serif";
-  const fontSize = FONT_SIZE_PX[options.bodyFontSize];
-  const lineHeight = LINE_HEIGHT[options.lineSpacing];
   const paragraphs = body.split(/\n+/).filter((p) => p.trim().length > 0);
 
-  const ratio = device === "print" ? TRIM_RATIO[trim] : DEVICE_RATIO[device];
+  const layout = usePreviewLayout({ containerRef, trim, options, device });
 
-  // 본문 영역 padding — print 는 판형별 × 여백 프리셋 배율, 전자기기는 공통값
-  // marginPreset이 없는 옛 옵션 객체일 수 있어 "normal" 폴백
-  const mult = MARGIN_MULTIPLIER[options.marginPreset ?? "normal"] ?? 1.0;
-  const padding =
-    device === "print"
-      ? scalePadding(TRIM_PADDING[trim], mult)
-      : DEVICE_PADDING;
+  const { pages, totalPages } = usePagination({
+    paragraphs,
+    linesPerPage: layout.linesPerPage,
+    charsPerLine: layout.charsPerLine,
+    chapterHeaderLines: estimateChapterHeaderLines(options.showChapterNumber),
+  });
 
-  // 쪽번호 (인쇄본만).
-  // 미리보기는 "본문 페이지" 기준으로 옵션 효과를 보여준다 — showPageNumber 토글이 즉시 보이도록
-  // 챕터 시작 페이지에서 숨김 처리하는 옵션(hideChapterStartPageNumber)은 2단계 페이지 분할에서 실제 동작.
-  const previewPageNumber = 2;
-  const pnVisible = device === "print" && options.showPageNumber;
+  // 챕터 전환 시 0으로 리셋
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [resetPageKey]);
+
+  // totalPages 변경 시 currentPage 클램프 (옵션 변경에서도 처음으로 점프하지 않게)
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(Math.max(0, p), Math.max(0, totalPages - 1)));
+  }, [totalPages]);
+
+  // 키보드 ← / → — 미리보기 패널 포커스 시만 (에디터 캐럿과 충돌 방지)
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      setCurrentPage((p) => Math.max(0, p - 1));
+    } else if (e.key === "ArrowRight" || e.key === "PageDown") {
+      e.preventDefault();
+      setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
+    }
+  }
+
+  const goPage = (delta: number) =>
+    setCurrentPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
+  const goPageStart = () => setCurrentPage(0);
+  const goPageEnd = () => setCurrentPage(Math.max(0, totalPages - 1));
+
+  const visibleParagraphIdx = pages[currentPage] ?? [];
+  const showChapterHeader = currentPage === 0;
+
+  // 쪽번호 (인쇄본만). 챕터 시작 페이지(0)에서 hideChapterStartPageNumber 적용
+  const pnVisible =
+    device === "print" &&
+    options.showPageNumber &&
+    !(options.hideChapterStartPageNumber && currentPage === 0);
+  const previewPageNumber = currentPage + 1;
 
   let pnPositionStyle: React.CSSProperties = {};
   if (options.pageNumberPosition === "bottom-center") {
-    pnPositionStyle = { bottom: padding.bottom, left: 0, right: 0, textAlign: "center" };
+    pnPositionStyle = {
+      bottom: `${layout.paddingPx.bottom / 2}px`,
+      left: 0,
+      right: 0,
+      textAlign: "center",
+    };
   } else if (options.pageNumberPosition === "top-outside") {
-    pnPositionStyle = { top: padding.top, right: padding.outer };
+    pnPositionStyle = {
+      top: `${layout.paddingPx.top / 2}px`,
+      right: `${layout.paddingPx.outer / 2}px`,
+    };
   } else {
-    pnPositionStyle = { bottom: padding.bottom, right: padding.outer };
+    pnPositionStyle = {
+      bottom: `${layout.paddingPx.bottom / 2}px`,
+      right: `${layout.paddingPx.outer / 2}px`,
+    };
   }
 
-  const innerBody = (
-    // 바깥 div: padding으로 사방 여백 확보. overflow:hidden은 안쪽 wrapper로 옮긴다.
-    // (padding 영역에 content가 침범하는 CSS 기본 동작을 막기 위함)
-    <div
-      className="absolute inset-0"
-      style={{
-        paddingTop: padding.top,
-        paddingBottom: padding.bottom,
-        paddingLeft: padding.inner,
-        paddingRight: padding.outer,
-        boxSizing: "border-box",
-        fontFamily,
-        fontSize,
-        lineHeight,
-        color: "#1F1B16",
-      }}
-    >
-      {/* content area — padding 안쪽 영역 100%×100%. 본문이 넘쳐도 여기서만 잘림. */}
-      <div className="w-full h-full overflow-hidden">
-      {isEmpty ? (
-        <div
-          className="text-center leading-[1.7]"
-          style={{ fontSize: "9px", color: "#BDBDBD", paddingTop: "15%" }}
-        >
-          챕터를 입력하면
-          <br />
-          여기에 미리보기가 표시됩니다.
-        </div>
-      ) : (
-        <>
-          {options.showChapterNumber && (
-            <div
-              className="text-center font-bold"
-              style={{
-                fontFamily: "sans-serif",
-                fontSize: "9px",
-                color: "#111",
-                marginBottom: "3px",
-              }}
-            >
-              {chapterNum}
-            </div>
-          )}
-          <div
-            className="text-center font-bold leading-[1.3]"
-            style={{
-              fontFamily: "sans-serif",
-              fontSize: "11px",
-              color: "#111",
-              marginBottom: "10px",
-            }}
-          >
-            {title || "(제목 없음)"}
-          </div>
-          <div style={{ textAlign: "justify" }}>
-            {paragraphs.map((p, i) => (
-              <p
-                key={i}
-                style={{
-                  textIndent: options.paragraphIndent && i > 0 ? "1em" : "0",
-                  margin: 0,
-                }}
-                className={options.dropCaps && i === 0 ? "drop-caps-para" : ""}
-              >
-                {p}
-              </p>
-            ))}
-          </div>
-        </>
-      )}
-      </div>
-    </div>
-  );
-
   return (
-    /* 밝은 크림색 배경 — 에디터 영역과 자연스럽게 이어지도록 */
-    <aside className="w-full h-full bg-[#EDEBE5] border-l border-border flex flex-col overflow-hidden">
+    <aside
+      className="w-full h-full bg-[#EDEBE5] border-l border-border flex flex-col overflow-hidden focus:outline-none"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
       {/* 상단 툴바 */}
       <div className="h-10 px-4 flex items-center justify-between border-b border-border flex-shrink-0">
         <span className="text-[11px] text-text-secondary font-medium">
-          {device === "print" ? `${trim} ${TRIM_SIZE_LABEL[trim]}` : deviceLabel(device)}
+          {device === "print"
+            ? `${trim} ${TRIM_SIZE_LABEL[trim]}`
+            : deviceLabel(device)}
         </span>
         <span className="text-[11px] text-text-muted">
           {device === "print" ? "인쇄본" : "전자책"}
         </span>
       </div>
 
-      {/* 프레임 영역 — 패널 너비의 75% 를 프레임 너비로 사용, max-w 제한 없음 */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-8">
-        {device === "print" ? (
-          <div className="w-[75%] min-w-[140px]">
-            <PrintFrame
-              ratio={ratio}
-              paddingInner={padding.inner}
-              innerBody={innerBody}
-              pnVisible={pnVisible && !isEmpty}
-              pnPositionStyle={pnPositionStyle}
-              pageNumber={previewPageNumber}
-            />
-          </div>
-        ) : (
-          <div className="w-[75%] min-w-[140px]">
-            <DeviceFrame device={device} ratio={ratio} innerBody={innerBody} />
-          </div>
+      {/* 책 프레임 영역 — ResizeObserver 측정 대상 */}
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-hidden flex items-center justify-center px-3 py-3"
+      >
+        {layout.ready && layout.bookWidth > 0 && (
+          <BookFrame
+            device={device}
+            widthPx={layout.bookWidth}
+            heightPx={layout.bookHeight}
+            paddingPx={layout.paddingPx}
+            fontFamily={options.bodyFont === "sans" ? "sans-serif" : "serif"}
+            fontSizePx={layout.fontSizePx}
+            lineHeightPx={layout.lineHeightPx}
+            renderHeader={showChapterHeader && !isEmpty}
+            renderEmptyMessage={isEmpty}
+            chapterNum={chapterNum}
+            title={title}
+            showChapterNumber={options.showChapterNumber}
+            dropCaps={options.dropCaps}
+            paragraphIndent={options.paragraphIndent}
+            paragraphTexts={visibleParagraphIdx.map((i) => paragraphs[i])}
+            paragraphAbsoluteIndices={visibleParagraphIdx}
+            currentPage={currentPage}
+            pnVisible={pnVisible && !isEmpty}
+            pnPositionStyle={pnPositionStyle}
+            pageNumber={previewPageNumber}
+          />
         )}
+      </div>
+
+      {/* 페이지 수 표시 */}
+      <div className="px-4 pt-1 flex items-center justify-center flex-shrink-0">
+        <span className="text-[11px] text-text-muted">({totalPages} pages)</span>
+      </div>
+
+      {/* 네비 2×2 */}
+      <div className="px-4 pt-2 pb-2 grid grid-cols-2 gap-1 flex-shrink-0">
+        <NavButton
+          label="◀ Page"
+          onClick={() => goPage(-1)}
+          disabled={currentPage === 0}
+        />
+        <NavButton
+          label="Page ▶"
+          onClick={() => goPage(1)}
+          disabled={currentPage >= totalPages - 1}
+        />
+        <NavButton
+          label="|◀ Chapter"
+          onClick={goPageStart}
+          disabled={currentPage === 0}
+        />
+        <NavButton
+          label="Chapter ▶|"
+          onClick={goPageEnd}
+          disabled={currentPage >= totalPages - 1}
+        />
       </div>
 
       {/* 하단 — 기기 전환 드롭다운 */}
@@ -266,120 +226,251 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   );
 }
 
-// ─── 인쇄본 프레임 (종이/제본선/쪽번호) ──────────────────────────────────────
-function PrintFrame({
-  ratio,
-  paddingInner,
-  innerBody,
-  pnVisible,
-  pnPositionStyle,
-  pageNumber,
+// ─── 네비 버튼 ──────────────────────────────────────────────────────────────
+function NavButton({
+  label,
+  onClick,
+  disabled,
 }: {
-  ratio: number;
-  paddingInner: string;
-  innerBody: React.ReactNode;
-  pnVisible: boolean;
-  pnPositionStyle: React.CSSProperties;
-  pageNumber: number;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <div
-      className="relative flex-shrink-0"
-      style={{ width: "100%", aspectRatio: `${ratio}` }}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`text-[11px] py-[6px] rounded-[6px] border border-border transition-colors ${
+        disabled
+          ? "bg-transparent text-text-muted/40 cursor-not-allowed"
+          : "bg-surface text-text-secondary hover:border-accent hover:text-accent"
+      }`}
     >
-      {/* 페이지 뒷장 두께 효과 */}
-      <div
-        className="absolute inset-0 rounded-[2px]"
-        style={{
-          transform: "translate(3px, 4px)",
-          background: "#C8C4BC",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-        }}
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 rounded-[2px]"
-        style={{ transform: "translate(1.5px, 2px)", background: "#D8D4CC" }}
-        aria-hidden
-      />
-
-      {/* 실제 종이 */}
-      <div
-        className="absolute inset-0 rounded-[2px] overflow-hidden"
-        style={{
-          background: "#FAFAFA",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)",
-        }}
-      >
-        {/* 제본선(spine) 음영 */}
-        <div
-          className="absolute top-0 bottom-0 left-0 pointer-events-none"
-          style={{
-            width: paddingInner,
-            background:
-              "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.04) 40%, rgba(0,0,0,0) 100%)",
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute top-0 bottom-0 left-0 pointer-events-none"
-          style={{ width: "1px", background: "rgba(0,0,0,0.08)" }}
-          aria-hidden
-        />
-
-        {innerBody}
-
-        {pnVisible && (
-          <div
-            className="absolute pointer-events-none"
-            style={{ ...pnPositionStyle, fontFamily: "serif", fontSize: "9px", color: "#555" }}
-          >
-            {pageNumber}
-          </div>
-        )}
-      </div>
-    </div>
+      {label}
+    </button>
   );
 }
 
-// ─── 전자기기 프레임 (Kindle / iPad / Smartphone) ────────────────────────────
-function DeviceFrame({
-  device,
-  ratio,
-  innerBody,
-}: {
-  device: Exclude<PreviewDevice, "print">;
-  ratio: number;
-  innerBody: React.ReactNode;
-}) {
+// ─── 책 프레임 (인쇄본 + 전자기기 통합) ────────────────────────────────────
+interface BookFrameProps {
+  device: PreviewDevice;
+  widthPx: number;
+  heightPx: number;
+  paddingPx: { top: number; bottom: number; inner: number; outer: number };
+  fontFamily: string;
+  fontSizePx: number;
+  lineHeightPx: number;
+  renderHeader: boolean;
+  renderEmptyMessage: boolean;
+  chapterNum: string;
+  title: string;
+  showChapterNumber: boolean;
+  dropCaps: boolean;
+  paragraphIndent: boolean;
+  paragraphTexts: string[];
+  paragraphAbsoluteIndices: number[];
+  currentPage: number;
+  pnVisible: boolean;
+  pnPositionStyle: React.CSSProperties;
+  pageNumber: number;
+}
+
+function BookFrame(props: BookFrameProps) {
+  const {
+    device,
+    widthPx,
+    heightPx,
+    paddingPx,
+    fontFamily,
+    fontSizePx,
+    lineHeightPx,
+    renderHeader,
+    renderEmptyMessage,
+    chapterNum,
+    title,
+    showChapterNumber,
+    dropCaps,
+    paragraphIndent,
+    paragraphTexts,
+    paragraphAbsoluteIndices,
+    currentPage,
+    pnVisible,
+    pnPositionStyle,
+    pageNumber,
+  } = props;
+
+  const isPrint = device === "print";
   const isKindle = device === "kindle";
-  // Kindle: 따뜻한 회색 베젤, iPad/Smartphone: 어두운 베젤
   const bezelColor = isKindle ? "#8A8480" : "#2A2A2A";
   const screenBg = isKindle ? "#F2EFE9" : "#FFFFFF";
-  const bezel = device === "smartphone" ? "5%" : "6%";
-  const radius = device === "smartphone" ? "14px" : "8px";
+  const bezelPct = device === "smartphone" ? 0.05 : 0.06;
+  const radius = device === "smartphone" ? 14 : isPrint ? 2 : 8;
 
   return (
     <div
       className="relative flex-shrink-0"
       style={{
-        width: "100%",
-        aspectRatio: `${ratio}`,
-        background: bezelColor,
-        borderRadius: radius,
-        padding: bezel,
-        boxShadow: "0 8px 20px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
+        width: widthPx,
+        height: heightPx,
       }}
     >
-      {/* 화면 */}
+      {isPrint && (
+        <>
+          {/* 페이지 뒷장 두께 효과 */}
+          <div
+            className="absolute inset-0 rounded-[2px]"
+            style={{
+              transform: "translate(3px, 4px)",
+              background: "#C8C4BC",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+            }}
+            aria-hidden
+          />
+          <div
+            className="absolute inset-0 rounded-[2px]"
+            style={{ transform: "translate(1.5px, 2px)", background: "#D8D4CC" }}
+            aria-hidden
+          />
+        </>
+      )}
+
+      {/* 종이 / 화면 */}
       <div
-        className="relative w-full h-full overflow-hidden"
+        className="absolute inset-0 overflow-hidden"
         style={{
-          background: screenBg,
-          borderRadius: device === "smartphone" ? "6px" : "3px",
+          background: isPrint ? "#FFFFFF" : bezelColor,
+          borderRadius: radius,
+          padding: isPrint ? 0 : `${widthPx * bezelPct}px`,
+          boxShadow: isPrint
+            ? "0 6px 20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.10)"
+            : "0 8px 20px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)",
         }}
       >
-        {innerBody}
+        <div
+          className="relative w-full h-full overflow-hidden"
+          style={{
+            background: isPrint ? "transparent" : screenBg,
+            borderRadius: isPrint ? 0 : device === "smartphone" ? 6 : 3,
+          }}
+        >
+          {/* 제본선 (인쇄본만) */}
+          {isPrint && (
+            <>
+              <div
+                className="absolute top-0 bottom-0 left-0 pointer-events-none"
+                style={{
+                  width: `${paddingPx.inner}px`,
+                  background:
+                    "linear-gradient(to right, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.04) 40%, rgba(0,0,0,0) 100%)",
+                }}
+                aria-hidden
+              />
+              <div
+                className="absolute top-0 bottom-0 left-0 pointer-events-none"
+                style={{ width: "1px", background: "rgba(0,0,0,0.08)" }}
+                aria-hidden
+              />
+            </>
+          )}
+
+          {/* 본문 영역 */}
+          <div
+            className="absolute inset-0"
+            style={{
+              paddingTop: paddingPx.top,
+              paddingBottom: paddingPx.bottom,
+              paddingLeft: paddingPx.inner,
+              paddingRight: paddingPx.outer,
+              boxSizing: "border-box",
+              fontFamily,
+              fontSize: `${fontSizePx}px`,
+              lineHeight: `${lineHeightPx}px`,
+              color: "#1F1B16",
+            }}
+          >
+            <div
+              className="w-full h-full overflow-hidden"
+              key={currentPage} // opacity 페이드용 (CSS animation으로 대체 가능)
+              style={{ animation: "previewFade 120ms ease-out" }}
+            >
+              {renderEmptyMessage ? (
+                <div
+                  className="text-center leading-[1.7]"
+                  style={{ fontSize: "10px", color: "#BDBDBD", paddingTop: "15%" }}
+                >
+                  챕터를 입력하면
+                  <br />
+                  여기에 미리보기가 표시됩니다.
+                </div>
+              ) : (
+                <>
+                  {renderHeader && (
+                    <>
+                      {showChapterNumber && (
+                        <div
+                          className="text-center font-bold"
+                          style={{
+                            fontFamily: "sans-serif",
+                            fontSize: `${fontSizePx * 0.95}px`,
+                            color: "#111",
+                            marginBottom: `${fontSizePx * 0.3}px`,
+                          }}
+                        >
+                          {chapterNum}
+                        </div>
+                      )}
+                      <div
+                        className="text-center font-bold leading-[1.3]"
+                        style={{
+                          fontFamily: "sans-serif",
+                          fontSize: `${fontSizePx * 1.4}px`,
+                          color: "#111",
+                          marginBottom: `${fontSizePx * 0.8}px`,
+                        }}
+                      >
+                        {title || "(제목 없음)"}
+                      </div>
+                    </>
+                  )}
+                  <div style={{ textAlign: "justify" }}>
+                    {paragraphTexts.map((p, localIdx) => {
+                      const absIdx = paragraphAbsoluteIndices[localIdx];
+                      const isFirstParagraphOfChapter = absIdx === 0;
+                      return (
+                        <p
+                          key={`${currentPage}-${localIdx}`}
+                          style={{
+                            textIndent: paragraphIndent && !isFirstParagraphOfChapter ? "1em" : "0",
+                            margin: 0,
+                          }}
+                          className={dropCaps && isFirstParagraphOfChapter ? "drop-caps-para" : ""}
+                        >
+                          {p}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 쪽번호 */}
+          {pnVisible && (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                ...pnPositionStyle,
+                fontFamily: "serif",
+                fontSize: `${Math.max(8, fontSizePx * 0.7)}px`,
+                color: "#555",
+              }}
+            >
+              {pageNumber}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

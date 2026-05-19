@@ -135,6 +135,33 @@ export function useBookStore() {
     []
   );
 
+  const updateChapter = useCallback(
+    (
+      id: string,
+      patch: { chapterNum?: string; title?: string; body?: string },
+    ) => {
+      setBookData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          blocks: prev.blocks.map((b) => {
+            if (b.id !== id || b.type !== "chapter") return b;
+            const body = patch.body ?? b.body;
+            return {
+              ...b,
+              chapterNum: patch.chapterNum ?? b.chapterNum,
+              title: patch.title ?? b.title,
+              body,
+              charCount: body.length,
+            };
+          }),
+          updatedAt: Date.now(),
+        };
+      });
+    },
+    [],
+  );
+
   const deleteBlock = useCallback((id: string) => {
     setBookData((prev) => {
       if (!prev) return prev;
@@ -176,6 +203,7 @@ export function useBookStore() {
     addChapter,
     addInterlude,
     updateBlock,
+    updateChapter,
     deleteBlock,
     reorderBlocks,
     totalChars,
