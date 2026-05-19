@@ -101,6 +101,7 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
   const [includeInToc, setIncludeInToc] = useState(initialIncludeInToc);
   const [tocTitle, setTocTitle] = useState(initialTocTitle);
   const [showChapterNumber, setShowChapterNumber] = useState(initialShowChapterNumber);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -279,66 +280,38 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
           placeholder="부제목 또는 소제목 (선택)"
           className="mt-2 w-full border-none outline-none text-[14px] font-medium text-text-secondary bg-transparent leading-[1.5] placeholder:text-[#D4D0C8] placeholder:font-normal"
         />
-        <div className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[12px] text-text-secondary">
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={includeInToc}
-              onChange={(e) => {
-                setIncludeInToc(e.target.checked);
-                onChange?.({
-                  chapterNum,
-                  title,
-                  subtitle,
-                  body,
-                  includeInToc: e.target.checked,
-                  tocTitle,
-                  showChapterNumber,
-                });
-              }}
-              className="w-4 h-4 accent-accent"
-            />
-            목차에 표시
-          </label>
-          <input
-            type="text"
-            value={tocTitle}
-            onChange={(e) => {
-              setTocTitle(e.target.value);
-              onChange?.({
-                chapterNum,
-                title,
-                subtitle,
-                body,
-                includeInToc,
-                tocTitle: e.target.value,
-                showChapterNumber,
-              });
-            }}
-            placeholder="목차에 다르게 보일 이름 (선택)"
-            className="min-w-0 rounded-[7px] border border-border bg-bg px-3 py-[6px] outline-none focus:border-accent focus:bg-white"
-          />
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showChapterNumber}
-              onChange={(e) => {
-                setShowChapterNumber(e.target.checked);
-                onChange?.({
-                  chapterNum,
-                  title,
-                  subtitle,
-                  body,
-                  includeInToc,
-                  tocTitle,
-                  showChapterNumber: e.target.checked,
-                });
-              }}
-              className="w-4 h-4 accent-accent"
-            />
-            챕터 번호 표시
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen((v) => !v)}
+          className="mt-4 inline-flex items-center gap-1 text-[12px] font-medium text-text-muted transition-colors hover:text-accent"
+        >
+          <span>{settingsOpen ? "▾" : "▸"}</span>
+          챕터 설정
+        </button>
+        {settingsOpen && (
+          <div className="mt-3 rounded-[10px] border border-border bg-bg px-4 py-3 text-[12px] text-text-secondary">
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showChapterNumber}
+                onChange={(e) => {
+                  setShowChapterNumber(e.target.checked);
+                  onChange?.({
+                    chapterNum,
+                    title,
+                    subtitle,
+                    body,
+                    includeInToc,
+                    tocTitle,
+                    showChapterNumber: e.target.checked,
+                  });
+                }}
+                className="w-4 h-4 accent-accent"
+              />
+              이 챕터에 번호 보이기
+            </label>
+          </div>
+        )}
         <div className="h-px bg-border mt-4" />
       </div>
 

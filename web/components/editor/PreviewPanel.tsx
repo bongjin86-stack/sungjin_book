@@ -179,18 +179,20 @@ export function BookPreviewPanel({
 
       {/* 페이지 수 표시 */}
       <div className="px-4 pt-1 flex items-center justify-center flex-shrink-0">
-        <span className="text-[11px] text-text-muted">({totalPages} pages)</span>
+        <span className="text-[11px] text-text-muted">
+          {currentPage + 1} / {totalPages}쪽
+        </span>
       </div>
 
       {/* 페이지 네비 — 좌/우 한 줄 */}
       <div className="px-4 pt-2 pb-2 grid grid-cols-2 gap-1 flex-shrink-0">
         <NavButton
-          label="◀ Page"
+          label="◀ 이전 쪽"
           onClick={() => goPage(-1)}
           disabled={currentPage === 0}
         />
         <NavButton
-          label="Page ▶"
+          label="다음 쪽 ▶"
           onClick={() => goPage(1)}
           disabled={currentPage >= totalPages - 1}
         />
