@@ -23,6 +23,7 @@ export interface BookOptions {
   bodyFont: "serif" | "sans";
   bodyFontSize: "9pt" | "10pt" | "11pt";
   lineSpacing: "narrow" | "normal" | "wide";
+  marginPreset: "narrow" | "normal" | "wide";
 
   // 레이어 3 — 켜기/끄기
   showPageNumber: boolean;
@@ -161,6 +162,7 @@ export const DEFAULT_OPTIONS: BookOptions = {
   bodyFont: "serif",
   bodyFontSize: "10pt",
   lineSpacing: "normal",
+  marginPreset: "normal",
 
   showPageNumber: true,
   pageNumberPosition: "bottom-outside",

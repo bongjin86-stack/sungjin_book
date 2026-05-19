@@ -59,11 +59,31 @@ const DEVICE_PADDING = {
   outer: "9%",
 } as const;
 
+// 미리보기 폰트 크기 — 책 프레임 너비가 작아 실제 mm 비율보다 키워서 옵션 차이가 눈에 보이게.
+// (정확한 mm→px 변환은 2단계 동적 레이아웃에서 처리)
 const FONT_SIZE_PX: Record<BookOptions["bodyFontSize"], string> = {
-  "9pt": "11px",
-  "10pt": "12px",
-  "11pt": "13px",
+  "9pt": "13px",
+  "10pt": "15px",
+  "11pt": "17px",
 };
+
+// 여백 프리셋 배율 — 판형별 기준 여백에 곱하는 계수
+const MARGIN_MULTIPLIER: Record<BookOptions["marginPreset"], number> = {
+  narrow: 0.7,
+  normal: 1.0,
+  wide: 1.3,
+};
+
+function scalePadding(
+  base: { top: string; bottom: string; inner: string; outer: string },
+  mult: number,
+) {
+  const scale = (s: string) => {
+    const n = parseFloat(s);
+    return `${(n * mult).toFixed(2)}%`;
+  };
+  return { top: scale(base.top), bottom: scale(base.bottom), inner: scale(base.inner), outer: scale(base.outer) };
+}
 
 const LINE_HEIGHT: Record<BookOptions["lineSpacing"], string> = {
   narrow: "1.6",
@@ -90,15 +110,17 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
 
   const ratio = device === "print" ? TRIM_RATIO[trim] : DEVICE_RATIO[device];
 
-  // 본문 영역 padding — print 는 판형별, 전자기기는 공통값
-  const padding = device === "print" ? TRIM_PADDING[trim] : DEVICE_PADDING;
+  // 본문 영역 padding — print 는 판형별 × 여백 프리셋 배율, 전자기기는 공통값
+  const padding =
+    device === "print"
+      ? scalePadding(TRIM_PADDING[trim], MARGIN_MULTIPLIER[options.marginPreset])
+      : DEVICE_PADDING;
 
-  // 쪽번호 (인쇄본만)
-  const isChapterStartPage = true;
-  const pnVisible =
-    device === "print" &&
-    options.showPageNumber &&
-    !(options.hideChapterStartPageNumber && isChapterStartPage);
+  // 쪽번호 (인쇄본만).
+  // 미리보기는 "본문 페이지" 기준으로 옵션 효과를 보여준다 — showPageNumber 토글이 즉시 보이도록
+  // 챕터 시작 페이지에서 숨김 처리하는 옵션(hideChapterStartPageNumber)은 2단계 페이지 분할에서 실제 동작.
+  const previewPageNumber = 2;
+  const pnVisible = device === "print" && options.showPageNumber;
 
   let pnPositionStyle: React.CSSProperties = {};
   if (options.pageNumberPosition === "bottom-center") {
@@ -200,6 +222,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
               innerBody={innerBody}
               pnVisible={pnVisible && !isEmpty}
               pnPositionStyle={pnPositionStyle}
+              pageNumber={previewPageNumber}
             />
           </div>
         ) : (
@@ -239,12 +262,14 @@ function PrintFrame({
   innerBody,
   pnVisible,
   pnPositionStyle,
+  pageNumber,
 }: {
   ratio: number;
   paddingInner: string;
   innerBody: React.ReactNode;
   pnVisible: boolean;
   pnPositionStyle: React.CSSProperties;
+  pageNumber: number;
 }) {
   return (
     <div
@@ -296,9 +321,9 @@ function PrintFrame({
         {pnVisible && (
           <div
             className="absolute pointer-events-none"
-            style={{ ...pnPositionStyle, fontFamily: "serif", fontSize: "7px", color: "#555" }}
+            style={{ ...pnPositionStyle, fontFamily: "serif", fontSize: "9px", color: "#555" }}
           >
-            1
+            {pageNumber}
           </div>
         )}
       </div>

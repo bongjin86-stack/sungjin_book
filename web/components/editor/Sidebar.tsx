@@ -222,6 +222,16 @@ export function Sidebar({
                 ]}
                 onChange={(v) => onChangeOptions({ lineSpacing: v })}
               />
+              <PillGroup
+                label="여백"
+                value={options.marginPreset}
+                options={[
+                  { value: "narrow", label: "좁게" },
+                  { value: "normal", label: "보통" },
+                  { value: "wide", label: "넓게" },
+                ]}
+                onChange={(v) => onChangeOptions({ marginPreset: v })}
+              />
               <ToggleRow
                 label="단락 들여쓰기"
                 checked={options.paragraphIndent}
