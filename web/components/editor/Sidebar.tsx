@@ -26,7 +26,6 @@ interface SidebarProps {
   onChangeOptions: (patch: Partial<BookOptions>) => void;
   blocks: BookBlock[];
   onReorder: (next: BookBlock[]) => void;
-  onAddInterlude: () => void;
   activeBlockId?: string | null;
   onSelectBlock?: (id: string) => void;
 }
@@ -36,7 +35,6 @@ export function Sidebar({
   onChangeOptions,
   blocks,
   onReorder,
-  onAddInterlude,
   activeBlockId,
   onSelectBlock,
 }: SidebarProps) {
@@ -67,7 +65,7 @@ export function Sidebar({
     onReorder(arrayMove(blocks, oldIndex, newIndex));
   }
 
-  const chapterCountForLabel = blocks.length;
+  const chapterCountForLabel = blocks.filter((b) => b.type === "chapter").length;
 
   return (
     <aside className="w-sidebar-w flex-shrink-0 bg-sidebar-bg border-r border-border flex flex-col overflow-hidden">
@@ -142,15 +140,7 @@ export function Sidebar({
             )}
           </div>
 
-          <div className="px-2 pt-[6px] pb-[10px] flex-shrink-0">
-            <button
-              type="button"
-              onClick={onAddInterlude}
-              className="w-full px-[10px] py-[7px] border-[1.5px] border-dashed border-border rounded-[7px] bg-transparent text-text-muted text-[12px] flex items-center gap-[6px] justify-center transition-all hover:border-purple hover:text-purple hover:bg-purple-light"
-            >
-              ✦ 간지 추가
-            </button>
-          </div>
+          <div className="px-2 pt-[6px] pb-[10px] flex-shrink-0" />
         </div>
       )}
 

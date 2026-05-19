@@ -20,7 +20,6 @@ export function EditorLayout() {
     updateMeta,
     updateOptions,
     addChapter,
-    addInterlude,
     updateBlock,
     updateChapter,
     reorderBlocks,
@@ -33,7 +32,7 @@ export function EditorLayout() {
   const didSelectInitialBlock = useRef(false);
 
   const [previewContent, setPreviewContent] = useState({
-    chapterNum: "1장",
+    chapterNum: "제1장",
     title: "",
     subtitle: "",
     body: "",
@@ -46,9 +45,9 @@ export function EditorLayout() {
   }, [hydrated, bookData, router]);
 
   const nextChapterNum = useMemo(() => {
-    if (!bookData) return "1장";
+    if (!bookData) return "제1장";
     const n = bookData.blocks.filter((b) => b.type === "chapter").length + 1;
-    return `${n}장`;
+    return formatChapterNum(n);
   }, [bookData]);
 
   // activeBlockId가 가리키는 블록이 삭제됐다면 null로
@@ -136,7 +135,6 @@ export function EditorLayout() {
           onChangeOptions={updateOptions}
           blocks={blocks}
           onReorder={reorderBlocks}
-          onAddInterlude={addInterlude}
           activeBlockId={activeBlockId}
           onSelectBlock={handleSelectBlock}
         />
@@ -162,7 +160,7 @@ export function EditorLayout() {
                   }}
                   className="text-[12px] text-text-muted hover:text-accent transition-colors"
                 >
-                  + 새 챕터 쓰기
+                  + 다음 챕터 쓰기
                 </button>
               </div>
             )}
@@ -175,7 +173,7 @@ export function EditorLayout() {
                   addChapter(data);
                   setActiveBlockId(null);
                   setPreviewContent({
-                    chapterNum: nextChapterNum,
+                    chapterNum: formatChapterNum(chapterCount + 2),
                     title: "",
                     subtitle: "",
                     body: "",
@@ -268,4 +266,8 @@ function getPreviewContent(block: BookBlock, bookData: BookData) {
     body: (block as { body?: string }).body ?? "",
     showChapterNumber: false,
   };
+}
+
+function formatChapterNum(n: number) {
+  return `제${n}장`;
 }
