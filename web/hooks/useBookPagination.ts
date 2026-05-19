@@ -23,6 +23,8 @@ export interface BookPreviewPage {
   paragraphs: PageParagraph[];
 }
 
+export type ChapterPageMap = Record<string, number>;
+
 interface Input {
   bookData: BookData;
   linesPerPage: number;
@@ -55,10 +57,17 @@ function defaultCopyrightLines(bookData: BookData): string[] {
   return lines;
 }
 
+function formatTocLine(chapterNum: string, title: string, pageNumber?: number): string {
+  const left = `${chapterNum}  ${title}`;
+  if (!pageNumber) return left;
+  return `${left} ........ ${pageNumber}`;
+}
+
 function extractBlock(
   block: BookBlock,
   bookData: BookData,
   defaultShowChapterNumber: boolean,
+  chapterPageMap?: ChapterPageMap,
 ): BlockExtract | null {
   if (block.type === "chapter") {
     const c = block as ChapterBlock;
@@ -74,7 +83,6 @@ function extractBlock(
   }
 
   if (block.type === "interlude") {
-    // MVP에서는 간지는 미리보기에서 스킵
     return null;
   }
 
@@ -111,7 +119,8 @@ function extractBlock(
         ? ["챕터를 추가하면 자동으로 표시됩니다."]
         : chapters.map((c) => {
             const label = c.tocTitle?.trim() || c.title.trim() || "(제목 없음)";
-            return `${c.chapterNum}  ${label}`;
+            const pageNumber = chapterPageMap?.[c.id];
+            return formatTocLine(c.chapterNum, label, pageNumber);
           });
     return {
       title: matter.title || "목차",
@@ -121,7 +130,6 @@ function extractBlock(
     };
   }
 
-  // 그 외 Front/Back matter — title + body
   return {
     title: matter.title || BLOCK_META[block.type].defaultTitle,
     showChapterNumber: false,
@@ -130,40 +138,80 @@ function extractBlock(
   };
 }
 
-export function useBookPagination(input: Input): { pages: BookPreviewPage[] } {
+function buildPages(
+  bookData: BookData,
+  linesPerPage: number,
+  charsPerLine: number,
+  defaultShowChapterNumber: boolean,
+  tocChapterPageMap?: ChapterPageMap,
+): { pages: BookPreviewPage[]; chapterPageMap: ChapterPageMap } {
+  const pages: BookPreviewPage[] = [];
+  const chapterPageMap: ChapterPageMap = {};
+
+  for (const block of bookData.blocks) {
+    const extract = extractBlock(
+      block,
+      bookData,
+      defaultShowChapterNumber,
+      tocChapterPageMap,
+    );
+    if (!extract) continue;
+
+    const paragraphs = extract.paragraphs.length > 0 ? extract.paragraphs : [""];
+    const blockPages = paginateParagraphs(
+      paragraphs,
+      linesPerPage,
+      charsPerLine,
+      extract.headerLines,
+    );
+
+    blockPages.forEach((para, idx) => {
+      const visiblePageNumber = pages.length + 1;
+
+      if (block.type === "chapter" && idx === 0) {
+        chapterPageMap[block.id] = visiblePageNumber;
+      }
+
+      pages.push({
+        id: `${block.id}-${idx}`,
+        blockId: block.id,
+        blockType: block.type,
+        title: extract.title,
+        subtitle: extract.subtitle,
+        chapterNum: extract.chapterNum,
+        showChapterNumber: extract.showChapterNumber,
+        isFirstPageOfBlock: idx === 0,
+        pageIndexInBlock: idx,
+        paragraphs: para,
+      });
+    });
+  }
+
+  return { pages, chapterPageMap };
+}
+
+export function useBookPagination(input: Input): {
+  pages: BookPreviewPage[];
+  chapterPageMap: ChapterPageMap;
+} {
   const { bookData, linesPerPage, charsPerLine, defaultShowChapterNumber } = input;
 
   return useMemo(() => {
-    const pages: BookPreviewPage[] = [];
+    const first = buildPages(
+      bookData,
+      linesPerPage,
+      charsPerLine,
+      defaultShowChapterNumber,
+    );
 
-    for (const block of bookData.blocks) {
-      const extract = extractBlock(block, bookData, defaultShowChapterNumber);
-      if (!extract) continue;
+    const second = buildPages(
+      bookData,
+      linesPerPage,
+      charsPerLine,
+      defaultShowChapterNumber,
+      first.chapterPageMap,
+    );
 
-      const paragraphs = extract.paragraphs.length > 0 ? extract.paragraphs : [""];
-      const blockPages = paginateParagraphs(
-        paragraphs,
-        linesPerPage,
-        charsPerLine,
-        extract.headerLines,
-      );
-
-      blockPages.forEach((para, idx) => {
-        pages.push({
-          id: `${block.id}-${idx}`,
-          blockId: block.id,
-          blockType: block.type,
-          title: extract.title,
-          subtitle: extract.subtitle,
-          chapterNum: extract.chapterNum,
-          showChapterNumber: extract.showChapterNumber,
-          isFirstPageOfBlock: idx === 0,
-          pageIndexInBlock: idx,
-          paragraphs: para,
-        });
-      });
-    }
-
-    return { pages };
+    return second;
   }, [bookData, linesPerPage, charsPerLine, defaultShowChapterNumber]);
 }
