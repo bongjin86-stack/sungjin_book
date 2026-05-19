@@ -75,11 +75,6 @@ export function Sidebar({
           onChange={(v) => onChangeOptions({ showChapterNumber: v })}
         />
         <ToggleRow
-          label="미리보기 패널"
-          checked={options.showPreviewPanel}
-          onChange={(v) => onChangeOptions({ showPreviewPanel: v })}
-        />
-        <ToggleRow
           label="시리즈명 표시"
           checked={options.showSeriesName}
           onChange={(v) => onChangeOptions({ showSeriesName: v })}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChapterForm } from "@/components/editor/ChapterForm";
 import { FullPreviewOverlay } from "@/components/editor/FullPreviewOverlay";
 import { Header } from "@/components/editor/Header";
-import { PreviewPanel } from "@/components/editor/PreviewPanel";
+import { InlinePreview } from "@/components/editor/PreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { useBookStore } from "@/hooks/useBookStore";
@@ -68,23 +68,22 @@ export function EditorLayout() {
           onAddInterlude={addInterlude}
         />
 
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-y-auto flex items-start justify-center px-6 pt-11 pb-20 bg-bg">
-            <ChapterForm
-              key={chapterCount}
-              initialChapterNum={nextChapterNum}
-              onSave={(data) => {
-                addChapter(data);
-                setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
-              }}
-              onChange={setPreviewContent}
-            />
-          </div>
+        {/* 에디터 중앙 영역 — ChapterForm + 인라인 책 프레임 미리보기 */}
+        <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-11 pb-32 bg-bg">
+          <ChapterForm
+            key={chapterCount}
+            initialChapterNum={nextChapterNum}
+            onSave={(data) => {
+              addChapter(data);
+              setPreviewContent({ chapterNum: nextChapterNum, title: "", body: "" });
+            }}
+            onChange={setPreviewContent}
+          />
 
-          <PreviewPanel
-            open={meta.options.showPreviewPanel}
-            onClose={() => updateOptions({ showPreviewPanel: false })}
+          {/* 인라인 책 프레임 미리보기 — 판형 비율 정확 반영 */}
+          <InlinePreview
             options={meta.options}
+            trim={meta.trim}
             previewContent={previewContent}
           />
         </div>

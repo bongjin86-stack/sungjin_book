@@ -114,9 +114,30 @@ export function BookSetupScreen() {
           <div className="text-[28px] font-extrabold text-white tracking-[-0.5px] mb-[10px]">
             성진<span className="text-[#60A5FA]">북스</span>
           </div>
-          <div className="text-[14px] text-[#94A3B8] leading-[1.7] mb-7">
+          <div className="text-[14px] text-[#94A3B8] leading-[1.7] mb-5">
             원고를 넣으면<br />인쇄 가능한 책이 됩니다.
           </div>
+
+          {/* 서비스 혜택 배지 */}
+          <div className="flex flex-col gap-[6px] mb-6">
+            {[
+              { icon: "✦", label: "무료로 책 만들기",     sub: "조판·편집 비용 없음" },
+              { icon: "📋", label: "ISBN 무료 등록",       sub: "국립중앙도서관 신청 지원" },
+              { icon: "📱", label: "전자책 무료 전송",     sub: "교보·리디·밀리 유통 연동" },
+              { icon: "🖨", label: "인쇄소 직접 연결",     sub: "파일 → 인쇄 원스톱" },
+            ].map((b) => (
+              <div key={b.label} className="flex items-center gap-[10px] bg-white/5 rounded-[10px] px-3 py-[8px]">
+                <div className="w-7 h-7 rounded-[7px] bg-white/10 flex items-center justify-center text-[13px] flex-shrink-0">{b.icon}</div>
+                <div>
+                  <div className="text-[12px] font-semibold text-[#E2E8F0]">{b.label}</div>
+                  <div className="text-[10px] text-[#64748B] mt-[1px]">{b.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="h-px bg-white/10 mb-5" />
+          <div className="text-[10px] font-bold text-[#475569] uppercase tracking-[0.7px] mb-3">진행 단계</div>
           <div className="flex flex-col gap-3">
             {([{ n: 1, label: "기본 정보" }, { n: 2, label: "책 구성" }, { n: 3, label: "테마 선택" }] as const).map(({ n, label }) => (
               <div key={n} className="flex items-center gap-3">
