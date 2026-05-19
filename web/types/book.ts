@@ -40,7 +40,23 @@ export interface BookMeta {
   options: BookOptions;
 }
 
-export type BlockType = "chapter" | "interlude";
+// ─── BlockType ────────────────────────────────────────────────────────────────
+export type BlockType =
+  // 본문
+  | "chapter"
+  | "interlude"
+  // Front Matter (앞부분)
+  | "half-title"    // 속표지
+  | "toc"           // 목차
+  | "preface"       // 서문/머리말
+  | "dedication"    // 헌정사
+  | "prologue"      // 프롤로그
+  | "blurb"         // 추천사
+  // Back Matter (뒷부분)
+  | "author-bio"    // 저자 소개
+  | "epilogue"      // 에필로그
+  | "acknowledgments" // 감사의 글
+  | "bibliography"; // 참고문헌
 
 export interface ChapterBlock {
   id: string;
@@ -59,7 +75,34 @@ export interface InterludeBlock {
   partSubtitle?: string;
 }
 
-export type BookBlock = ChapterBlock | InterludeBlock;
+/** Front/Back Matter 공통 블록 — 제목과 본문 텍스트를 가짐 */
+export interface MatterBlock {
+  id: string;
+  type: Exclude<BlockType, "chapter" | "interlude">;
+  title?: string;
+  body?: string;
+}
+
+export type BookBlock = ChapterBlock | InterludeBlock | MatterBlock;
+
+// ─── 블록 타입 메타데이터 ──────────────────────────────────────────────────────
+export const BLOCK_META: Record<
+  BlockType,
+  { label: string; section: "front" | "body" | "back"; defaultTitle: string }
+> = {
+  "chapter":        { label: "챕터",     section: "body",  defaultTitle: "제1장" },
+  "interlude":      { label: "간지",     section: "body",  defaultTitle: "간지" },
+  "half-title":     { label: "속표지",   section: "front", defaultTitle: "속표지" },
+  "toc":            { label: "목차",     section: "front", defaultTitle: "목차" },
+  "preface":        { label: "서문",     section: "front", defaultTitle: "서문" },
+  "dedication":     { label: "헌정사",   section: "front", defaultTitle: "헌정사" },
+  "prologue":       { label: "프롤로그", section: "front", defaultTitle: "프롤로그" },
+  "blurb":          { label: "추천사",   section: "front", defaultTitle: "추천사" },
+  "author-bio":     { label: "저자 소개", section: "back", defaultTitle: "저자 소개" },
+  "epilogue":       { label: "에필로그", section: "back",  defaultTitle: "에필로그" },
+  "acknowledgments":{ label: "감사의 글", section: "back", defaultTitle: "감사의 글" },
+  "bibliography":   { label: "참고문헌", section: "back",  defaultTitle: "참고문헌" },
+};
 
 export interface BookData {
   meta: BookMeta;
@@ -120,14 +163,17 @@ export const DEFAULT_OPTIONS: BookOptions = {
   paragraphIndent: true,
 };
 
-export function createEmptyBook(meta: Omit<BookMeta, "options"> & { options?: Partial<BookOptions> }): BookData {
+export function createEmptyBook(
+  meta: Omit<BookMeta, "options"> & { options?: Partial<BookOptions> },
+  initialBlocks?: BookBlock[]
+): BookData {
   const now = Date.now();
   return {
     meta: {
       ...meta,
       options: { ...DEFAULT_OPTIONS, ...(meta.options ?? {}) },
     },
-    blocks: [],
+    blocks: initialBlocks ?? [],
     createdAt: now,
     updatedAt: now,
   };

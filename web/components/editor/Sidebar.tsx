@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Toggle } from "@/components/ui/Toggle";
-import { THEME_PRESETS, type BookBlock, type BookOptions, type BookTheme } from "@/types/book";
+import { BLOCK_META, THEME_PRESETS, type BookBlock, type BookOptions, type BookTheme } from "@/types/book";
 
 interface SidebarProps {
   options: BookOptions;
@@ -286,6 +286,17 @@ function SortableTocItem({ block }: { block: BookBlock }) {
   } as const;
 
   const isChapter = block.type === "chapter";
+  const isInterlude = block.type === "interlude";
+  const meta = BLOCK_META[block.type];
+
+  // 섹션별 색상 도트
+  const dotColor = isChapter
+    ? "bg-accent"
+    : isInterlude
+    ? "bg-purple"
+    : meta.section === "front"
+    ? "bg-[#F59E0B]"
+    : "bg-[#10B981]";
 
   // TODO: Phase 2 — 목차 항목 클릭 시 해당 챕터로 에디터 포커스 이동
   return (
@@ -294,11 +305,7 @@ function SortableTocItem({ block }: { block: BookBlock }) {
       style={style}
       className="group flex items-center gap-2 px-2 py-[7px] rounded-[7px] cursor-pointer transition-colors hover:bg-border mb-px"
     >
-      <span
-        className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${
-          isChapter ? "bg-accent" : "bg-purple"
-        }`}
-      />
+      <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${dotColor}`} />
       <div className="flex-1 min-w-0">
         {isChapter ? (
           <>
@@ -310,10 +317,19 @@ function SortableTocItem({ block }: { block: BookBlock }) {
               챕터 · {block.charCount.toLocaleString()}자
             </div>
           </>
-        ) : (
+        ) : isInterlude ? (
           <>
             <div className="text-[12px] text-text-primary">간지</div>
             <div className="text-[10px] text-text-muted mt-px">간지 · 드래그로 위치 조정</div>
+          </>
+        ) : (
+          <>
+            <div className="text-[12px] text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
+              {(block as { title?: string }).title || meta.label}
+            </div>
+            <div className="text-[10px] text-text-muted mt-px">
+              {meta.section === "front" ? "앞부분" : "뒷부분"} · {meta.label}
+            </div>
           </>
         )}
       </div>
