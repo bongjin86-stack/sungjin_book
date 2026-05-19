@@ -80,7 +80,10 @@ export function Header({
   }
 
   return (
-    <header className="h-[54px] bg-surface border-b border-border flex items-center px-[18px] gap-[10px] flex-shrink-0 z-20">
+    <header
+      className="h-[54px] flex items-center px-[18px] gap-[10px] flex-shrink-0 z-20"
+      style={{ background: "var(--bg-pane-left)" }}
+    >
       <div className="text-[15px] font-extrabold tracking-[-0.4px] flex-shrink-0">
         성진<span className="text-accent">북스</span>
       </div>
