@@ -1,5 +1,6 @@
 export type TrimSize = "신국판" | "46배판" | "문고판";
 export type BookType = "chapter" | "continuous";
+export type BookTheme = "classic" | "modern" | "minimal";
 
 export const TRIM_SIZES: { name: TrimSize; size: string }[] = [
   { name: "신국판", size: "152 × 225mm" },
@@ -8,6 +9,8 @@ export const TRIM_SIZES: { name: TrimSize; size: string }[] = [
 ];
 
 export interface BookOptions {
+  theme: BookTheme;
+
   showChapterNumber: boolean;
   showPreviewPanel: boolean;
   showSeriesName: boolean;
@@ -65,7 +68,41 @@ export interface BookData {
   updatedAt: number;
 }
 
+// 테마 프리셋 — 테마 선택 시 적용되는 부분 옵션 묶음.
+// (theme 자체는 별도로 set, 여기에 포함하지 않는다.)
+export const THEME_PRESETS: Record<BookTheme, Partial<BookOptions>> = {
+  classic: {
+    bodyFont: "serif",
+    bodyFontSize: "10pt",
+    lineSpacing: "normal",
+    showPageNumber: true,
+    pageNumberPosition: "bottom-outside",
+    showChapterNumber: true,
+    paragraphIndent: true,
+  },
+  modern: {
+    bodyFont: "sans",
+    bodyFontSize: "10pt",
+    lineSpacing: "wide",
+    showPageNumber: true,
+    pageNumberPosition: "bottom-center",
+    showChapterNumber: true,
+    paragraphIndent: false,
+  },
+  minimal: {
+    bodyFont: "serif",
+    bodyFontSize: "9pt",
+    lineSpacing: "normal",
+    showPageNumber: false,
+    pageNumberPosition: "bottom-center",
+    showChapterNumber: false,
+    paragraphIndent: true,
+  },
+};
+
 export const DEFAULT_OPTIONS: BookOptions = {
+  theme: "classic",
+
   showChapterNumber: true,
   showPreviewPanel: false,
   showSeriesName: false,

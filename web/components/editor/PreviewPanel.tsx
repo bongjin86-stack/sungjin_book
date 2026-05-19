@@ -133,10 +133,10 @@ export function PreviewPanel({ open, onClose, options, previewContent }: Preview
             <div
               className="absolute inset-0"
               style={{
-                paddingTop: "10%",
-                paddingBottom: "12%",
-                paddingLeft: "13%",
-                paddingRight: "11%",
+                paddingTop: "32px",
+                paddingBottom: "36px",
+                paddingLeft: "38px",
+                paddingRight: "32px",
                 fontFamily,
                 fontSize,
                 lineHeight,
@@ -156,7 +156,7 @@ export function PreviewPanel({ open, onClose, options, previewContent }: Preview
                       className="text-center font-bold mb-[6px]"
                       style={{ fontFamily: "sans-serif", fontSize: "11px", color: "#111" }}
                     >
-                      제 {chapterNum.replace(/장$/, "")} 장
+                      {chapterNum}
                     </div>
                   )}
                   <div

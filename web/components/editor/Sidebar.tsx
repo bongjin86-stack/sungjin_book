@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Toggle } from "@/components/ui/Toggle";
-import type { BookBlock, BookOptions } from "@/types/book";
+import { THEME_PRESETS, type BookBlock, type BookOptions, type BookTheme } from "@/types/book";
 
 interface SidebarProps {
   options: BookOptions;
@@ -53,6 +53,20 @@ export function Sidebar({
       {/* Options */}
       <div className="px-3 pt-3 pb-[10px] border-b border-border flex-shrink-0 overflow-y-auto max-h-[55vh]">
         <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mb-2">
+          테마
+        </div>
+        <PillGroup<BookTheme>
+          label="스타일"
+          value={options.theme}
+          options={[
+            { value: "classic", label: "클래식" },
+            { value: "modern", label: "모던" },
+            { value: "minimal", label: "미니멀" },
+          ]}
+          onChange={(v) => onChangeOptions({ theme: v, ...THEME_PRESETS[v] })}
+        />
+
+        <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
           옵션
         </div>
         <ToggleRow
