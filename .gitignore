@@ -47,8 +47,15 @@ pnpm-debug.log*
 docs/.bkit-memory.json
 docs/.pdca-status.json
 
-# Playwright 스크린샷 (재생성 가능, 용량)
+# Playwright 스크린샷·PDF (재생성 가능, 용량)
 tools/playwright/shots/
 tools/playwright/shots-editor/
 tools/playwright/shots-vellum/
 tools/playwright/shots-typst/
+tools/playwright/shots-verify/
+tools/playwright/shots-pdf/
+tools/playwright/shots-klreq/
+
+# 사용자 작업 영역 (커밋 안 함)
+experiments/
+hwp/
