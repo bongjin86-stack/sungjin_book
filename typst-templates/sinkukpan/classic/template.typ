@@ -11,6 +11,10 @@
 //
 // JSON 스키마: sungjin-book/v1 (decisions.md D-006)
 // 변환: Typst 네이티브 json() 사용 (D-008). 별도 변환 스크립트 없음.
+//
+// 수정 이력:
+//   2026-05-19 (Manus): 챕터 시작 쪽번호 억제 버그 수정 (state 방식으로 교체)
+//                       단락 간격(spacing) 통일 → 기준선 그리드 정렬
 
 // === 폰트 fallback 체인 ===
 // 프로젝트 fonts/ 폴더에 OFL 노토 KR 4종 동봉 (D-009).
@@ -18,12 +22,24 @@
 #let serif-fonts = ("Noto Serif KR", "Noto Serif CJK KR")
 #let sans-fonts = ("Noto Sans KR", "Noto Sans CJK KR")
 
+// === 챕터 시작 상태 추적 ===
+// query(<label>) 방식이 Typst 0.13.x에서 불안정하므로
+// state를 사용하여 챕터 시작 페이지 번호를 직접 기록한다.
+#let chapter-start-pages = state("chapter-start-pages", ())
+
 // === 챕터 함수 ===
-// 홀수 페이지에서 시작하고, 그 페이지에 footer가 안 그려지도록 라벨을 박는다.
-// footer 함수에서 query(<chapter-start>)로 챕터 시작 페이지를 검출한다.
+// 홀수 페이지에서 시작하고, 현재 페이지 번호를 state에 기록한다.
+// footer 함수에서 state를 읽어 챕터 시작 페이지 여부를 판단한다.
 #let chapter(number: 1, title: "") = [
   #pagebreak(to: "odd", weak: true)
-  #metadata("chapter-start") <chapter-start>
+
+  // 현재 페이지 번호를 챕터 시작 목록에 추가
+  #context {
+    let n = counter(page).at(here()).first()
+    chapter-start-pages.update(pages => {
+      pages + (n,)
+    })
+  }
 
   // 위쪽 여유 (한국 단행본 챕터 첫 페이지 통례)
   #v(8em)
@@ -52,11 +68,11 @@
     margin: (inside: 20mm, outside: 18mm, top: 22mm, bottom: 25mm),
     footer: context {
       let n = counter(page).at(here()).first()
-      // 이 페이지에 챕터 시작 마커가 있으면 쪽번호 그리지 않음
-      let chapters-here = query(<chapter-start>).filter(
-        c => c.location().page() == n,
-      )
-      if chapters-here.len() == 0 {
+      // 이 페이지가 챕터 시작 페이지인지 확인
+      let start-pages = chapter-start-pages.at(here())
+      if start-pages.contains(n) {
+        // 챕터 시작 페이지: 쪽번호 표시 안 함
+      } else {
         // 홀수 페이지 = 오른쪽(밖), 짝수 페이지 = 왼쪽(밖)
         let outer = if calc.odd(n) { right } else { left }
         set align(outer)
@@ -77,10 +93,12 @@
 
   // --- 단락 ---
   // leading 8pt = 폰트 10pt 기준 baseline-to-baseline 약 18pt
+  // spacing 8pt = 단락 간격도 동일하게 설정 → 기준선 그리드 정렬
   // first-line-indent: all=false → 챕터/제목 직후 첫 단락은 들여쓰기 없음,
   //                                단락이 이어질 때만 1em 들여쓰기.
   set par(
     leading: 8pt,
+    spacing: 8pt,
     justify: true,
     first-line-indent: (amount: 1em, all: false),
   )
