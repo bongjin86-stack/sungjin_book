@@ -63,6 +63,18 @@ export function EditorLayout() {
   const activeBlock = activeBlockId ? blocks.find((b) => b.id === activeBlockId) : null;
   const activeIsChapter = activeBlock?.type === "chapter";
 
+  // 챕터 간 이동용 — TOC 순서 기준 prev/next 챕터 ID
+  const chapterBlocks = blocks.filter((b) => b.type === "chapter");
+  const activeChapterIdx = activeIsChapter
+    ? chapterBlocks.findIndex((b) => b.id === activeBlockId)
+    : -1;
+  const prevChapterId =
+    activeChapterIdx > 0 ? chapterBlocks[activeChapterIdx - 1].id : null;
+  const nextChapterId =
+    activeChapterIdx >= 0 && activeChapterIdx < chapterBlocks.length - 1
+      ? chapterBlocks[activeChapterIdx + 1].id
+      : null;
+
   // 사이드바에서 블록 클릭 시 — 챕터면 편집 모드 진입, 미리보기에 내용 반영
   function handleSelectBlock(id: string) {
     setActiveBlockId(id);
@@ -155,6 +167,8 @@ export function EditorLayout() {
               trim={meta.trim}
               previewContent={previewContent}
               resetPageKey={activeBlockId ?? "new"}
+              onPrevChapter={prevChapterId ? () => handleSelectBlock(prevChapterId) : undefined}
+              onNextChapter={nextChapterId ? () => handleSelectBlock(nextChapterId) : undefined}
             />
           </div>
         </div>

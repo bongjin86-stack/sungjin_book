@@ -123,10 +123,12 @@ export function usePreviewLayout(input: UsePreviewLayoutInput): PreviewLayout {
     const trimWidthMm = trimMM.w;
     const scaleFactor = bookWidth / trimWidthMm;
 
-    // pt → px (1pt = 96/72 px), 그리고 책 축소 비율 곱
+    // pt → 실물 mm → 화면 px (실물 책이 0.X 배로 축소 표시됨)
+    // 1pt = 25.4/72 mm. 그 다음 scaleFactor(px/mm) 곱.
     const ptStr = options.bodyFontSize.replace("pt", "");
     const bodyPt = parseFloat(ptStr) || 10;
-    const fontSizePx = bodyPt * (96 / 72) * scaleFactor;
+    const fontSizeMm = bodyPt * (25.4 / 72);
+    const fontSizePx = fontSizeMm * scaleFactor;
     const lineHeightPx = fontSizePx * (LINE_HEIGHT_MULT[options.lineSpacing] ?? 1.8);
 
     // 패딩 — print는 판형별 비율 × marginPreset 배율, 기기는 공통값(10% / 10% / 9% / 9%)

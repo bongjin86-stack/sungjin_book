@@ -26,6 +26,10 @@ interface BookPreviewPanelProps {
   };
   /** 챕터 전환 식별자 — 바뀌면 currentPage가 0으로 리셋 */
   resetPageKey?: string | null;
+  /** TOC의 이전 챕터로 점프. undefined면 비활성 */
+  onPrevChapter?: () => void;
+  /** TOC의 다음 챕터로 점프. undefined면 비활성 */
+  onNextChapter?: () => void;
 }
 
 const TRIM_SIZE_LABEL: Record<TrimSize, string> = {
@@ -51,6 +55,8 @@ export function BookPreviewPanel({
   trim,
   previewContent,
   resetPageKey,
+  onPrevChapter,
+  onNextChapter,
 }: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
   const [currentPage, setCurrentPage] = useState(0);
@@ -92,8 +98,6 @@ export function BookPreviewPanel({
 
   const goPage = (delta: number) =>
     setCurrentPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
-  const goPageStart = () => setCurrentPage(0);
-  const goPageEnd = () => setCurrentPage(Math.max(0, totalPages - 1));
 
   const visibleParagraphIdx = pages[currentPage] ?? [];
   const showChapterHeader = currentPage === 0;
@@ -192,14 +196,14 @@ export function BookPreviewPanel({
           disabled={currentPage >= totalPages - 1}
         />
         <NavButton
-          label="|◀ Chapter"
-          onClick={goPageStart}
-          disabled={currentPage === 0}
+          label="|◀ 이전 챕터"
+          onClick={onPrevChapter ?? (() => {})}
+          disabled={!onPrevChapter}
         />
         <NavButton
-          label="Chapter ▶|"
-          onClick={goPageEnd}
-          disabled={currentPage >= totalPages - 1}
+          label="다음 챕터 ▶|"
+          onClick={onNextChapter ?? (() => {})}
+          disabled={!onNextChapter}
         />
       </div>
 
