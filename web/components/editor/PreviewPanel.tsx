@@ -1,24 +1,21 @@
 "use client";
 
-// BookPreviewPanel — Atticus 스타일 미리보기 (페이지 분할 + 네비게이션).
+// BookPreviewPanel — 현재 페이지 / 전체 책 두 가지 모드.
 //
-// 구조:
-//   ┌ 상단 툴바 (판형/기기 라벨)
-//   ├ 책 프레임 영역 (flex-1, ResizeObserver 측정 대상)
-//   ├ (N pages) 페이지 수 표시
-//   ├ 네비 2×2 (◀ Page / Page ▶ / |◀ Chapter / Chapter ▶|)
-//   └ 하단 기기 전환 드롭다운
-//
-// 페이지 분할은 usePreviewLayout → usePagination 으로 결정. 현재 활성 챕터 1개만 분할.
+// 모드:
+//   - current: 사이드바에서 선택한 블록의 previewContent만 페이지화
+//   - book:    bookData.blocks 전체를 한 권의 책처럼 이어서 페이지화
 
-import { useEffect, useRef, useState } from "react";
-import type { BookOptions, PreviewDevice, TrimSize } from "@/types/book";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { BookData, BookOptions, PreviewDevice, TrimSize } from "@/types/book";
 import { usePreviewLayout } from "@/hooks/usePreviewLayout";
-import { usePagination, type PageParagraph } from "@/hooks/usePagination";
+import { paginateParagraphs, type PageParagraph } from "@/hooks/usePagination";
+import { useBookPagination } from "@/hooks/useBookPagination";
 
 interface BookPreviewPanelProps {
   options: BookOptions;
   trim: TrimSize;
+  bookData: BookData;
   previewContent: {
     chapterNum: string;
     title: string;
@@ -26,7 +23,7 @@ interface BookPreviewPanelProps {
     body: string;
     showChapterNumber?: boolean;
   };
-  /** 챕터 전환 식별자 — 바뀌면 currentPage가 0으로 리셋 */
+  /** 챕터 전환 식별자 — 바뀌면 current 모드 currentPage가 0으로 리셋 */
   resetPageKey?: string | null;
 }
 
@@ -42,48 +39,81 @@ function deviceLabel(device: Exclude<PreviewDevice, "print">): string {
   return "스마트폰";
 }
 
-// 챕터 헤더(번호+제목+여백)가 차지하는 줄 수 추정값.
-// 정확한 측정은 2단계에서 동적으로.
 function estimateChapterHeaderLines(showChapterNumber: boolean): number {
   return showChapterNumber ? 4 : 3;
+}
+
+interface RenderedPage {
+  blockType: string;
+  title: string;
+  subtitle?: string;
+  chapterNum?: string;
+  showChapterNumber: boolean;
+  isFirstPageOfBlock: boolean;
+  paragraphs: PageParagraph[];
 }
 
 export function BookPreviewPanel({
   options,
   trim,
+  bookData,
   previewContent,
   resetPageKey,
 }: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
+  const [mode, setMode] = useState<"current" | "book">("current");
   const [currentPage, setCurrentPage] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { chapterNum, title, subtitle = "", body } = previewContent;
-  const isEmpty = !title.trim() && !body.trim();
-  const paragraphs = body.split(/\n+/).filter((p) => p.trim().length > 0);
+  const isCurrentEmpty = !title.trim() && !body.trim();
 
   const layout = usePreviewLayout({ containerRef, trim, options, device });
 
-  const { pages, totalPages } = usePagination({
-    paragraphs,
-    linesPerPage: layout.linesPerPage,
-    charsPerLine: layout.charsPerLine,
-    chapterHeaderLines: estimateChapterHeaderLines(
-      previewContent.showChapterNumber ?? options.showChapterNumber,
-    ),
+  // current 모드 페이지 (선택 블록 1개)
+  const currentParagraphs = useMemo(
+    () => body.split(/\n+/).filter((p) => p.trim().length > 0),
+    [body],
+  );
+  const currentShowChapterNumber =
+    previewContent.showChapterNumber ?? options.showChapterNumber;
+
+  const currentPages = useMemo(() => {
+    if (!layout.ready) return [[]];
+    return paginateParagraphs(
+      currentParagraphs.length > 0 ? currentParagraphs : [""],
+      layout.linesPerPage,
+      layout.charsPerLine,
+      estimateChapterHeaderLines(currentShowChapterNumber),
+    );
+  }, [currentParagraphs, layout.ready, layout.linesPerPage, layout.charsPerLine, currentShowChapterNumber]);
+
+  // book 모드 페이지 (책 전체)
+  const { pages: bookPages } = useBookPagination({
+    bookData,
+    linesPerPage: layout.ready ? layout.linesPerPage : 1,
+    charsPerLine: layout.ready ? layout.charsPerLine : 1,
+    defaultShowChapterNumber: options.showChapterNumber,
   });
 
-  // 챕터 전환 시 0으로 리셋
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [resetPageKey]);
+  const totalPages = mode === "current" ? currentPages.length : Math.max(1, bookPages.length);
 
-  // totalPages 변경 시 currentPage 클램프 (옵션 변경에서도 처음으로 점프하지 않게)
+  // current 모드: resetPageKey 변하면 0으로
+  useEffect(() => {
+    if (mode === "current") setCurrentPage(0);
+  }, [resetPageKey, mode]);
+
+  // totalPages 변경 시 클램프
   useEffect(() => {
     setCurrentPage((p) => Math.min(Math.max(0, p), Math.max(0, totalPages - 1)));
   }, [totalPages]);
 
-  // 키보드 ← / → — 미리보기 패널 포커스 시만 (에디터 캐럿과 충돌 방지)
+  function switchMode(next: "current" | "book") {
+    if (next === mode) return;
+    setMode(next);
+    setCurrentPage(0);
+  }
+
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowLeft" || e.key === "PageUp") {
       e.preventDefault();
@@ -97,14 +127,54 @@ export function BookPreviewPanel({
   const goPage = (delta: number) =>
     setCurrentPage((p) => Math.max(0, Math.min(totalPages - 1, p + delta)));
 
-  const visibleParagraphs = pages[currentPage] ?? [];
-  const showChapterHeader = currentPage === 0;
+  // 현재 페이지에 표시할 데이터를 모드에 따라 통일
+  let active: RenderedPage;
+  let renderEmpty = false;
 
-  // 쪽번호 (인쇄본만). 챕터 시작 페이지(0)에서 hideChapterStartPageNumber 적용
+  if (mode === "current") {
+    renderEmpty = isCurrentEmpty;
+    active = {
+      blockType: "chapter",
+      title,
+      subtitle,
+      chapterNum,
+      showChapterNumber: currentShowChapterNumber,
+      isFirstPageOfBlock: currentPage === 0,
+      paragraphs: currentPages[currentPage] ?? [],
+    };
+  } else {
+    const page = bookPages[currentPage];
+    if (!page) {
+      renderEmpty = true;
+      active = {
+        blockType: "chapter",
+        title: "",
+        showChapterNumber: false,
+        isFirstPageOfBlock: true,
+        paragraphs: [],
+      };
+    } else {
+      active = {
+        blockType: page.blockType,
+        title: page.title,
+        subtitle: page.subtitle,
+        chapterNum: page.chapterNum,
+        showChapterNumber: page.showChapterNumber,
+        isFirstPageOfBlock: page.isFirstPageOfBlock,
+        paragraphs: page.paragraphs,
+      };
+    }
+  }
+
+  const showHeader = active.isFirstPageOfBlock && !renderEmpty;
+
+  // 쪽번호 — chapter 블록 시작 페이지에서 hideChapterStartPageNumber 적용
+  const isChapterStart =
+    active.blockType === "chapter" && active.isFirstPageOfBlock;
   const pnVisible =
     device === "print" &&
     options.showPageNumber &&
-    !(options.hideChapterStartPageNumber && currentPage === 0);
+    !(options.hideChapterStartPageNumber && isChapterStart);
   const previewPageNumber = currentPage + 1;
 
   let pnPositionStyle: React.CSSProperties = {};
@@ -133,19 +203,28 @@ export function BookPreviewPanel({
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
-      {/* 상단 툴바 */}
+      {/* 상단 툴바 — 모드 토글 + 판형/기기 라벨 */}
       <div className="h-10 px-4 flex items-center justify-between border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <ModeButton
+            label="현재 페이지"
+            active={mode === "current"}
+            onClick={() => switchMode("current")}
+          />
+          <ModeButton
+            label="전체 책"
+            active={mode === "book"}
+            onClick={() => switchMode("book")}
+          />
+        </div>
         <span className="text-[11px] text-text-secondary font-medium">
           {device === "print"
             ? `${trim} ${TRIM_SIZE_LABEL[trim]}`
             : deviceLabel(device)}
         </span>
-        <span className="text-[11px] text-text-muted">
-          {device === "print" ? "인쇄본" : "전자책"}
-        </span>
       </div>
 
-      {/* 책 프레임 영역 — ResizeObserver 측정 대상 */}
+      {/* 책 프레임 영역 */}
       <div
         ref={containerRef}
         className="flex-1 overflow-hidden flex items-center justify-center px-3 py-3"
@@ -159,17 +238,18 @@ export function BookPreviewPanel({
             fontFamily={options.bodyFont === "sans" ? "sans-serif" : "serif"}
             fontSizePx={layout.fontSizePx}
             lineHeightPx={layout.lineHeightPx}
-            renderHeader={showChapterHeader && !isEmpty}
-            renderEmptyMessage={isEmpty}
-            chapterNum={chapterNum}
-            title={title}
-            subtitle={subtitle}
-            showChapterNumber={previewContent.showChapterNumber ?? options.showChapterNumber}
+            renderHeader={showHeader}
+            renderEmptyMessage={renderEmpty}
+            chapterNum={active.chapterNum ?? ""}
+            title={active.title}
+            subtitle={active.subtitle ?? ""}
+            showChapterNumber={active.showChapterNumber}
+            blockType={active.blockType}
             dropCaps={options.dropCaps}
             paragraphIndent={options.paragraphIndent}
-            paragraphChunks={visibleParagraphs}
+            paragraphChunks={active.paragraphs}
             currentPage={currentPage}
-            pnVisible={pnVisible && !isEmpty}
+            pnVisible={pnVisible && !renderEmpty}
             pnPositionStyle={pnPositionStyle}
             pageNumber={previewPageNumber}
           />
@@ -183,7 +263,7 @@ export function BookPreviewPanel({
         </span>
       </div>
 
-      {/* 페이지 네비 — 좌/우 한 줄 */}
+      {/* 페이지 네비 */}
       <div className="px-4 pt-2 pb-2 grid grid-cols-2 gap-1 flex-shrink-0">
         <NavButton
           label="◀ 이전 쪽"
@@ -220,7 +300,30 @@ export function BookPreviewPanel({
   );
 }
 
-// ─── 네비 버튼 ──────────────────────────────────────────────────────────────
+function ModeButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-[11px] font-medium px-[10px] py-[4px] rounded-[6px] border transition-colors ${
+        active
+          ? "bg-accent text-white border-accent"
+          : "bg-transparent text-text-muted border-border hover:border-accent hover:text-accent"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 function NavButton({
   label,
   onClick,
@@ -246,7 +349,7 @@ function NavButton({
   );
 }
 
-// ─── 책 프레임 (인쇄본 + 전자기기 통합) ────────────────────────────────────
+// ─── 책 프레임 ───────────────────────────────────────────────────────────────
 interface BookFrameProps {
   device: PreviewDevice;
   widthPx: number;
@@ -261,6 +364,7 @@ interface BookFrameProps {
   title: string;
   subtitle?: string;
   showChapterNumber: boolean;
+  blockType: string;
   dropCaps: boolean;
   paragraphIndent: boolean;
   paragraphChunks: PageParagraph[];
@@ -285,6 +389,7 @@ function BookFrame(props: BookFrameProps) {
     title,
     subtitle = "",
     showChapterNumber,
+    blockType,
     dropCaps,
     paragraphIndent,
     paragraphChunks,
@@ -301,6 +406,9 @@ function BookFrame(props: BookFrameProps) {
   const bezelPct = device === "smartphone" ? 0.05 : 0.06;
   const radius = device === "smartphone" ? 14 : isPrint ? 2 : 8;
 
+  // 챕터 블록의 드롭캡은 본문 시작 단락에만
+  const isChapterBlock = blockType === "chapter";
+
   return (
     <div
       className="relative flex-shrink-0"
@@ -311,7 +419,6 @@ function BookFrame(props: BookFrameProps) {
     >
       {isPrint && (
         <>
-          {/* 페이지 뒷장 두께 효과 */}
           <div
             className="absolute inset-0 rounded-[2px]"
             style={{
@@ -329,7 +436,6 @@ function BookFrame(props: BookFrameProps) {
         </>
       )}
 
-      {/* 종이 / 화면 */}
       <div
         className="absolute inset-0 overflow-hidden"
         style={{
@@ -348,7 +454,6 @@ function BookFrame(props: BookFrameProps) {
             borderRadius: isPrint ? 0 : device === "smartphone" ? 6 : 3,
           }}
         >
-          {/* 제본선 (인쇄본만) */}
           {isPrint && (
             <>
               <div
@@ -368,7 +473,6 @@ function BookFrame(props: BookFrameProps) {
             </>
           )}
 
-          {/* 본문 영역 */}
           <div
             className="absolute inset-0"
             style={{
@@ -385,7 +489,7 @@ function BookFrame(props: BookFrameProps) {
           >
             <div
               className="w-full h-full overflow-hidden"
-              key={currentPage} // opacity 페이드용 (CSS animation으로 대체 가능)
+              key={`${blockType}-${currentPage}`}
               style={{ animation: "previewFade 120ms ease-out" }}
             >
               {renderEmptyMessage ? (
@@ -401,7 +505,7 @@ function BookFrame(props: BookFrameProps) {
                 <>
                   {renderHeader && (
                     <>
-                      {showChapterNumber && (
+                      {isChapterBlock && showChapterNumber && chapterNum && (
                         <div
                           className="text-center font-bold"
                           style={{
@@ -444,7 +548,9 @@ function BookFrame(props: BookFrameProps) {
                   <div style={{ textAlign: "justify" }}>
                     {paragraphChunks.map((chunk, localIdx) => {
                       const isFirstParagraphOfChapter =
-                        chunk.paragraphIndex === 0 && chunk.startsParagraph;
+                        isChapterBlock &&
+                        chunk.paragraphIndex === 0 &&
+                        chunk.startsParagraph;
                       return (
                         <p
                           key={`${currentPage}-${localIdx}`}
@@ -472,7 +578,6 @@ function BookFrame(props: BookFrameProps) {
             </div>
           </div>
 
-          {/* 쪽번호 */}
           {pnVisible && (
             <div
               className="absolute pointer-events-none"

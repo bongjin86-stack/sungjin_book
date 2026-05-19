@@ -108,58 +108,68 @@ function wrapParagraph(paragraph: string, charsPerLine: number): string[] {
   return lines.length > 0 ? lines : [normalized];
 }
 
+export function paginateParagraphs(
+  paragraphs: string[],
+  linesPerPage: number,
+  charsPerLine: number,
+  firstPageHeaderLines: number,
+): PageParagraph[][] {
+  if (
+    !paragraphs ||
+    paragraphs.length === 0 ||
+    !Number.isFinite(linesPerPage) ||
+    linesPerPage < 1 ||
+    !Number.isFinite(charsPerLine) ||
+    charsPerLine < 1
+  ) {
+    return [[]];
+  }
+
+  const pages: PageParagraph[][] = [[]];
+  let currentPage = 0;
+  let usedLines = 0;
+
+  const firstPageBudget = Math.max(1, linesPerPage - firstPageHeaderLines);
+  const pageBudget = () => (currentPage === 0 ? firstPageBudget : linesPerPage);
+  const nextPage = () => {
+    pages.push([]);
+    currentPage += 1;
+    usedLines = 0;
+  };
+
+  paragraphs.forEach((paragraph, paragraphIndex) => {
+    const lines = wrapParagraph(paragraph, charsPerLine);
+    let lineIndex = 0;
+
+    while (lineIndex < lines.length) {
+      const remaining = pageBudget() - usedLines;
+      if (remaining <= 0) {
+        nextPage();
+        continue;
+      }
+
+      const take = Math.min(remaining, lines.length - lineIndex);
+      pages[currentPage].push({
+        paragraphIndex,
+        lines: lines.slice(lineIndex, lineIndex + take),
+        startsParagraph: lineIndex === 0,
+      });
+
+      usedLines += take;
+      lineIndex += take;
+
+      if (lineIndex < lines.length) nextPage();
+    }
+  });
+
+  return pages;
+}
+
 export function usePagination(input: PaginationInput): PaginationResult {
   const { paragraphs, linesPerPage, charsPerLine, chapterHeaderLines } = input;
 
   return useMemo(() => {
-    if (
-      !paragraphs ||
-      paragraphs.length === 0 ||
-      !Number.isFinite(linesPerPage) ||
-      linesPerPage < 1 ||
-      !Number.isFinite(charsPerLine) ||
-      charsPerLine < 1
-    ) {
-      return { pages: [[]], totalPages: 1 };
-    }
-
-    const pages: PageParagraph[][] = [[]];
-    let currentPage = 0;
-    let usedLines = 0;
-
-    const firstPageBudget = Math.max(1, linesPerPage - chapterHeaderLines);
-    const pageBudget = () => (currentPage === 0 ? firstPageBudget : linesPerPage);
-    const nextPage = () => {
-      pages.push([]);
-      currentPage += 1;
-      usedLines = 0;
-    };
-
-    paragraphs.forEach((paragraph, paragraphIndex) => {
-      const lines = wrapParagraph(paragraph, charsPerLine);
-      let lineIndex = 0;
-
-      while (lineIndex < lines.length) {
-        const remaining = pageBudget() - usedLines;
-        if (remaining <= 0) {
-          nextPage();
-          continue;
-        }
-
-        const take = Math.min(remaining, lines.length - lineIndex);
-        pages[currentPage].push({
-          paragraphIndex,
-          lines: lines.slice(lineIndex, lineIndex + take),
-          startsParagraph: lineIndex === 0,
-        });
-
-        usedLines += take;
-        lineIndex += take;
-
-        if (lineIndex < lines.length) nextPage();
-      }
-    });
-
+    const pages = paginateParagraphs(paragraphs, linesPerPage, charsPerLine, chapterHeaderLines);
     return { pages, totalPages: pages.length };
   }, [paragraphs, linesPerPage, charsPerLine, chapterHeaderLines]);
 }

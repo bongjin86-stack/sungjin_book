@@ -209,6 +209,7 @@ export function EditorLayout() {
             <BookPreviewPanel
               options={meta.options}
               trim={meta.trim}
+              bookData={bookData}
               previewContent={previewContent}
               resetPageKey={activeBlockId ?? "new"}
             />
