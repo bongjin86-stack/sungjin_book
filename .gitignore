@@ -32,6 +32,9 @@ web/public/wasm/
 web/public/fonts/*.ttf
 build/fonts-src/
 
+# typst-templates 복사본 (postinstall로 자동, 단일 source of truth는 root /typst-templates)
+web/public/typst-templates/
+
 # Logs
 *.log
 npm-debug.log*

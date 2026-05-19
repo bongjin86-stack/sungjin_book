@@ -22,7 +22,9 @@
 // 프로젝트 fonts/ 폴더에 OFL 노토 KR 4종 동봉 (D-009).
 // 컴파일 시 --font-path fonts 옵션 필수.
 #let serif-fonts = ("Noto Serif KR", "Noto Serif CJK KR")
-#let sans-fonts = ("Noto Sans KR", "Noto Sans CJK KR")
+// 산스 KR 미동봉 환경(브라우저 typst.ts PoC 등)에선 마지막에 세리프 fallback.
+// 산스 KR이 있는 환경(서버 PDF 등)에선 첫 폰트가 잡혀 영향 없다.
+#let sans-fonts = ("Noto Sans KR", "Noto Sans CJK KR", "Noto Serif KR", "Noto Serif CJK KR")
 
 // === 챕터 시작 상태 추적 ===
 // query(<label>) 방식이 Typst 0.13.x에서 불안정하므로

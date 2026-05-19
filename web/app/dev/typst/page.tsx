@@ -4,7 +4,7 @@
 // S1-4부터 lib/typst/compiler 추상화를 통해 호출 (typst.ts 직접 import 금지).
 
 import { useEffect, useRef, useState } from "react";
-import { compileSvg } from "@/lib/typst/compiler";
+import { compileSvg, compileBookSvg } from "@/lib/typst/compiler";
 
 type State =
   | { kind: "idle" }
@@ -53,7 +53,20 @@ const SAMPLES = {
 `,
 };
 
-type SampleKey = keyof typeof SAMPLES;
+type SampleKey = keyof typeof SAMPLES | "book";
+type Mode = { kind: "source"; text: string } | { kind: "book"; jsonUrl: string };
+
+const MODES: Record<SampleKey, Mode> = {
+  hello: { kind: "source", text: SAMPLES.hello },
+  classic: { kind: "source", text: SAMPLES.classic },
+  book: { kind: "book", jsonUrl: "/dev/sample-book.json" },
+};
+
+const LABELS: Record<SampleKey, string> = {
+  hello: "안녕 (소형)",
+  classic: "신국판 Classic 미니",
+  book: "콘텐츠 JSON → 책 1장",
+};
 
 export default function TypstSandboxPage() {
   const [sampleKey, setSampleKey] = useState<SampleKey>("hello");
@@ -69,7 +82,14 @@ export default function TypstSandboxPage() {
       setState({ kind: "loading", phase: "컴파일 중" });
 
       try {
-        const svg = await compileSvg(source);
+        const mode = MODES[sampleKey];
+        let svg: string;
+        if (mode.kind === "source") {
+          svg = await compileSvg(mode.kind === "source" ? source : mode.text);
+        } else {
+          const book = await fetch(mode.jsonUrl).then((r) => r.json());
+          svg = await compileBookSvg(book);
+        }
         if (cancelled) return;
         const elapsedMs = Math.round(performance.now() - t0);
         setState({ kind: "ok", svg, elapsedMs });
@@ -86,7 +106,7 @@ export default function TypstSandboxPage() {
     return () => {
       cancelled = true;
     };
-  }, [source]);
+  }, [source, sampleKey]);
 
   useEffect(() => {
     if (state.kind === "ok" && svgRef.current) {
@@ -96,7 +116,8 @@ export default function TypstSandboxPage() {
 
   const pickSample = (key: SampleKey) => {
     setSampleKey(key);
-    setSource(SAMPLES[key]);
+    const mode = MODES[key];
+    if (mode.kind === "source") setSource(mode.text);
   };
 
   return (
@@ -108,7 +129,7 @@ export default function TypstSandboxPage() {
 
       <section style={{ marginTop: 16 }}>
         <div style={{ display: "flex", gap: 8 }}>
-          {(Object.keys(SAMPLES) as SampleKey[]).map((k) => (
+          {(Object.keys(MODES) as SampleKey[]).map((k) => (
             <button
               key={k}
               onClick={() => pickSample(k)}
@@ -116,14 +137,14 @@ export default function TypstSandboxPage() {
                 padding: "6px 12px",
                 fontSize: 13,
                 border: "1px solid",
-                borderColor: sampleKey === k ? "#222" : "#ccc",
-                background: sampleKey === k ? "#222" : "#fff",
+                borderColor: sampleKey === k ? "var(--accent)" : "#ccc",
+                background: sampleKey === k ? "var(--accent)" : "#fff",
                 color: sampleKey === k ? "#fff" : "#222",
                 borderRadius: 4,
                 cursor: "pointer",
               }}
             >
-              {k === "hello" ? "안녕 (소형)" : "신국판 Classic 미니"}
+              {LABELS[k]}
             </button>
           ))}
         </div>

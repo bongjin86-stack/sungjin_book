@@ -64,6 +64,12 @@ export async function compileSvg(typSource: string): Promise<string> {
   return t.svg({ mainContent: typSource });
 }
 
+/** 가상 파일시스템에 파일 매핑. 같은 path 다시 호출하면 덮어쓴다. */
+export async function addSource(path: string, content: string): Promise<void> {
+  const t = await getInstance();
+  await t.addSource(path, content);
+}
+
 /** .typ 소스를 PDF 바이너리로 컴파일. */
 export async function compilePdf(typSource: string): Promise<Uint8Array> {
   const t = await getInstance();
@@ -73,3 +79,23 @@ export async function compilePdf(typSource: string): Promise<Uint8Array> {
 }
 
 export const TYPST_ASSETS = ASSETS;
+
+/**
+ * bookData(JSON)를 신국판 Classic 템플릿으로 컴파일한 SVG 반환.
+ * 내부적으로 /template.typ과 /data.json을 가상 파일시스템에 박고 컴파일.
+ */
+export async function compileBookSvg(book: unknown): Promise<string> {
+  const { buildMainSource, buildDataJson } = await import("./buildSource");
+
+  const templateUrl =
+    "/typst-templates/sinkukpan/classic/template.typ";
+  const tpl = await fetch(templateUrl).then((r) => {
+    if (!r.ok) throw new Error(`template fetch ${r.status}`);
+    return r.text();
+  });
+
+  await addSource("/template.typ", tpl);
+  await addSource("/data.json", buildDataJson(book as never));
+
+  return compileSvg(buildMainSource());
+}

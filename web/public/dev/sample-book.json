@@ -1,0 +1,26 @@
+{
+  "schema": "sungjin-book/v1",
+  "meta": {
+    "title": "고양이가 사는 집",
+    "author": "테스트",
+    "options": {
+      "showChapterNumber": true,
+      "bodyFont": "serif",
+      "bodyFontSize": "10pt",
+      "lineSpacing": "normal",
+      "showPageNumber": true,
+      "pageNumberPosition": "bottom-outside",
+      "hideChapterStartPageNumber": true,
+      "paragraphIndent": true
+    }
+  },
+  "blocks": [
+    { "type": "chapter", "number": 1, "title": "햇살이 비스듬히 들어오는 마당" },
+    { "type": "paragraph", "text": "오래된 한옥 마당에는 늘 햇살이 비스듬히 들어왔다. 마루 끝에 앉아 있던 검은 고양이는 햇살을 따라 천천히 자리를 옮겼다. 마치 하루치의 빛을 따로따로 쪼개어 받아내려는 듯, 한 번에 다 받지 않고 조금씩 나누어 받았다." },
+    { "type": "paragraph", "text": "처마 끝에서 떨어지는 빗방울 소리가 그쳤다. 비가 멎은 뒤에도 마당은 한참을 젖어 있었다. 흙냄새가 올라왔고, 그 냄새 속에서 고양이는 익숙한 자세로 잠이 들었다. 누구도 깨우지 않았다. 깨울 일도 없었다." },
+    { "type": "paragraph", "text": "이른 봄, 마당의 한쪽 구석에 매화 한 그루가 있었다. 가지 끝이 거뭇거뭇한 그 매화는 매년 같은 시기에 같은 자리에서 꽃을 피웠고, 가끔 다정한 손길이 닿을 때마다 잎을 흔들었다. 고양이는 매화 아래에 자주 자리를 잡았다. 꽃잎이 떨어지는 자리에 누워, 자기 몸 위로 꽃이 내려앉기를 기다리는 듯했다." },
+    { "type": "chapter", "number": 2, "title": "밤이 오는 시간" },
+    { "type": "paragraph", "text": "해가 지면 마당은 천천히 어두워졌다. 어둠은 한꺼번에 오는 것이 아니라, 마루 끝에서부터, 그리고 매화 아래에서부터, 조금씩 짙어졌다. 고양이는 그 변화를 알아챘다. 빛이 사라지기 전 잠시 눈을 떴다가, 다시 깊은 잠으로 돌아갔다." },
+    { "type": "paragraph", "text": "별이 떴다. 처마 밑에서 올려다본 별은 늘 같은 위치에 있었지만, 매번 처음 보는 것 같았다. 그 밤도 마찬가지였다. 누군가 문을 열고 마당으로 나왔다. 발자국 소리는 가볍고 익숙했다. 고양이는 눈을 뜨지 않았다." }
+  ]
+}

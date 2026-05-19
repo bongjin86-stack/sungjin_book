@@ -39,20 +39,24 @@ const statusHello = await page.locator("text=/완료|오류/").first().textConte
 console.log("hello 상태:", statusHello);
 await page.screenshot({ path: join(OUT, "01-hello.png"), fullPage: true });
 
+async function pickAndCapture(label, fileBase) {
+  await page.getByRole("button", { name: label }).click();
+  // 새 SVG 컴파일 완료 대기 — 상태가 "완료"로 다시 바뀔 때까지
+  await page.waitForFunction(
+    () => /완료 \(\d+ms\)/.test(document.body.innerText) || /오류/.test(document.body.innerText),
+    { timeout: 60000 },
+  );
+  await page.waitForTimeout(500);
+  const status = await page.locator("text=/완료|오류/").first().textContent();
+  console.log(`${fileBase} 상태:`, status);
+  await page.screenshot({ path: join(OUT, `${fileBase}.png`), fullPage: true });
+}
+
 // 2) classic 샘플
-await page.getByRole("button", { name: /신국판 Classic 미니/ }).click();
-// 새 SVG 컴파일 완료 대기 — 상태가 "완료"로 다시 바뀔 때까지
-await page.waitForFunction(
-  () => {
-    const el = document.body.innerText;
-    return /완료 \(\d+ms\)/.test(el);
-  },
-  { timeout: 60000 },
-);
-await page.waitForTimeout(500);
-const statusClassic = await page.locator("text=/완료|오류/").first().textContent();
-console.log("classic 상태:", statusClassic);
-await page.screenshot({ path: join(OUT, "02-classic.png"), fullPage: true });
+await pickAndCapture(/신국판 Classic 미니/, "02-classic");
+
+// 3) 콘텐츠 JSON → 책
+await pickAndCapture(/콘텐츠 JSON/, "03-book");
 
 console.log("--- console ---");
 for (const l of consoleLines) console.log(l);
