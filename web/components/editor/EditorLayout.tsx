@@ -152,10 +152,11 @@ export function EditorLayout() {
           onSelectBlock={handleSelectBlock}
         />
 
-        {/* 가운데 영역 — 에디터(flex-1) + 미리보기(flex-1) 5:5 분할 */}
-        <div className="flex-1 flex overflow-hidden bg-bg">
-          {/* 에디터 영역 (50%) */}
-          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col items-center px-8 pt-8 pb-24 border-r border-border">
+        {/* 가운데 영역 — 에디터(flex-1) + 미리보기(flex-1) 5:5 분할
+            Vellum 디자인 패턴: 보더 없이 배경 회색 3단계 진폭만으로 위계. */}
+        <div className="flex-1 flex overflow-hidden" style={{ background: "var(--bg-pane-center)" }}>
+          {/* 에디터 영역 (50%) — 흰색 (글이 주인공) */}
+          <div className="flex-1 min-w-0 overflow-y-auto flex flex-col items-center px-8 pt-8 pb-24">
             {/* 활성 챕터가 있으면 "새 챕터로 돌아가기" 버튼 노출 */}
             {activeIsChapter && (
               <div className="w-full max-w-[680px] mb-3 flex justify-end">

@@ -101,7 +101,10 @@ export function Sidebar({
   const density = currentDensity(options);
 
   return (
-    <aside className="w-sidebar-w flex-shrink-0 bg-sidebar-bg border-r border-border flex flex-col overflow-hidden">
+    <aside
+      className="w-sidebar-w flex-shrink-0 flex flex-col overflow-hidden"
+      style={{ background: "var(--bg-pane-left)" }}
+    >
       {/* 탭 */}
       <div className="flex border-b border-border flex-shrink-0">
         <button
