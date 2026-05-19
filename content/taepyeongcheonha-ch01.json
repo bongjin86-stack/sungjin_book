@@ -2,7 +2,17 @@
   "schema": "sungjin-book/v1",
   "meta": {
     "title": "태평천하",
-    "author": "채만식"
+    "author": "채만식",
+    "options": {
+      "showChapterNumber": true,
+      "bodyFont": "serif",
+      "bodyFontSize": "10pt",
+      "lineSpacing": "normal",
+      "showPageNumber": true,
+      "pageNumberPosition": "bottom-outside",
+      "hideChapterStartPageNumber": true,
+      "paragraphIndent": true
+    }
   },
   "blocks": [
     { "type": "chapter", "number": 1, "title": "윤직원 영감 귀택지도(歸宅之圖)" },

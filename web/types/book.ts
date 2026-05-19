@@ -14,6 +14,17 @@ export interface BookOptions {
   showEnglishTitle: boolean;
   includeISBN: boolean;
   interludeStyle: "1p" | "2p";
+
+  // 레이어 2 — 프리셋
+  bodyFont: "serif" | "sans";
+  bodyFontSize: "9pt" | "10pt" | "11pt";
+  lineSpacing: "narrow" | "normal" | "wide";
+
+  // 레이어 3 — 켜기/끄기
+  showPageNumber: boolean;
+  pageNumberPosition: "bottom-outside" | "bottom-center" | "top-outside";
+  hideChapterStartPageNumber: boolean;
+  paragraphIndent: boolean;
 }
 
 export interface BookMeta {
@@ -61,6 +72,15 @@ export const DEFAULT_OPTIONS: BookOptions = {
   showEnglishTitle: false,
   includeISBN: false,
   interludeStyle: "1p",
+
+  bodyFont: "serif",
+  bodyFontSize: "10pt",
+  lineSpacing: "normal",
+
+  showPageNumber: true,
+  pageNumberPosition: "bottom-outside",
+  hideChapterStartPageNumber: true,
+  paragraphIndent: true,
 };
 
 export function createEmptyBook(meta: Omit<BookMeta, "options"> & { options?: Partial<BookOptions> }): BookData {
