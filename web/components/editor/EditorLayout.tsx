@@ -139,6 +139,7 @@ export function EditorLayout() {
         trim={meta.trim}
         isSaved={isSaved}
         hasChapters={chapterCount > 0}
+        bookData={bookData}
       />
 
       <div className="flex flex-1 overflow-hidden">
