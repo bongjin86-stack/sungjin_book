@@ -40,3 +40,10 @@ docs/.pdca-status.json
 tools/playwright/shots/
 tools/playwright/shots-editor/
 tools/playwright/shots-vellum/
+
+# 교재형 실험 — HWP 원본·결과물 보호 (저작권/민감)
+hwp/
+experiments/edu-import/out/
+experiments/edu-import/node_modules/
+experiments/edu-import/.venv/
+experiments/edu-import/package-lock.json

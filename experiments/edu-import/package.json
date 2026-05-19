@@ -1,0 +1,10 @@
+{
+  "name": "edu-import-experiments",
+  "version": "0.0.0",
+  "private": true,
+  "description": "격리 실험 — 평가원 .hwp에서 텍스트 추출 가능성 평가. 본앱 코드와 단절.",
+  "type": "module",
+  "scripts": {
+    "extract:hwpjs": "node scripts/extract-hwpjs.mjs"
+  }
+}
