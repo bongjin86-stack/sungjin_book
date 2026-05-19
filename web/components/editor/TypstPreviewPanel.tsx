@@ -13,6 +13,8 @@ const DEBOUNCE_MS = 300;
 
 interface Props {
   bookData: BookData;
+  /** 사용자가 클릭한 블록 id. typst 미리보기를 그 챕터 페이지로 스크롤. */
+  activeBlockId?: string | null;
   /** 컴파일 실패가 충분히 지속되면 호출자가 react 미리보기로 폴백한다. */
   onFallback?: (err: Error) => void;
 }
@@ -23,9 +25,10 @@ type State =
   | { kind: "ok"; svg: string; elapsedMs: number }
   | { kind: "error"; message: string };
 
-export function TypstPreviewPanel({ bookData, onFallback }: Props) {
+export function TypstPreviewPanel({ bookData, activeBlockId, onFallback }: Props) {
   const [state, setState] = useState<State>({ kind: "idle" });
   const svgRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
@@ -41,7 +44,13 @@ export function TypstPreviewPanel({ bookData, onFallback }: Props) {
         setState({ kind: "loading", phase: "컴파일 중" });
         try {
           const typstBook = trackBToTypst(
-            { title: bookData.meta.title, author: bookData.meta.author, options: serializeOptions(bookData.meta.options) },
+            {
+              title: bookData.meta.title,
+              author: bookData.meta.author,
+              subtitle: bookData.meta.subtitle,
+              publisher: bookData.meta.publisher,
+              options: serializeOptions(bookData.meta.options),
+            },
             bookData.blocks,
           );
           const svg = await compileBookSvg(typstBook);
@@ -70,6 +79,39 @@ export function TypstPreviewPanel({ bookData, onFallback }: Props) {
       svgRef.current.innerHTML = state.svg;
     }
   }, [state]);
+
+  // 활성 블록이 바뀌면 그 블록의 typst 페이지로 자동 스크롤.
+  // 정확한 페이지 위치는 typst 컴파일 결과에서만 알 수 있지만, 룰 기반 추정:
+  //   matter blocks (half-title, copyright, toc, *-page) → 각 1페이지
+  //   chapter → 2페이지 (홀수 시작 + 짝수 빈 페이지)
+  //   interlude → 0 (1단계 스킵)
+  // 본문이 길면 부정확하지만 챕터 근처로는 점프함.
+  useEffect(() => {
+    if (state.kind !== "ok") return;
+    if (!activeBlockId) return;
+    const root = svgRef.current;
+    const scroller = scrollRef.current;
+    if (!root || !scroller) return;
+
+    let targetIdx = 0;
+    for (const b of bookData.blocks) {
+      if (b.id === activeBlockId) break;
+      switch (b.type) {
+        case "chapter": targetIdx += 2; break;
+        case "interlude": break;
+        default: targetIdx += 1; break; // matter 종류
+      }
+    }
+
+    const pages = root.querySelectorAll<SVGGElement>("g.typst-page");
+    if (pages.length === 0) return;
+    const clamped = Math.min(targetIdx, pages.length - 1);
+    const target = pages[clamped];
+    const targetRect = target.getBoundingClientRect();
+    const scrollerRect = scroller.getBoundingClientRect();
+    const offset = targetRect.top - scrollerRect.top + scroller.scrollTop - 24;
+    scroller.scrollTo({ top: offset, behavior: "smooth" });
+  }, [activeBlockId, state, bookData.blocks]);
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--bg-pane-right)" }}>
@@ -101,7 +143,10 @@ export function TypstPreviewPanel({ bookData, onFallback }: Props) {
         </pre>
       )}
 
-      <div className="flex-1 overflow-auto px-6 py-6 flex justify-center">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto px-6 py-6 flex justify-center"
+      >
         <div
           ref={svgRef}
           className="bg-white shadow-sm"

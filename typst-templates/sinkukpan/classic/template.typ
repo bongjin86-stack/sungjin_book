@@ -144,6 +144,77 @@
         #if "by" in blk [ — #blk.by]
       ]
       parbreak()
+    } else if blk.type == "half-title" {
+      // 속표지 — 홀수 페이지 시작, 책 제목·저자·출판사
+      pagebreak(to: "odd", weak: true)
+      context {
+        let n = counter(page).at(here()).first()
+        chapter-start-pages.update(pages => pages + (n,))
+      }
+      v(1fr)
+      align(center)[
+        #text(font: sans-fonts, weight: "bold", size: 26pt)[#blk.title]
+      ]
+      if "author" in blk and blk.author != none and blk.author != "" [
+        #v(2em)
+        #align(center)[
+          #text(font: serif-fonts, size: 13pt)[#blk.author]
+        ]
+      ]
+      v(1fr)
+      if "publisher" in blk and blk.publisher != none and blk.publisher != "" [
+        #align(center)[
+          #text(font: sans-fonts, size: 10pt)[#blk.publisher]
+        ]
+        #v(2em)
+      ]
+    } else if blk.type == "copyright" {
+      // 판권지 — 홀수 페이지 시작, 하단 영역에 작게
+      pagebreak(to: "odd", weak: true)
+      context {
+        let n = counter(page).at(here()).first()
+        chapter-start-pages.update(pages => pages + (n,))
+      }
+      v(1fr)
+      align(center)[
+        #text(font: serif-fonts, size: 9pt)[#blk.body]
+      ]
+      v(0.5fr)
+    } else if blk.type == "toc" {
+      // 목차 — 홀수 페이지 시작, 챕터 목록 박스
+      pagebreak(to: "odd", weak: true)
+      context {
+        let n = counter(page).at(here()).first()
+        chapter-start-pages.update(pages => pages + (n,))
+      }
+      v(6em)
+      align(center)[
+        #text(font: sans-fonts, weight: "bold", size: 18pt)[목차]
+      ]
+      v(2em)
+      for entry in blk.entries [
+        #grid(
+          columns: (auto, 1fr, auto),
+          align: (left, center, right),
+          text(font: serif-fonts, size: 11pt)[#entry.chapterNum],
+          [],
+          text(font: serif-fonts, size: 11pt)[#entry.title],
+        )
+        #v(0.6em)
+      ]
+    } else if blk.type == "matter-page" {
+      // 일반 matter — 서문/저자소개/에필로그 등. 홀수 페이지 시작, 제목 가운데, 본문.
+      pagebreak(to: "odd", weak: true)
+      context {
+        let n = counter(page).at(here()).first()
+        chapter-start-pages.update(pages => pages + (n,))
+      }
+      v(6em)
+      align(center)[
+        #text(font: sans-fonts, weight: "bold", size: 18pt)[#blk.title]
+      ]
+      v(2em)
+      blk.body
     }
   }
 }

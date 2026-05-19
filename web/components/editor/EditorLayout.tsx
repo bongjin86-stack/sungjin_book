@@ -100,6 +100,17 @@ export function EditorLayout() {
       body: data.body,
       showChapterNumber: data.showChapterNumber ?? true,
     });
+    // 활성 챕터가 있으면 bookData도 즉시 갱신 — typst 미리보기가 본문 변경을
+    // 실시간으로 받아 보기 위해. localStorage 저장은 useBookStore가 1초 디바운스.
+    if (activeBlockId && activeIsChapter) {
+      updateChapter(activeBlockId, {
+        chapterNum: data.chapterNum,
+        title: data.title,
+        subtitle: data.subtitle,
+        body: data.body,
+        showChapterNumber: data.showChapterNumber,
+      });
+    }
   }
 
   // ChapterForm mode 결정 — 챕터 블록이 활성화돼 있으면 edit, 아니면 new
@@ -213,6 +224,7 @@ export function EditorLayout() {
               trim={meta.trim}
               previewContent={previewContent}
               activeBlockId={activeBlockId}
+              onTypstFallback={() => undefined}
             />
           </div>
         </div>
@@ -285,6 +297,7 @@ function PreviewSwitcher({
   trim,
   previewContent,
   activeBlockId,
+  onTypstFallback,
 }: {
   bookData: BookData;
   options: BookData["meta"]["options"];
@@ -297,6 +310,7 @@ function PreviewSwitcher({
     showChapterNumber?: boolean;
   };
   activeBlockId: string | null;
+  onTypstFallback: () => void;
 }) {
   const engine = process.env.NEXT_PUBLIC_PREVIEW_ENGINE === "typst" ? "typst" : "react";
   const [fellBack, setFellBack] = useState(false);
@@ -307,9 +321,11 @@ function PreviewSwitcher({
     return (
       <TypstPreviewPanel
         bookData={bookData}
+        activeBlockId={activeBlockId}
         onFallback={(err) => {
           console.warn("[preview] typst 실패 → react 폴백", err);
           setFellBack(true);
+          onTypstFallback();
         }}
       />
     );
