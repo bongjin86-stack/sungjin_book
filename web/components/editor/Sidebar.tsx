@@ -19,7 +19,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { Toggle } from "@/components/ui/Toggle";
 import { BLOCK_META, THEME_PRESETS, type BookBlock, type BookOptions, type BookTheme } from "@/types/book";
 
-type SidebarTab = "writing" | "formatting";
+type SidebarTab = "structure" | "style";
+type Density = "default" | "loose" | "tight";
 
 interface SidebarProps {
   options: BookOptions;
@@ -28,6 +29,26 @@ interface SidebarProps {
   onReorder: (next: BookBlock[]) => void;
   activeBlockId?: string | null;
   onSelectBlock?: (id: string) => void;
+}
+
+const DENSITY_PRESETS: Record<Density, Partial<BookOptions>> = {
+  default: { bodyFontSize: "10pt", lineSpacing: "normal", marginPreset: "normal" },
+  loose:   { bodyFontSize: "10pt", lineSpacing: "wide",   marginPreset: "wide"   },
+  tight:   { bodyFontSize: "9pt",  lineSpacing: "narrow", marginPreset: "narrow" },
+};
+
+function currentDensity(o: BookOptions): Density | null {
+  for (const key of Object.keys(DENSITY_PRESETS) as Density[]) {
+    const p = DENSITY_PRESETS[key];
+    if (
+      p.bodyFontSize === o.bodyFontSize &&
+      p.lineSpacing === o.lineSpacing &&
+      p.marginPreset === o.marginPreset
+    ) {
+      return key;
+    }
+  }
+  return null;
 }
 
 export function Sidebar({
@@ -39,8 +60,19 @@ export function Sidebar({
   onSelectBlock,
 }: SidebarProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
-  const [activeTab, setActiveTab] = useState<SidebarTab>("writing");
+  const [activeTab, setActiveTab] = useState<SidebarTab>("structure");
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  // 챕터 자동 번호 보정용 인덱스 맵
+  const chapterAutoNum = new Map<string, number>();
+  let n = 0;
+  for (const b of blocks) {
+    if (b.type === "chapter") {
+      n += 1;
+      chapterAutoNum.set(b.id, n);
+    }
+  }
+
   const groupedBlocks = [
     {
       title: "앞부분",
@@ -65,7 +97,8 @@ export function Sidebar({
     onReorder(arrayMove(blocks, oldIndex, newIndex));
   }
 
-  const chapterCountForLabel = blocks.filter((b) => b.type === "chapter").length;
+  const chapterCount = blocks.filter((b) => b.type === "chapter").length;
+  const density = currentDensity(options);
 
   return (
     <aside className="w-sidebar-w flex-shrink-0 bg-sidebar-bg border-r border-border flex flex-col overflow-hidden">
@@ -73,37 +106,37 @@ export function Sidebar({
       <div className="flex border-b border-border flex-shrink-0">
         <button
           type="button"
-          onClick={() => setActiveTab("writing")}
+          onClick={() => setActiveTab("structure")}
           className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
-            activeTab === "writing"
+            activeTab === "structure"
               ? "text-accent border-b-2 border-accent bg-accent-light"
               : "text-text-muted hover:text-text-secondary"
           }`}
         >
-          ✏️ 집필
+          책 구성
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("formatting")}
+          onClick={() => setActiveTab("style")}
           className={`flex-1 py-[10px] text-[12px] font-semibold transition-colors ${
-            activeTab === "formatting"
+            activeTab === "style"
               ? "text-accent border-b-2 border-accent bg-accent-light"
               : "text-text-muted hover:text-text-secondary"
           }`}
         >
-          🎨 포맷팅
+          책 스타일
         </button>
       </div>
 
-      {/* Writing 탭 — 목차 */}
-      {activeTab === "writing" && (
+      {/* 책 구성 탭 */}
+      {activeTab === "structure" && (
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="px-3 pt-[10px] pb-[6px] flex items-center justify-between flex-shrink-0">
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px]">
-              목차
+              책 구성
             </span>
             <span className="text-[10px] text-text-muted bg-border px-[7px] py-[2px] rounded-[10px] font-semibold">
-              {chapterCountForLabel}
+              {chapterCount}개 챕터
             </span>
           </div>
 
@@ -128,6 +161,7 @@ export function Sidebar({
                           <SortableTocItem
                             key={b.id}
                             block={b}
+                            autoChapterNum={chapterAutoNum.get(b.id)}
                             isActive={activeBlockId === b.id}
                             onSelect={() => onSelectBlock?.(b.id)}
                           />
@@ -144,12 +178,13 @@ export function Sidebar({
         </div>
       )}
 
-      {/* Formatting 탭 — 옵션 패널 */}
-      {activeTab === "formatting" && (
+      {/* 책 스타일 탭 */}
+      {activeTab === "style" && (
         <div className="flex-1 overflow-y-auto px-3 pt-3 pb-[10px]">
           <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mb-2">
-            테마
+            책 스타일
           </div>
+
           <PillGroup<BookTheme>
             label="스타일"
             value={options.theme}
@@ -161,53 +196,51 @@ export function Sidebar({
             onChange={(v) => onChangeOptions({ theme: v, ...THEME_PRESETS[v] })}
           />
 
-          <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
-            옵션
-          </div>
-          <ToggleRow
-            label="챕터 번호 표시"
-            checked={options.showChapterNumber}
-            onChange={(v) => onChangeOptions({ showChapterNumber: v })}
-          />
-          <ToggleRow
-            label="시리즈명 표시"
-            checked={options.showSeriesName}
-            onChange={(v) => onChangeOptions({ showSeriesName: v })}
-          />
-          <ToggleRow
-            label="영문 제목 병기"
-            checked={options.showEnglishTitle}
-            onChange={(v) => onChangeOptions({ showEnglishTitle: v })}
-          />
-          <ToggleRow
-            label="ISBN 포함"
-            checked={options.includeISBN}
-            onChange={(v) => onChangeOptions({ includeISBN: v })}
-          />
-          <PillGroup
-            label="간지 스타일"
-            value={options.interludeStyle}
+          <PillGroup<"with-number" | "title-only">
+            label="챕터 제목"
+            value={options.showChapterNumber ? "with-number" : "title-only"}
             options={[
-              { value: "1p", label: "1p" },
-              { value: "2p", label: "2p" },
+              { value: "with-number", label: "번호+제목" },
+              { value: "title-only", label: "제목만" },
             ]}
-            onChange={(v) => onChangeOptions({ interludeStyle: v })}
+            onChange={(v) => onChangeOptions({ showChapterNumber: v === "with-number" })}
           />
 
-          {/* 고급 설정 아코디언 */}
+          <PillGroup<Density>
+            label="본문 밀도"
+            value={density ?? "default"}
+            options={[
+              { value: "default", label: "기본" },
+              { value: "loose", label: "여유" },
+              { value: "tight", label: "촘촘" },
+            ]}
+            onChange={(v) => onChangeOptions(DENSITY_PRESETS[v])}
+          />
+
+          <PillGroup<"show" | "hide">
+            label="쪽번호"
+            value={options.showPageNumber ? "show" : "hide"}
+            options={[
+              { value: "show", label: "표시" },
+              { value: "hide", label: "숨김" },
+            ]}
+            onChange={(v) => onChangeOptions({ showPageNumber: v === "show" })}
+          />
+
+          {/* 세부 조정 아코디언 */}
           <button
             type="button"
             onClick={() => setAdvancedOpen((p) => !p)}
             className="w-full mt-3 flex items-center justify-between text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] py-1 hover:text-text-secondary transition-colors"
           >
-            <span>조판 · 고급</span>
+            <span>세부 조정</span>
             <span className="text-[10px]">{advancedOpen ? "▾" : "▸"}</span>
           </button>
 
           {advancedOpen && (
             <div className="pt-1">
               <PillGroup
-                label="본문 폰트"
+                label="본문 글꼴"
                 value={options.bodyFont}
                 options={[
                   { value: "serif", label: "바탕" },
@@ -251,41 +284,16 @@ export function Sidebar({
                 onChange={(v) => onChangeOptions({ paragraphIndent: v })}
               />
               <ToggleRow
-                label="쪽번호 표시"
-                checked={options.showPageNumber}
-                onChange={(v) => onChangeOptions({ showPageNumber: v })}
-              />
-              <PillGroup
-                label="쪽번호 위치"
-                value={options.pageNumberPosition}
-                options={[
-                  { value: "bottom-outside", label: "밖↓" },
-                  { value: "bottom-center", label: "중↓" },
-                  { value: "top-outside", label: "밖↑" },
-                ]}
-                onChange={(v) => onChangeOptions({ pageNumberPosition: v })}
-              />
-              <ToggleRow
                 label="챕터 시작 쪽번호 숨김"
                 checked={options.hideChapterStartPageNumber}
                 onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v })}
-              />
-
-              {/* 챕터 스타일 */}
-              <div className="text-[10px] font-bold text-text-muted uppercase tracking-[0.7px] mt-3 mb-2">
-                챕터 스타일
-              </div>
-              <ToggleRow
-                label="드롭 캡 (첫 글자 장식)"
-                checked={options.dropCaps}
-                onChange={(v) => onChangeOptions({ dropCaps: v })}
               />
               <PillGroup
                 label="장면 전환 구분자"
                 value={options.sceneBreakStyle}
                 options={[
                   { value: "asterisk", label: "* * *" },
-                  { value: "line", label: "───" },
+                  { value: "line", label: "선" },
                   { value: "none", label: "없음" },
                 ]}
                 onChange={(v) => onChangeOptions({ sceneBreakStyle: v })}
@@ -357,10 +365,12 @@ function ToggleRow({
 
 function SortableTocItem({
   block,
+  autoChapterNum,
   isActive = false,
   onSelect,
 }: {
   block: BookBlock;
+  autoChapterNum?: number;
   isActive?: boolean;
   onSelect?: () => void;
 }) {
@@ -377,7 +387,6 @@ function SortableTocItem({
   const isInterlude = block.type === "interlude";
   const meta = BLOCK_META[block.type];
 
-  // 섹션별 색상 도트
   const dotColor = isChapter
     ? "bg-accent"
     : isInterlude
@@ -385,6 +394,16 @@ function SortableTocItem({
     : meta.section === "front"
     ? "bg-[#F59E0B]"
     : "bg-[#10B981]";
+
+  // 챕터 표시 문구: 제N장 — {title || 제목 없음}
+  let chapterLabel = "";
+  if (isChapter) {
+    const num = block.chapterNum && block.chapterNum.trim()
+      ? block.chapterNum
+      : `제${autoChapterNum ?? 1}장`;
+    const title = block.title && block.title.trim() ? block.title : "제목 없음";
+    chapterLabel = `${num} — ${title}`;
+  }
 
   return (
     <div
@@ -402,8 +421,7 @@ function SortableTocItem({
         {isChapter ? (
           <>
             <div className="text-[12px] text-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
-              {block.chapterNum}
-              {block.title ? ` — ${block.title}` : ""}
+              {chapterLabel}
             </div>
             <div className="text-[10px] text-text-muted mt-px">
               챕터 · {block.charCount.toLocaleString()}자
@@ -420,7 +438,7 @@ function SortableTocItem({
               {(block as { title?: string }).title || meta.label}
             </div>
             <div className="text-[10px] text-text-muted mt-px">
-              {meta.section === "front" ? "앞부분" : "뒷부분"} · {meta.label}
+              {getMatterDescription(block.type)}
             </div>
           </>
         )}
@@ -434,4 +452,21 @@ function SortableTocItem({
       </span>
     </div>
   );
+}
+
+function getMatterDescription(type: string): string {
+  switch (type) {
+    case "half-title": return "책 제목 페이지";
+    case "copyright": return "저작권·발행 정보";
+    case "toc": return "챕터 목록 자동 생성";
+    case "author-bio": return "저자 프로필";
+    case "preface": return "서문";
+    case "dedication": return "헌정사";
+    case "prologue": return "프롤로그";
+    case "blurb": return "추천사";
+    case "epilogue": return "에필로그";
+    case "acknowledgments": return "감사의 글";
+    case "bibliography": return "참고문헌";
+    default: return "";
+  }
 }
