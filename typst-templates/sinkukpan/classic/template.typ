@@ -131,7 +131,13 @@
     if blk.type == "chapter" {
       chapter(number: blk.number, title: blk.title)
     } else if blk.type == "paragraph" {
-      blk.text
+      // KLREQ G3 — 어절 단위 줄바꿈. 각 어절을 box로 묶어 단어 가운데
+      // 글자 단위 잘림 방지. 한국어 어절(공백 기준)과 영문 단어 둘 다 적용.
+      let words = blk.text.split(" ")
+      for (i, w) in words.enumerate() {
+        if i > 0 { " " }
+        box(w)
+      }
       parbreak()
     } else if blk.type == "heading" {
       let level = blk.at("level", default: 2)
