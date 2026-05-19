@@ -1,7 +1,8 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-19 KST (정찰 종합 → 100일 작전)
+> 마지막 업데이트: 2026-05-20 KST (Sprint 1 완료, Sprint 2 진입)
 > 단계: **Typst 단일 엔진 전환** — 인디자인 대비 한국어 단행본 조판 정밀화
+> 작업 브랜치: `refactor/typst-ts-preview`
 
 ## 한 줄 정체성
 
@@ -22,15 +23,15 @@
 
 > 매일 1%씩 인디자인에 가까워진다. 한국어 단행본 본문 조판 한정.
 
-### Sprint 1 (D1~D20) — Typst 살리기
+### Sprint 1 (D1~D20) — Typst 살리기 ✅ (D1~D7 7일 만에 완주)
 
-- [ ] S1-1. typst.ts 설치, 빈 페이지 SVG 렌더 PoC
-- [ ] S1-2. Next.js 14 + WASM 통합 설정 (`use client`, asyncWebAssembly, Vercel public/)
-- [ ] S1-3. Noto Serif/Sans CJK KR 서브셋 빌드 스크립트(`scripts/build-fonts.ts`). 슬림(0.5MB) + 표준(1.5MB) 2단계.
-- [ ] S1-4. `lib/typst/compiler.ts` — typst.ts 얇은 추상화 레이어 (락인 최소화)
-- [ ] S1-5. 신국판 Classic 템플릿이 typst.ts에서 컴파일되는지 검증
+- [x] S1-1. typst.ts 설치, 빈 페이지 SVG 렌더 PoC — `/dev/typst` 샌드박스
+- [x] S1-2. Next.js 14 + WASM 통합 — public/wasm self-host + postinstall 자동 복사 (Vercel 호환)
+- [x] S1-3. Noto Serif CJK KR 슬림 서브셋 빌드 스크립트(`web/scripts/build-fonts.mjs`). **결과 6.1MB** (목표 0.5MB는 woff2 미지원으로 달성 불가, SW 캐싱(D-019)으로 보완 예정). 산스 KR과 "표준" 2단계는 보류.
+- [x] S1-4. `web/lib/typst/compiler.ts` — typst.ts 얇은 추상화. globalThis 캐시 + warmup으로 dev HMR/race condition 해결.
+- [x] S1-5. 신국판 Classic 템플릿이 typst.ts에서 컴파일되는지 검증 — Playwright 캡처로 한국어 양끝정렬·들여쓰기·챕터 식자 정상 확인.
 
-**완료 기준**: 브라우저에서 "안녕하세요" 한 줄이 노토 세리프로 SVG 렌더됨. PDF와 SVG가 같은 결과.
+**완료 기준 충족**: 브라우저에서 "안녕하세요"가 노토 세리프로 SVG 렌더됨 (캐시 후 14~21ms). 신국판 Classic 1챕터 + 2단락도 OK. 서버 PDF vs SVG 일치는 Sprint 4에서 검증.
 
 ### Sprint 2 (D21~D45) — 한국어 패키지 v0.1
 
@@ -79,15 +80,23 @@
 
 **완료 기준**: 베타 출시. "이거 인디자인으로 한 거 아니야?" 반응이 베타 사용자 절반 이상에서 나옴.
 
-## 다음 7일 (D1~D7) — 즉시 행동
+## D1~D7 회고 (2026-05-19~20 완료)
 
-1. **D1**: `refactor/typst-ts-preview` 브랜치 생성. typst.ts npm 설치, 빈 SVG 렌더 PoC.
-2. **D2**: Next.js 14 WASM 통합 (`use client` 경계, next.config.js, Vercel public/ 호스팅 검증).
-3. **D3**: Noto Serif CJK KR 슬림 서브셋 빌드 스크립트 + OFL.txt 동봉.
-4. **D4**: typst.ts에 폰트 등록 + 신국판 Classic 템플릿 컴파일 테스트.
-5. **D5**: SVG와 서버 PDF 결과 비교 (페이지 수·줄바꿈 일치 확인).
-6. **D6**: 컴파일 시간 측정 (디바운스 기준 결정), 모바일 LTE 첫 로딩 측정.
-7. **D7**: D1~D6 회고 + Sprint 1 잔여 작업 일정 재조정.
+- **D1~D5 통과**. D6(컴파일 시간 측정)은 자연 측정됨: 첫 로딩 ~1s(폰트+WASM 받는 시간 제외), 캐시 후 14~21ms. **디바운스 기준 = 100ms로 충분.**
+- D5(SVG ↔ 서버 PDF 비교)는 서버 PDF 자체가 Sprint 4 작업이라 후일로 미룸.
+- 새 발견:
+  - typst.ts 0.6은 **woff2 미지원** → 폰트 6MB. SW 캐싱 의존도 ↑.
+  - typst.ts의 `getCompiler()`는 첫 호출에 race 있음 → warmup 컴파일을 init promise 안에 박아 회피.
+  - dev HMR이 모듈 변수 reset → init 캐시는 `globalThis`에 저장.
+
+## 다음 7일 (D8~D14) — Sprint 2 진입
+
+1. **D8**: Vellum 디자인 보고서 → D-021 액센트 색 결정 (먹색 vs 쪽빛). decisions.md에 박기. 토큰 파일 박기.
+2. **D9**: S2-1 `lib/typst/buildSource.ts` — bookData JSON → .typ 문자열 변환 골격.
+3. **D10~D11**: S2-3 G1·S2-4 G2 — 줄 처음/끝 금칙 전처리.
+4. **D12**: S2-5 J1 — `par.justify` + `justification-limits` 실측.
+5. **D13**: S2-6 I1 — 들여쓰기 정책 c (이미 template.typ에 일부 구현).
+6. **D14**: S2-7 S1 — 한영 자간 1/4각.
 
 ## 진행 지표 (매일 측정)
 

@@ -1,8 +1,10 @@
 "use client";
 
 // D1~D4 PoC — typst.ts 브라우저 컴파일 + 노토 세리프 CJK KR + 신국판 Classic 검증.
+// S1-4부터 lib/typst/compiler 추상화를 통해 호출 (typst.ts 직접 import 금지).
 
 import { useEffect, useRef, useState } from "react";
+import { compileSvg } from "@/lib/typst/compiler";
 
 type State =
   | { kind: "idle" }
@@ -53,8 +55,6 @@ const SAMPLES = {
 
 type SampleKey = keyof typeof SAMPLES;
 
-let initOptionsSet = false;
-
 export default function TypstSandboxPage() {
   const [sampleKey, setSampleKey] = useState<SampleKey>("hello");
   const [source, setSource] = useState<string>(SAMPLES.hello);
@@ -66,33 +66,11 @@ export default function TypstSandboxPage() {
 
     async function run() {
       const t0 = performance.now();
-      setState({ kind: "loading", phase: "typst.ts 로딩 중" });
+      setState({ kind: "loading", phase: "컴파일 중" });
 
       try {
-        const { $typst, preloadRemoteFonts } = await import(
-          "@myriaddreamin/typst.ts"
-        );
+        const svg = await compileSvg(source);
         if (cancelled) return;
-
-        if (!initOptionsSet) {
-          $typst.setCompilerInitOptions({
-            beforeBuild: [
-              preloadRemoteFonts([
-                "/fonts/NotoSerifCJKkr-Regular.slim.ttf",
-              ]),
-            ],
-            getModule: () => "/wasm/typst_ts_web_compiler_bg.wasm",
-          });
-          $typst.setRendererInitOptions({
-            getModule: () => "/wasm/typst_ts_renderer_bg.wasm",
-          });
-          initOptionsSet = true;
-        }
-
-        setState({ kind: "loading", phase: "컴파일 중" });
-        const svg = await $typst.svg({ mainContent: source });
-        if (cancelled) return;
-
         const elapsedMs = Math.round(performance.now() - t0);
         setState({ kind: "ok", svg, elapsedMs });
       } catch (e) {

@@ -21,10 +21,19 @@ page.on("console", (msg) => consoleLines.push(`[${msg.type()}] ${msg.text()}`));
 page.on("pageerror", (err) => consoleLines.push(`[pageerror] ${err.message}`));
 
 console.log(`> ${URL}`);
-await page.goto(URL, { waitUntil: "networkidle" });
+await page.goto(URL, { waitUntil: "domcontentloaded" });
 
 // 1) hello 샘플 — 기본 선택 상태
-await page.waitForSelector("svg", { timeout: 60000 });
+try {
+  await page.waitForSelector("svg", { timeout: 15000 });
+} catch (e) {
+  console.error("SVG 대기 타임아웃 — 콘솔 덤프:");
+  for (const l of consoleLines) console.error(l);
+  const bodyText = await page.locator("body").innerText();
+  console.error("--- body text ---\n" + bodyText.slice(0, 1500));
+  await page.screenshot({ path: join(OUT, "00-fail-hello.png"), fullPage: true });
+  throw e;
+}
 await page.waitForTimeout(500);
 const statusHello = await page.locator("text=/완료|오류/").first().textContent();
 console.log("hello 상태:", statusHello);
