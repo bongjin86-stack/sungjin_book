@@ -75,7 +75,8 @@ const LINE_HEIGHT: Record<BookOptions["lineSpacing"], string> = {
   wide: "2.0",
 };
 
-const FRAME_WIDTH = 160; // px — 모든 기기 프레임의 너비 고정
+// 패널 220px - 좌우 패딩 22px×2 = 176px
+const FRAME_WIDTH = 176; // px — 모든 기기 프레임의 너비 고정
 
 export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("print");
@@ -178,7 +179,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   );
 
   return (
-    <aside className="w-[280px] flex-shrink-0 bg-[#1C1C1E] border-l border-[#2A2A2A] flex flex-col overflow-hidden">
+    <aside className="w-[220px] flex-shrink-0 bg-[#1C1C1E] border-l border-[#2A2A2A] flex flex-col overflow-hidden">
       {/* 상단 툴바 — 기기 라벨 */}
       <div className="h-10 px-3 flex items-center justify-between border-b border-[#2A2A2A] flex-shrink-0">
         <span className="text-[11px] text-[#BBB] font-medium">
@@ -190,7 +191,7 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
       </div>
 
       {/* 프레임 영역 */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 py-5">
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-[22px] py-4">
         {device === "print" ? (
           <PrintFrame
             ratio={ratio}
