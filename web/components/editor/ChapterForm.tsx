@@ -136,7 +136,9 @@ export function ChapterForm({ initialChapterNum, onSave, onChange }: ChapterForm
         <div className="h-px bg-border mt-4" />
       </div>
 
-      <div className="px-[26px] py-4 min-h-[260px]">
+      {/* 본문 영역 — 고정 높이 + 내부 스크롤. BlockNote 자체가 무한 확장하므로
+          overflow-y-auto로 감싸 카드 높이를 고정한다. */}
+      <div className="px-[26px] py-4 h-[420px] overflow-y-auto">
         <div className="ch-blocknote text-[15px] leading-[1.9] text-text-primary">
           <BlockNoteView
             editor={editor}

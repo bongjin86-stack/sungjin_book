@@ -9,7 +9,6 @@ interface HeaderProps {
   trim: string;
   isSaved: boolean;
   hasChapters: boolean;
-  onOpenFullPreview: () => void;
 }
 
 export function Header({
@@ -18,7 +17,6 @@ export function Header({
   trim,
   isSaved,
   hasChapters,
-  onOpenFullPreview,
 }: HeaderProps) {
   return (
     <header className="h-[54px] bg-surface border-b border-border flex items-center px-[18px] gap-[10px] flex-shrink-0 z-20">
@@ -37,6 +35,7 @@ export function Header({
       <Badge variant="trim">{trim}</Badge>
       <Divider />
 
+      {/* 집필 진행 단계 */}
       <div className="flex items-center gap-[6px] flex-shrink-0">
         <ProgStep label="✏️ 집필 중" active done={hasChapters} />
         <ProgArrow />
@@ -47,19 +46,12 @@ export function Header({
 
       <div className="flex-1" />
 
-      <button
-        type="button"
-        className="px-[13px] py-[7px] rounded text-[11px] font-medium text-text-secondary hover:bg-bg hover:text-text-primary"
-      >
+      {/* 자동저장 상태 */}
+      <span className="text-[11px] font-medium text-text-secondary">
         {isSaved ? "✓ 자동저장됨" : "저장 중..."}
-      </button>
-      <button
-        type="button"
-        onClick={onOpenFullPreview}
-        className="px-[13px] py-[7px] rounded bg-[#18181B] text-white text-[13px] font-medium hover:bg-[#27272A] inline-flex items-center gap-[5px]"
-      >
-        👁 전체 미리보기
-      </button>
+      </span>
+
+      {/* PDF 생성 — 준비 중 */}
       <button
         type="button"
         onClick={() => showToast("PDF 생성 기능은 준비 중입니다.")}

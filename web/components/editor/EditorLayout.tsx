@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChapterForm } from "@/components/editor/ChapterForm";
-import { FullPreviewOverlay } from "@/components/editor/FullPreviewOverlay";
 import { Header } from "@/components/editor/Header";
 import { InlinePreview } from "@/components/editor/PreviewPanel";
 import { Sidebar } from "@/components/editor/Sidebar";
@@ -29,8 +28,6 @@ export function EditorLayout() {
     title: "",
     body: "",
   });
-  const [fullOpen, setFullOpen] = useState(false);
-
   // 책 데이터 없으면 온보딩으로
   useEffect(() => {
     if (hydrated && !bookData) router.replace("/");
@@ -56,7 +53,6 @@ export function EditorLayout() {
         trim={meta.trim}
         isSaved={isSaved}
         hasChapters={chapterCount > 0}
-        onOpenFullPreview={() => setFullOpen(true)}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -96,12 +92,6 @@ export function EditorLayout() {
         trim={meta.trim}
       />
 
-      <FullPreviewOverlay
-        open={fullOpen}
-        onClose={() => setFullOpen(false)}
-        meta={meta}
-        blocks={blocks}
-      />
     </div>
   );
 }
