@@ -24,6 +24,9 @@ Thumbs.db
 # Typst
 *.pdf.tmp
 
+# typst.ts WASM (npm install 후 postinstall로 자동 복사, 22MB)
+web/public/wasm/
+
 # Logs
 *.log
 npm-debug.log*

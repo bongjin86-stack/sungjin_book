@@ -17,6 +17,8 @@ const DEFAULT_SOURCE = `#set page(width: 80mm, height: 30mm, margin: 6mm)
 안녕하세요
 `;
 
+let initOptionsSet = false;
+
 export default function TypstSandboxPage() {
   const [source, setSource] = useState<string>(DEFAULT_SOURCE);
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -32,6 +34,16 @@ export default function TypstSandboxPage() {
       try {
         const { $typst } = await import("@myriaddreamin/typst.ts");
         if (cancelled) return;
+
+        if (!initOptionsSet) {
+          $typst.setCompilerInitOptions({
+            getModule: () => "/wasm/typst_ts_web_compiler_bg.wasm",
+          });
+          $typst.setRendererInitOptions({
+            getModule: () => "/wasm/typst_ts_renderer_bg.wasm",
+          });
+          initOptionsSet = true;
+        }
 
         setState({ kind: "loading", phase: "컴파일 중" });
         const svg = await $typst.svg({ mainContent: source });
