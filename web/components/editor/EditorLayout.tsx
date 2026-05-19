@@ -61,8 +61,12 @@ export function EditorLayout() {
   useEffect(() => {
     if (!bookData || didSelectInitialBlock.current || bookData.blocks.length === 0) return;
     didSelectInitialBlock.current = true;
-    setActiveBlockId(bookData.blocks[0].id);
-    setPreviewContent(getPreviewContent(bookData.blocks[0], bookData));
+    // 진입 시 첫 챕터를 우선 선택 (작가가 즉시 글쓰기에 들어가도록).
+    // 챕터가 없으면 첫 블록(matter 등) fallback.
+    const firstChapter = bookData.blocks.find((b) => b.type === "chapter");
+    const target = firstChapter ?? bookData.blocks[0];
+    setActiveBlockId(target.id);
+    setPreviewContent(getPreviewContent(target, bookData));
   }, [bookData]);
 
   if (!hydrated || !bookData) {

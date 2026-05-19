@@ -14,8 +14,12 @@ import type { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snip
 const ASSETS = {
   webCompilerWasm: "/wasm/typst_ts_web_compiler_bg.wasm",
   rendererWasm: "/wasm/typst_ts_renderer_bg.wasm",
-  /** 노토 세리프 CJK KR 슬림 서브셋 (한글 11,172자, 6MB). */
-  serifKr: "/fonts/NotoSerifCJKkr-Regular.slim.ttf",
+  /** 노토 KR 슬림 서브셋 — 본문(세리프 Regular) + 챕터/제목(산스 Regular/Bold). */
+  fonts: [
+    "/fonts/NotoSerifCJKkr-Regular.slim.ttf",
+    "/fonts/NotoSansCJKkr-Regular.slim.ttf",
+    "/fonts/NotoSansCJKkr-Bold.slim.ttf",
+  ],
 };
 
 type Snippet = TypstSnippet;
@@ -37,7 +41,7 @@ async function getInstance(): Promise<Snippet> {
     );
 
     $typst.setCompilerInitOptions({
-      beforeBuild: [preloadRemoteFonts([ASSETS.serifKr])],
+      beforeBuild: [preloadRemoteFonts(ASSETS.fonts)],
       getModule: () => ASSETS.webCompilerWasm,
     });
     $typst.setRendererInitOptions({

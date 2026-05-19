@@ -93,14 +93,13 @@ export function TypstPreviewPanel({ bookData, activeBlockId, onFallback }: Props
     const scroller = scrollRef.current;
     if (!root || !scroller) return;
 
+    // typst pagebreak(to: "odd")는 짝수 빈 페이지를 자동 추가.
+    // 모든 블록(chapter/matter)이 홀수 시작이라 평균 2페이지 사용.
     let targetIdx = 0;
     for (const b of bookData.blocks) {
       if (b.id === activeBlockId) break;
-      switch (b.type) {
-        case "chapter": targetIdx += 2; break;
-        case "interlude": break;
-        default: targetIdx += 1; break; // matter 종류
-      }
+      if (b.type === "interlude") continue;
+      targetIdx += 2;
     }
 
     const pages = root.querySelectorAll<SVGGElement>("g.typst-page");
