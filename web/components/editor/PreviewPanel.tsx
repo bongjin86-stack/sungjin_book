@@ -78,9 +78,12 @@ function scalePadding(
   base: { top: string; bottom: string; inner: string; outer: string },
   mult: number,
 ) {
+  // 옛 localStorage에 marginPreset이 없을 수 있어 NaN 방어 — 기본 1.0
+  const safeMult = Number.isFinite(mult) && mult > 0 ? mult : 1.0;
   const scale = (s: string) => {
     const n = parseFloat(s);
-    return `${(n * mult).toFixed(2)}%`;
+    if (!Number.isFinite(n)) return s;
+    return `${(n * safeMult).toFixed(2)}%`;
   };
   return { top: scale(base.top), bottom: scale(base.bottom), inner: scale(base.inner), outer: scale(base.outer) };
 }
@@ -111,9 +114,11 @@ export function BookPreviewPanel({ options, trim, previewContent }: BookPreviewP
   const ratio = device === "print" ? TRIM_RATIO[trim] : DEVICE_RATIO[device];
 
   // 본문 영역 padding — print 는 판형별 × 여백 프리셋 배율, 전자기기는 공통값
+  // marginPreset이 없는 옛 옵션 객체일 수 있어 "normal" 폴백
+  const mult = MARGIN_MULTIPLIER[options.marginPreset ?? "normal"] ?? 1.0;
   const padding =
     device === "print"
-      ? scalePadding(TRIM_PADDING[trim], MARGIN_MULTIPLIER[options.marginPreset])
+      ? scalePadding(TRIM_PADDING[trim], mult)
       : DEVICE_PADDING;
 
   // 쪽번호 (인쇄본만).
