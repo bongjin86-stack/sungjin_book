@@ -1,6 +1,7 @@
 export type TrimSize = "신국판" | "46배판" | "문고판";
 export type BookType = "chapter" | "continuous";
 export type BookTheme = "classic" | "modern" | "minimal";
+export type PreviewDevice = "print" | "kindle" | "ipad" | "smartphone";
 
 export const TRIM_SIZES: { name: TrimSize; size: string }[] = [
   { name: "신국판", size: "152 × 225mm" },
