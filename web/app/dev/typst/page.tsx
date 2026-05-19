@@ -85,7 +85,7 @@ export default function TypstSandboxPage() {
         const mode = MODES[sampleKey];
         let svg: string;
         if (mode.kind === "source") {
-          svg = await compileSvg(mode.kind === "source" ? source : mode.text);
+          svg = await compileSvg(source);
         } else {
           const book = await fetch(mode.jsonUrl).then((r) => r.json());
           svg = await compileBookSvg(book);

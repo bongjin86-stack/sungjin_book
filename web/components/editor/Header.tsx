@@ -57,7 +57,12 @@ export function Header({
       await addSource("/data.json", buildDataJson(typstBook));
       const pdfBytes = await compilePdf(buildMainSource());
 
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      // pdfBytes는 Uint8Array<ArrayBufferLike>. Blob은 ArrayBuffer 기반만 받음.
+      const buf = pdfBytes.buffer.slice(
+        pdfBytes.byteOffset,
+        pdfBytes.byteOffset + pdfBytes.byteLength,
+      ) as ArrayBuffer;
+      const blob = new Blob([buf], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

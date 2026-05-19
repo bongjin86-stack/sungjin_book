@@ -158,6 +158,6 @@ export function buildMainSource(): string {
 }
 
 /** book 데이터를 .json 문자열로 직렬화 (typst json() 함수가 읽음). */
-export function buildDataJson(book: BookData): string {
+export function buildDataJson(book: TypstBookData): string {
   return JSON.stringify(book, null, 2);
 }
