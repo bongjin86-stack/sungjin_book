@@ -1,69 +1,43 @@
-// 교재형 — 평가원풍 2단 시험지 v0.3
+// 교재형 — 평가원풍 시험지 v0.3 (variant 디스패치)
 //
-// v0.2 대비 변경:
-//   - sungjin-core.typ import: 폰트·색 토큰·헬퍼 공유
-//   - 묶음 박스 디자인 = 왼쪽 굵은 사이드바 + 라벨 (평가원 실제 스타일에 더 가까움)
-//   - 발문/보기 식자 정교화 (글꼴 크기·간격 미세 조정)
-//   - 보기 ①~⑤ 균등 정렬 — 본문이 한 줄에 다 들어가는 케이스
-//   - 단 사이 가는 세로선
-//   - 빈 보기 안내문 디자인
-//   - 인라인 마커(⟦수식⟧, ⟨IMG:path⟩) 처리는 core의 render-with-markers 위임
+// v0.3는 더 이상 식자를 직접 박지 않는다. 블록(variant 라이브러리)에서 골라 조합한다.
 //
-// 입력 스키마: edu-import/v0
+// 사용자가 meta.style 4가지를 골라 시험지 디자인을 구성:
+//   - multiple_choice: 객관식 식자        (multiple-choice/*)
+//   - short_answer  : 주관식 식자        (short-answer/*)
+//   - passage       : 묶음(지문) 식자    (passage/*)
+//   - layout        : 단 배열 + 세로선   (layout/*)
+//
+// 디폴트는 모두 "academy"/"sidebar-label"/"two-col-rule" — 학원형 + 평가원풍.
+//
+// 입력 스키마: edu-import/v0 (+ 선택적 meta.style)
 
 #import "/typst-templates/_core/sungjin-core.typ": *
 
-// ── 묶음 박스 (평가원 스타일: 왼쪽 굵은 사이드바) ────────────────────────────
-#let render-passage(p) = block(
-  spacing: 1em,
-  breakable: true,
-  width: 100%,
-)[
-  #grid(
-    columns: (2.5pt, 1fr),
-    column-gutter: 7pt,
-    rect(width: 2.5pt, height: 100%, fill: accent, stroke: none),
-    [
-      #text(font: sans-fonts, weight: "bold", size: 0.9em, fill: accent)[
-        \[#p.range.at(0) ~ #p.range.at(1)\] #p.header
-      ]
-      #v(0.4em, weak: true)
-      #text(size: 0.95em)[#render-with-markers(p.body)]
-    ],
-  )
-]
+// ── variant 라이브러리 (전부 top-level import) ────────────────────────────────
+#import "/typst-templates/edu/blocks/multiple-choice/academy.typ" as mc-academy
 
-// ── 보기 한 줄 ───────────────────────────────────────────────────────────────
-// 글리프는 sans · 본문은 serif. 평가원 식자 그대로.
-#let render-choice(c) = block(spacing: 0.45em, above: 0.35em)[
-  #text(font: sans-fonts, fill: ink-strong)[#c.glyph]#h(0.4em)#render-with-markers(c.text)
-]
+#import "/typst-templates/edu/blocks/short-answer/academy.typ" as sa-academy
 
-// ── 빈 보기 안내문 ───────────────────────────────────────────────────────────
-#let empty-choices-notice = block(spacing: 0.5em)[
-  #text(font: sans-fonts, size: 0.82em, fill: luma(150), style: "italic")[
-    \[보기가 화학식·표·그림 안에 있어 텍스트 추출 단계에서 빠짐 — v2에서 회수 예정\]
-  ]
-]
+#import "/typst-templates/edu/blocks/passage/sidebar-label.typ" as ps-sidebar-label
 
-// ── 문항 ─────────────────────────────────────────────────────────────────────
-#let render-question(q) = block(
-  breakable: true,
-  spacing: 1.15em,
-  above: 0.95em,
-)[
-  #text(font: sans-fonts, weight: "bold", size: 1.02em, fill: ink-strong)[#q.number.]#h(0.4em)#render-with-markers(q.stem)
-  #if q.score != none [
-    #h(0.5em)#text(font: sans-fonts, size: 0.82em, fill: ink-muted)[\[#(q.score)점\]]
-  ]
-  #v(0.3em, weak: true)
-  #let all-empty = q.choices.len() > 0 and q.choices.all(c => c.text.trim() == "")
-  #if q.choices.len() == 0 or all-empty {
-    empty-choices-notice
-  } else {
-    for c in q.choices { render-choice(c) }
-  }
-]
+#import "/typst-templates/edu/blocks/layout/two-col-rule.typ" as lo-two-col-rule
+#import "/typst-templates/edu/blocks/layout/one-col.typ" as lo-one-col
+
+// ── variant 디스패치 dict ────────────────────────────────────────────────────
+#let mc-variants = (
+  "academy": mc-academy.render-question,
+)
+#let sa-variants = (
+  "academy": sa-academy.render-question,
+)
+#let ps-variants = (
+  "sidebar-label": ps-sidebar-label.render-passage,
+)
+#let layout-variants = (
+  "two-col-rule": lo-two-col-rule,
+  "one-col": lo-one-col,
+)
 
 // ── 묶음 ID 검색 ─────────────────────────────────────────────────────────────
 #let passage-by-id(passages, id) = {
@@ -76,6 +50,29 @@
 #let test-paper(data) = {
   let subject-name = if "subject" in data.meta { data.meta.subject } else { "국어" }
 
+  // 스타일 선택 (메타에 없으면 디폴트)
+  let style = data.meta.at("style", default: (:))
+  let style-mc = style.at("multiple_choice", default: "academy")
+  let style-sa = style.at("short_answer", default: "academy")
+  let style-ps = style.at("passage", default: "sidebar-label")
+  let style-layout = style.at("layout", default: "two-col-rule")
+
+  // variant 함수 꺼내기 (없으면 academy 디폴트)
+  let render-question-mc = mc-variants.at(style-mc, default: mc-academy.render-question)
+  let render-question-sa = sa-variants.at(style-sa, default: sa-academy.render-question)
+  let render-passage = ps-variants.at(style-ps, default: ps-sidebar-label.render-passage)
+  let layout-mod = layout-variants.at(style-layout, default: lo-two-col-rule)
+
+  // 객관식 vs 주관식 판별: choices가 비어있고 stem 끝이 "?"가 아니거나 q.kind="short" 등이면 주관식
+  // 현재 데이터엔 명시 필드 없으므로 choices 빈 케이스만 주관식으로 간주
+  let render-q-dispatch = (q) => {
+    if q.choices.len() == 0 {
+      render-question-sa(q)
+    } else {
+      render-question-mc(q)
+    }
+  }
+
   set page(
     paper: "a4",
     margin: (top: 22mm, bottom: 15mm, left: 13mm, right: 13mm),
@@ -87,11 +84,13 @@
     header-ascent: 8mm,
     footer: page-footer([#subject-name 영역]),
     footer-descent: 6mm,
+    background: layout-mod.column-rule,
   )
-  setup-korean(size: 9.8pt, leading: leading-body)
+  // 평가원 시험지보다 약간 빽빽하던 인상 — 행간 한 단계 늘려 가독성 확보.
+  setup-korean(size: 9.8pt, leading: leading-loose)
 
-  // 2단 본문
-  show: rest => columns(2, gutter: 8mm, rest)
+  // 본문 배열 (1단 또는 2단)
+  show: rest => layout-mod.wrap-columns(rest)
 
   let prev-pid = none
   for q in data.questions {
@@ -103,6 +102,6 @@
       }
       prev-pid = q.passage_id
     }
-    render-question(q)
+    render-q-dispatch(q)
   }
 }

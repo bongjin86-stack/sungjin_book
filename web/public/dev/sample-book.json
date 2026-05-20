@@ -10,7 +10,7 @@
       "lineSpacing": "normal",
       "showPageNumber": true,
       "pageNumberPosition": "bottom-outside",
-      "hideChapterStartPageNumber": true,
+      "hideChapterStartPageNumber": false,
       "paragraphIndent": true
     }
   },

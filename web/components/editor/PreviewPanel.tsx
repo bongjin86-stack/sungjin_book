@@ -168,32 +168,40 @@ export function BookPreviewPanel({
 
   const showHeader = active.isFirstPageOfBlock && !renderEmpty;
 
-  // 쪽번호 — chapter 블록 시작 페이지에서 hideChapterStartPageNumber 적용
+  // 쪽번호 정책
+  //  - 매터 페이지(속표지/판권지/목차/서문/헌정 등)는 항상 숨김
+  //  - 챕터 시작 페이지는 옵션이 켜진 경우에만 숨김 (기본 표시)
+  const isMatter =
+    active.blockType !== "chapter" && active.blockType !== "interlude";
   const isChapterStart =
     active.blockType === "chapter" && active.isFirstPageOfBlock;
   const pnVisible =
     device === "print" &&
     options.showPageNumber &&
+    !isMatter &&
     !(options.hideChapterStartPageNumber && isChapterStart);
   const previewPageNumber = currentPage + 1;
 
+  // 쪽번호는 본문 하단 여백(paddingBottom) 안에서 페이지 끝 가까운 쪽에 둠.
+  // 0.35 = paddingBottom의 35% 지점 → 본문 마지막 줄과의 시각 거리 충분히 확보.
+  // 상단 외곽(top-outside)도 동일 비율로 페이지 위쪽 가까이 배치.
   let pnPositionStyle: React.CSSProperties = {};
   if (options.pageNumberPosition === "bottom-center") {
     pnPositionStyle = {
-      bottom: `${layout.paddingPx.bottom / 2}px`,
+      bottom: `${layout.paddingPx.bottom * 0.35}px`,
       left: 0,
       right: 0,
       textAlign: "center",
     };
   } else if (options.pageNumberPosition === "top-outside") {
     pnPositionStyle = {
-      top: `${layout.paddingPx.top / 2}px`,
-      right: `${layout.paddingPx.outer / 2}px`,
+      top: `${layout.paddingPx.top * 0.35}px`,
+      right: `${layout.paddingPx.outer * 0.45}px`,
     };
   } else {
     pnPositionStyle = {
-      bottom: `${layout.paddingPx.bottom / 2}px`,
-      right: `${layout.paddingPx.outer / 2}px`,
+      bottom: `${layout.paddingPx.bottom * 0.35}px`,
+      right: `${layout.paddingPx.outer * 0.45}px`,
     };
   }
 
@@ -512,7 +520,7 @@ function BookFrame(props: BookFrameProps) {
                             fontFamily: "sans-serif",
                             fontSize: `${fontSizePx * 0.95}px`,
                             color: "#111",
-                            marginBottom: `${fontSizePx * 0.3}px`,
+                            marginBottom: `${fontSizePx * 0.9}px`,
                           }}
                         >
                           {chapterNum}
@@ -524,7 +532,7 @@ function BookFrame(props: BookFrameProps) {
                           fontFamily: "sans-serif",
                           fontSize: `${fontSizePx * 1.4}px`,
                           color: "#111",
-                          marginBottom: `${fontSizePx * 0.8}px`,
+                          marginBottom: `${fontSizePx * 1.4}px`,
                         }}
                       >
                         {title || "(제목 없음)"}
@@ -536,8 +544,8 @@ function BookFrame(props: BookFrameProps) {
                             fontFamily: "sans-serif",
                             fontSize: `${fontSizePx * 0.82}px`,
                             color: "#555",
-                            marginTop: `${fontSizePx * -0.35}px`,
-                            marginBottom: `${fontSizePx * 0.8}px`,
+                            marginTop: `${fontSizePx * 0.4}px`,
+                            marginBottom: `${fontSizePx * 1.4}px`,
                           }}
                         >
                           {subtitle}

@@ -186,7 +186,7 @@ export const DEFAULT_OPTIONS: BookOptions = {
   pageNumberPosition: "bottom-outside",
   pageNumberFormat: "arabic",
   frontMatterNumbering: "none",
-  hideChapterStartPageNumber: true,
+  hideChapterStartPageNumber: false,
   paragraphIndent: true,
 
   dropCaps: false,

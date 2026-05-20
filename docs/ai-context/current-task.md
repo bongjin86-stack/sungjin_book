@@ -1,8 +1,8 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-20 KST (단행본 Sprint 1·2·3·4 핵심 통과 + 교재 파이프라인 합류)
-> 단계: **단행본/교재 두 트랙 main에서 통합 운영 시작**
-> 작업 브랜치: `main` 단일 (refactor/typst-ts-preview, experiment/edu-vellum-mvp 모두 ff-merge 후 삭제)
+> 마지막 업데이트: 2026-05-21 KST (교재 variant 골격 + /edu MVP 박힘. 단행본은 동결)
+> 단계: **교재 트랙 — 식자 variant 라이브러리 구축 중**
+> 작업 브랜치: `main` 단일
 
 ## 한 줄 정체성
 
@@ -10,13 +10,93 @@
 단행본은 작가 입력 → PDF (Vellum 신뢰 + Reedsy 가격 + 부크크 출구).
 교재는 평가원형 HWP → JSON → 시험지 PDF.
 
-## 통합 상태 (2026-05-20 합류)
+## 통합 상태 (2026-05-21 갱신)
 
-- **main = 단일 통합 브랜치.** refactor/typst-ts-preview와 experiment/edu-vellum-mvp 모두 흡수.
-- **단행본 트랙**(옆 창): `web/`, `typst-templates/sinkukpan/`. Sprint 1~5 일부 진행.
-- **교재 트랙**(이 창): `experiments/edu-import/`, `typst-templates/edu/`. 5종목 HWP → JSON → PDF 자동 변환 100% 동작.
+- **main = 단일 통합 브랜치.**
+- **단행본 트랙**: `web/`, `typst-templates/sinkukpan/`. Sprint 1~5 일부 진행 후 **동결 중**. 이유: 사용자가 "한글 복붙이 더 편할 수도" 의문 제기 → 교재 트랙 우선 전환 (`memory/hwp-import-insight.md`).
+- **교재 트랙**: `experiments/edu-import/`, `typst-templates/edu/`. 5종목 HWP → JSON → PDF 자동 변환 100% 동작. 시험지 템플릿 v0.3 + variant 라이브러리 구조 박힘.
 - **공통 코어**: `typst-templates/_core/sungjin-core.typ` 박힘. 폰트·색 토큰(쪽빛 #2a3a5a)·박스 헬퍼·한국어 설정·인라인 마커 처리.
-- **두 창 운영 룰**: 이 창 = 교재 폴더만, 옆 창 = 단행본 폴더만. 공통 코어 만질 땐 알림.
+
+## 2026-05-21 진행 (이 세션)
+
+### 단행본 — 동결 직전 4가지 결정 박음 (사용자 확인 미완)
+
+`typst-templates/sinkukpan/classic/template.typ` + 미러 + 미리보기 + 옵션 기본값:
+
+1. **매터 vs 챕터 추적 분리** — `matter-pages` state 신설. 속표지/판권지/목차/서문은 항상 쪽번호 숨김.
+2. **`hideChapterStartPageNumber` 기본값 true → false** — 챕터 시작 페이지에도 쪽번호 표시가 한국 단행본 통례.
+3. **챕터 헤더 여백 늘림** — Typst 0.6em→1.2em, 0.4em→0.8em, 2em→2.6em. 미리보기도 동등 비율.
+4. **본문↔쪽번호 시각 거리 확대** — 미리보기 쪽번호 위치를 paddingBottom 50% → 35% 지점.
+
+→ 단행본 재개 시 첫 작업: 사용자가 위 4가지 결과를 브라우저에서 확인.
+
+### 교재 — variant 라이브러리 골격 박음
+
+**디렉토리 구조 (`typst-templates/edu/blocks/`)**:
+```
+multiple-choice/   객관식 — academy.typ (학원형: 번호 박스)
+short-answer/      주관식 — academy.typ (placeholder, 향후 채움)
+passage/           묶음    — sidebar-label.typ (사이드바 + 라벨박스)
+layout/            배열    — two-col-rule.typ (2단+세로선), one-col.typ (1단)
+```
+
+**v0.3 template.typ는 디스패치만**: `meta.style` 4가지 키 읽어 variant dict에서 함수 꺼냄. 객관식/주관식은 `q.choices` 빈 케이스로 자동 판별.
+
+**웹 `/edu` MVP 박힘** (`web/app/edu/page.tsx`):
+- 좌측 종목 칩(국어만 활성, 나머지 준비 중)
+- 가운데 SVG 미리보기 + 페이지 넘김
+- 우하단 PDF 다운로드
+- `compileTestPaperSvg/Pdf` 함수가 7개 typst 소스를 가상 FS에 박음
+- 샘플 데이터: `web/public/dev/edu/korean.json` (raw 추출 결과, page.tsx에서 meta 덧입힘)
+
+### 결정된 식자 위계 (식자 작업 진행 패턴)
+
+```
+Tier 0  atom        폰트·색·굵기·자간·줄간격
+Tier 1  마크업       강조·마커·글리프(①②③, ㉠, 한자)
+Tier 2  인라인 컴포   번호박스·[점수]·라벨
+Tier 3  한 줄        보기·발문·라벨
+Tier 4  블록 ◀ 지금  1객관식·1주관식·1묶음·1자료·1그림
+Tier 5  페이지 영역   단·헤더·푸터·세로선·여백
+Tier 6  책 전체      종목별 단수
+```
+
+**원칙**: Tier 4(블록)부터 결정 → 안에서 atom·마크업·인라인 부산물로 정해짐 → 결정 누적되면 패턴 발견 → 그제서야 토큰화. premature abstraction 금지.
+
+## 다음 한 발 (내일 이어서)
+
+### 교재 — Tier 4 블록 결정 누적 (가장 우선)
+
+이미 임시 결정:
+- ✅ 객관식 = academy (번호 박스)
+- ✅ 묶음 = sidebar-label
+- ✅ 배열 = two-col-rule
+
+다음 결정 순서:
+1. **주관식 식자** — 수학 단답형 데이터 확보 + 답 표기 방식
+2. **묶음 variant 추가** — boxed(박스 둘러침) / numbered(좌측 큰 숫자) 등
+3. **자료 박스** — `<보기>` ㄱㄴㄷㄹ, 표, 그림 placeholder 식자
+4. **인라인 그림 + 캡션** — `⟨IMG:path⟩` 마커가 자료에 들어갈 때 정렬·캡션·크기
+5. **여러 문제 배치** — 단 안에서 결속(breakable: false), 묶음+첫 문항 결속, 단 균형
+6. **메인 색상** — 위 5가지 결정 누적된 시각 보고 마지막에 확정
+
+### 교재 — 인프라
+
+- **웹 UI에 variant 선택기 추가** — `/edu` 좌측에 4개 드롭다운 (객관식/주관식/묶음/배열). 즉시 미리보기 갱신
+- **다른 종목 데이터 web에 배치** — 영어/수학/사탐/과탐 JSON을 `web/public/dev/edu/`로 복사 + 종목 칩 활성화
+- **종목별 자동 단 수 분기** — 수학 = `one-col`, 나머지 = `two-col-rule` 디폴트 매핑
+
+### 단행본 — 동결 해제 시점
+
+- 사용자가 단행본 4가지 변경(매터/챕터 쪽번호·헤더 여백) 직접 확인
+- 한글(HWP) 임포트 트랙 검토 — 교재 파이프라인의 단행본 확장 (`memory/hwp-import-insight.md`)
+
+## 운영 메모
+
+- 새 variant 추가 패턴: `typst-templates/edu/blocks/{category}/{variant}.typ` + v0.3 template의 dict에 등록 + (선택) 웹 UI 드롭다운 항목 추가
+- variant 파일은 `#import "/typst-templates/_core/sungjin-core.typ": *`로 시작, 같은 함수 signature 유지 (`render-question(q)` / `render-passage(p)` / layout은 `column-rule` + `wrap-columns(body)`)
+- `node web/scripts/copy-typst-templates.mjs`로 web/public 미러 동기화 (typst 템플릿 수정 시 매번)
+- 컴파일 검증: CLI(`experiments/edu-import/scripts/render-json-to-typst.py`)와 web 둘 다 동작해야 정상
 
 ## 교재 트랙 어디까지 (이 창 작업 영역)
 

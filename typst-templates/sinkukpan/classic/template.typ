@@ -30,10 +30,14 @@
 // 산스 KR이 있는 환경(서버 PDF 등)에선 첫 폰트가 잡혀 영향 없다.
 #let sans-fonts = ("Noto Sans KR", "Noto Sans CJK KR", "Noto Serif KR", "Noto Serif CJK KR")
 
-// === 챕터 시작 상태 추적 ===
-// query(<label>) 방식이 Typst 0.13.x에서 불안정하므로
-// state를 사용하여 챕터 시작 페이지 번호를 직접 기록한다.
+// === 페이지 추적 상태 ===
+// query(<label>) 방식이 Typst 0.13.x에서 불안정하므로 state로 직접 기록한다.
+//
+// chapter-start-pages: 챕터 시작 페이지 번호들. hide-chapter-pn 옵션 대상.
+// matter-pages       : 매터(속표지/판권지/목차/서문 등) 페이지 번호들. 항상 쪽번호 숨김.
+// pagebreak(to: "odd")이 끼워 넣는 빈 짝수 페이지는 chapter-start나 matter의 "n+1"로 추론.
 #let chapter-start-pages = state("chapter-start-pages", ())
+#let matter-pages = state("matter-pages", ())
 
 // 본문 시작 = 첫 챕터 페이지. 그 이전(매터)과 이후(본문)을 구분해서
 // 쪽번호 형식(로마자 vs 아라비아)을 자동 분리한다.
@@ -57,7 +61,8 @@
   let pn-format = opts.at("pageNumberFormat", default: "arabic")
   let front-matter-numbering = opts.at("frontMatterNumbering", default: "none")
   let show-pn = opts.at("showPageNumber", default: true)
-  let hide-chapter-pn = opts.at("hideChapterStartPageNumber", default: true)
+  // 챕터 시작 페이지 쪽번호 숨김 — 영문 단행본 통례. 한국 단행본은 기본 표시.
+  let hide-chapter-pn = opts.at("hideChapterStartPageNumber", default: false)
   let indent = opts.at("paragraphIndent", default: true)
   let show-chapter-num = opts.at("showChapterNumber", default: true)
   let drop-caps = opts.at("dropCaps", default: false)
@@ -91,7 +96,7 @@
       #align(center)[
         #text(font: sans-fonts, weight: "bold", size: 14pt)[제 #number 장]
       ]
-      #v(0.6em)
+      #v(1.2em)
     ]
 
     // 챕터 제목 — 산스 Bold 18pt, 가운데. 비어있으면 줄/공간을 차지하지 않음.
@@ -103,35 +108,39 @@
 
     // 챕터 부제 — 제목 아래 작게 이탤릭 (Vellum 표준)
     #if subtitle != none and subtitle != "" [
-      #v(0.4em)
+      #v(0.8em)
       #align(center)[
         #text(font: serif-fonts, style: "italic", size: 12pt)[#subtitle]
       ]
     ]
 
-    #v(2em)
+    #v(2.6em)
   ]
 
   // --- 빈 페이지 판단 ---
-  // pagebreak(to: "odd")가 끼워 넣은 짝수 빈 페이지 = 다음 페이지가 챕터 시작.
+  // pagebreak(to: "odd")가 끼워 넣은 짝수 빈 페이지 = 다음 페이지가 챕터/매터 시작.
   // 단행본 표준: 빈 페이지는 쪽번호도 헤더도 표시하지 않는다.
-  let is-blank-spacer(n, start-pages) = {
-    calc.even(n) and start-pages.contains(n + 1)
+  let is-blank-spacer(n, start-pages, mp) = {
+    calc.even(n) and (start-pages.contains(n + 1) or mp.contains(n + 1))
   }
 
   // --- 쪽번호 형식 변환 ---
   // body: 1·2·3 또는 i·ii / matter: 로마자(roman) 또는 없음(none).
-  // matter는 body 시작 시점부터 거꾸로 -1씩 매겨 i, ii … 식으로 정방향 정렬.
-  let render-pn(n, start-pages, fcp) = {
+  // matter는 본문 시작 시점 기준으로 매겨 i, ii … 식으로 정방향 정렬.
+  // matter-pages(속표지/판권지/목차/서문 등)는 **항상** 쪽번호 숨김.
+  let render-pn(n, start-pages, fcp, mp) = {
     if not show-pn { return none }
-    if is-blank-spacer(n, start-pages) { return none }
+    if is-blank-spacer(n, start-pages, mp) { return none }
 
-    // matter / body 분리
+    // 매터 페이지 자체는 무조건 숨김 (속표지/판권지/목차/서문 등)
+    if mp.contains(n) { return none }
+
+    // matter / body 분리 — 본문 시작 전(=첫 챕터 이전)은 매터로 간주
     let in-matter = fcp == none or n < fcp
     if in-matter {
-      // 매터 페이지 — frontMatterNumbering에 따라
+      // 매터 영역(본문 첫 챕터 이전). matter-pages는 위에서 이미 거름.
+      // 그 사이 일반 페이지(거의 없지만)는 frontMatterNumbering 정책 따름.
       if front-matter-numbering == "none" { return none }
-      // 매터는 페이지 1번부터 로마자 i, ii, iii...
       let num = numbering("i", n)
       let pos = if pn-pos == "bottom-outside" or pn-pos == "top-outside" {
         if calc.odd(n) { right } else { left }
@@ -140,7 +149,7 @@
     }
 
     // 본문 페이지 — 첫 챕터부터 1, 2, 3...
-    // 챕터 시작 페이지 쪽번호 숨김 옵션 적용
+    // 챕터 시작 페이지 쪽번호 숨김 옵션 (기본 off)
     if hide-chapter-pn and start-pages.contains(n) { return none }
     let body-n = n - fcp + 1
     let num = if pn-format == "roman" { numbering("i", body-n) } else { str(body-n) }
@@ -152,11 +161,12 @@
 
   // --- 러닝 헤더 렌더링 (옵션 토글) ---
   // 짝수 페이지: 책 제목 (왼쪽 = 안쪽). 홀수 페이지: 챕터 제목 (오른쪽 = 안쪽).
-  // 한국 단행본 통례: 챕터 시작 페이지와 빈 페이지에는 헤더 없음.
-  let render-header(n, start-pages) = {
+  // 한국 단행본 통례: 챕터 시작 페이지·매터 페이지·빈 페이지에는 헤더 없음.
+  let render-header(n, start-pages, mp) = {
     if not running-header { return none }
     if start-pages.contains(n) { return none }
-    if is-blank-spacer(n, start-pages) { return none }
+    if mp.contains(n) { return none }
+    if is-blank-spacer(n, start-pages, mp) { return none }
     let label = if calc.odd(n) {
       current-chapter-title.at(here())
     } else { book-title }
@@ -191,18 +201,20 @@
     header: context {
       let n = counter(page).at(here()).first()
       let sp = chapter-start-pages.final()
+      let mp = matter-pages.final()
       let fcp = first-chapter-page.final()
       if pn-pos == "top-outside" {
-        render-pn(n, sp, fcp)
+        render-pn(n, sp, fcp, mp)
       } else {
-        render-header(n, sp)
+        render-header(n, sp, mp)
       }
     },
     footer: context {
       let n = counter(page).at(here()).first()
       let sp = chapter-start-pages.final()
+      let mp = matter-pages.final()
       let fcp = first-chapter-page.final()
-      if pn-pos != "top-outside" { render-pn(n, sp, fcp) }
+      if pn-pos != "top-outside" { render-pn(n, sp, fcp, mp) }
     },
   )
 
@@ -280,7 +292,7 @@
       pagebreak(to: "odd", weak: true)
       context {
         let n = counter(page).at(here()).first()
-        chapter-start-pages.update(pages => pages + (n,))
+        matter-pages.update(pages => pages + (n,))
       }
       v(1fr)
       align(center)[
@@ -311,7 +323,7 @@
       pagebreak(to: "odd", weak: true)
       context {
         let n = counter(page).at(here()).first()
-        chapter-start-pages.update(pages => pages + (n,))
+        matter-pages.update(pages => pages + (n,))
       }
       v(1fr)
       align(center)[
@@ -324,7 +336,7 @@
       pagebreak(to: "odd", weak: true)
       context {
         let n = counter(page).at(here()).first()
-        chapter-start-pages.update(pages => pages + (n,))
+        matter-pages.update(pages => pages + (n,))
       }
       v(6em)
       align(center)[
@@ -349,7 +361,7 @@
       pagebreak(to: "odd", weak: true)
       context {
         let n = counter(page).at(here()).first()
-        chapter-start-pages.update(pages => pages + (n,))
+        matter-pages.update(pages => pages + (n,))
       }
       let body-text = blk.at("body", default: "")
       let is-short = body-text.len() < 400

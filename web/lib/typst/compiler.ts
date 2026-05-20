@@ -106,3 +106,50 @@ export async function compileBookSvg(book: unknown): Promise<string> {
 
   return compileSvg(buildMainSource());
 }
+
+// ─── 교재(시험지) 컴파일 ──────────────────────────────────────────────────────
+// v0.3 시험지 템플릿은 절대 경로 import (`#import "/typst-templates/_core/...":*`)
+// 라서 core·v0.3 두 파일을 그 경로 그대로 가상 파일시스템에 박는다.
+
+const TEST_PAPER_MAIN_SRC = `#import "/typst-templates/edu/test-paper/v0.3/template.typ": test-paper
+#let data = json("/data.json")
+#test-paper(data)
+`;
+
+async function loadTestPaperSources(): Promise<void> {
+  // v0.3는 blocks/ variant 라이브러리를 import — 모두 가상 FS에 박혀 있어야 함.
+  const paths = [
+    "/typst-templates/_core/sungjin-core.typ",
+    "/typst-templates/edu/blocks/multiple-choice/academy.typ",
+    "/typst-templates/edu/blocks/short-answer/academy.typ",
+    "/typst-templates/edu/blocks/passage/sidebar-label.typ",
+    "/typst-templates/edu/blocks/layout/two-col-rule.typ",
+    "/typst-templates/edu/blocks/layout/one-col.typ",
+    "/typst-templates/edu/test-paper/v0.3/template.typ",
+  ];
+  const srcs = await Promise.all(
+    paths.map((p) =>
+      fetch(p).then((r) => {
+        if (!r.ok) throw new Error(`fetch ${p}: ${r.status}`);
+        return r.text();
+      }),
+    ),
+  );
+  for (let i = 0; i < paths.length; i++) {
+    await addSource(paths[i], srcs[i]);
+  }
+}
+
+/** 시험지 데이터 JSON을 v0.3 템플릿으로 컴파일한 SVG 반환. */
+export async function compileTestPaperSvg(paperData: unknown): Promise<string> {
+  await loadTestPaperSources();
+  await addSource("/data.json", JSON.stringify(paperData));
+  return compileSvg(TEST_PAPER_MAIN_SRC);
+}
+
+/** 시험지 데이터 JSON을 v0.3 템플릿으로 컴파일한 PDF 바이너리 반환. */
+export async function compileTestPaperPdf(paperData: unknown): Promise<Uint8Array> {
+  await loadTestPaperSources();
+  await addSource("/data.json", JSON.stringify(paperData));
+  return compilePdf(TEST_PAPER_MAIN_SRC);
+}
