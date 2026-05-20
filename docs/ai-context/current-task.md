@@ -1,12 +1,31 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-20 KST (Sprint 1·2·3·4 핵심 통과, Sprint 5 진입)
-> 단계: **Typst 단일 엔진 전환 핵심 완료** — 작가 첫 PDF 다운로드까지 한 흐름
-> 작업 브랜치: `refactor/typst-ts-preview` (12커밋 ahead)
+> 마지막 업데이트: 2026-05-20 KST (단행본 Sprint 1·2·3·4 핵심 통과 + 교재 파이프라인 합류)
+> 단계: **단행본/교재 두 트랙 main에서 통합 운영 시작**
+> 작업 브랜치: `main` 단일 (refactor/typst-ts-preview, experiment/edu-vellum-mvp 모두 ff-merge 후 삭제)
 
 ## 한 줄 정체성
 
-**Vellum 신뢰 + Reedsy 가격 + 부크크 출구.** 한국어 단행본 자동 조판에만 집중.
+**한국어 출판물 자동 조판 도구 = 성진북스.** 한 사이트, 단행본 + 교재 두 모드.
+단행본은 작가 입력 → PDF (Vellum 신뢰 + Reedsy 가격 + 부크크 출구).
+교재는 평가원형 HWP → JSON → 시험지 PDF.
+
+## 통합 상태 (2026-05-20 합류)
+
+- **main = 단일 통합 브랜치.** refactor/typst-ts-preview와 experiment/edu-vellum-mvp 모두 흡수.
+- **단행본 트랙**(옆 창): `web/`, `typst-templates/sinkukpan/`. Sprint 1~5 일부 진행.
+- **교재 트랙**(이 창): `experiments/edu-import/`, `typst-templates/edu/`. 5종목 HWP → JSON → PDF 자동 변환 100% 동작.
+- **공통 코어**: `typst-templates/_core/sungjin-core.typ` 박힘. 폰트·색 토큰(쪽빛 #2a3a5a)·박스 헬퍼·한국어 설정·인라인 마커 처리.
+- **두 창 운영 룰**: 이 창 = 교재 폴더만, 옆 창 = 단행본 폴더만. 공통 코어 만질 땐 알림.
+
+## 교재 트랙 어디까지 (이 창 작업 영역)
+
+- 평가원 5종목(국어/영어/수학/사탐/과탐) HWP → 동일 JSON 스키마(edu-import/v0) → Typst PDF
+- 한컴 수식 매크로 코드 → Typst 수식 변환기 100% 컴파일 통과 (수학 522 + 과탐 444)
+- ShapePicture(이미지) → BinData PNG 자동 매핑 + Typst image() 인라인
+- 사탐 20/20, 과탐 20/20, 국어 55/56, 영어 44/45, 수학 33+단답형 13 보기 완전
+- 시험지 템플릿 v0.3 첫 컷 박힘 (`typst-templates/edu/test-paper/v0.3/`)
+- **다음 한 발**: v0.3 디자인 다듬기 → EBS/사설 HWP 검증 → 사이트 `/edu` 라우트 → 베타 출시
 
 ## 정찰 결과 (2026-05-19)
 
