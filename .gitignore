@@ -56,6 +56,9 @@ tools/playwright/shots-verify/
 tools/playwright/shots-pdf/
 tools/playwright/shots-klreq/
 
-# 사용자 작업 영역 (커밋 안 함)
-experiments/
+# 교재형 실험 — HWP 원본·결과물 보호 (저작권/민감)
 hwp/
+experiments/edu-import/out/
+experiments/edu-import/node_modules/
+experiments/edu-import/.venv/
+experiments/edu-import/package-lock.json

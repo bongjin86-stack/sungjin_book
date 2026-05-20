@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+out/
+*.log
+.venv/
+__pycache__/
+*.pyc
