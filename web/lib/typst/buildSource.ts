@@ -16,12 +16,12 @@ export interface TypstBookData {
 }
 
 export type Block =
-  | { type: "chapter"; number: number; title: string }
+  | { type: "chapter"; number: number; title: string; subtitle?: string }
   | { type: "paragraph"; text: string }
   | { type: "heading"; level?: number; text: string }
   | { type: "quote"; text: string; by?: string }
   // Front/Back matter — 트랙 B에서 변환된 결과
-  | { type: "half-title"; title: string; author?: string; publisher?: string }
+  | { type: "half-title"; title: string; subtitle?: string; author?: string; publisher?: string }
   | { type: "copyright"; body: string }
   | { type: "toc"; entries: Array<{ chapterNum: string; title: string }> }
   | { type: "matter-page"; title: string; body: string };
@@ -80,6 +80,7 @@ export function trackBToTypst(
         out.push({
           type: "half-title",
           title: meta.title,
+          subtitle: meta.subtitle,
           author: meta.author,
           publisher: meta.publisher,
         });
@@ -112,7 +113,12 @@ export function trackBToTypst(
       case "chapter": {
         const number = parseChapterNumber(b.chapterNum, autoNum);
         autoNum = number + 1;
-        out.push({ type: "chapter", number, title: b.title || "" });
+        out.push({
+          type: "chapter",
+          number,
+          title: b.title || "",
+          subtitle: b.subtitle || undefined,
+        });
         const paragraphs = (b.body || "")
           .split(/\n+/)
           .map((p) => p.trim())

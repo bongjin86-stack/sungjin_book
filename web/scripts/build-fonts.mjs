@@ -31,16 +31,20 @@ const cacheDir = join(projectRoot, "build", "fonts-src");
 const outDir = join(webRoot, "public", "fonts");
 
 const UNICODE_RANGES = [
-  "U+0020-007E",
-  "U+00A0-00FF",
-  "U+2000-206F",
-  "U+2070-209F",
-  "U+20A0-20CF",
-  "U+2100-214F",
-  "U+AC00-D7A3",
-  "U+1100-11FF",
-  "U+3000-303F",
-  "U+FF00-FFEF",
+  "U+0020-007E", // ASCII
+  "U+00A0-00FF", // Latin-1
+  "U+2000-206F", // General punctuation
+  "U+2070-209F", // Superscripts
+  "U+20A0-20CF", // Currency
+  "U+2100-214F", // Letterlike
+  "U+AC00-D7A3", // 한글 음절 11,172자
+  "U+1100-11FF", // 한글 자모
+  "U+3000-303F", // CJK 기호·구두점
+  "U+FF00-FFEF", // 반각/전각
+  // 한자 — 한국 단행본(특히 고전·인문서)에서 음독 괄호·인명·지명에 자주 등장.
+  // 빠지면 "歸宅之圖" 같은 본문이 □ 네모로 표시된다.
+  "U+3400-4DBF", // CJK Extension A
+  "U+4E00-9FFF", // CJK Unified Ideographs (기본 한자)
 ].join(",");
 
 function downloadWithRedirect(url, dest, maxRedirects = 5) {

@@ -40,29 +40,11 @@ function normalizeBlock(block: BookBlock): BookBlock {
 }
 
 function normalizeBookData(book: BookData): BookData {
+  // 정규화 = 챕터의 누락 필드 보충(subtitle/charCount 등)만 한다.
+  // 매터 블록 강제 추가는 하지 않는다 — 사용자가 onboarding에서 선택 해제했거나
+  // 사이드바에서 삭제한 매터가 정규화 단계에서 되살아나는 버그를 막기 위해.
+  // 새 책의 매터 구성은 BookSetupScreen이 결정하며, 기존 책은 그대로 유지된다.
   const normalizedBlocks = book.blocks.map(normalizeBlock);
-  const hasType = (type: MatterBlock["type"]) => normalizedBlocks.some((b) => b.type === type);
-  const firstBodyIndex = normalizedBlocks.findIndex(
-    (b) => b.type === "chapter" || b.type === "interlude",
-  );
-  const frontInsertIndex = firstBodyIndex >= 0 ? firstBodyIndex : normalizedBlocks.length;
-  const frontBlocks: BookBlock[] = [];
-
-  if (!hasType("half-title")) frontBlocks.push(createSystemMatterBlock("half-title"));
-  if (!hasType("copyright")) frontBlocks.push(createSystemMatterBlock("copyright"));
-  if (!hasType("toc")) frontBlocks.push(createSystemMatterBlock("toc"));
-
-  const withFront =
-    frontBlocks.length > 0
-      ? [
-          ...normalizedBlocks.slice(0, frontInsertIndex),
-          ...frontBlocks,
-          ...normalizedBlocks.slice(frontInsertIndex),
-        ]
-      : normalizedBlocks;
-
-  const hasAuthorBio = withFront.some((b) => b.type === "author-bio");
-  const blocks = hasAuthorBio ? withFront : [...withFront, createSystemMatterBlock("author-bio")];
 
   return {
     ...book,
@@ -70,7 +52,7 @@ function normalizeBookData(book: BookData): BookData {
       ...book.meta,
       options: { ...DEFAULT_OPTIONS, ...(book.meta.options ?? {}) },
     },
-    blocks,
+    blocks: normalizedBlocks,
   };
 }
 

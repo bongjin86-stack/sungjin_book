@@ -10,15 +10,18 @@
 
 import type { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
 
-/** typst.ts 0.6 기준 자산 경로. self-host (/public/...). */
+/** typst.ts 0.6 기준 자산 경로. self-host (/public/...).
+ *  ?v= 쿼리는 폰트 슬림본 빌드 키 — 한자 범위(U+4E00-9FFF) 추가 후 캐시 무효화.
+ */
+const FONT_VER = "2026-05-20-hanja";
 const ASSETS = {
   webCompilerWasm: "/wasm/typst_ts_web_compiler_bg.wasm",
   rendererWasm: "/wasm/typst_ts_renderer_bg.wasm",
   /** 노토 KR 슬림 서브셋 — 본문(세리프 Regular) + 챕터/제목(산스 Regular/Bold). */
   fonts: [
-    "/fonts/NotoSerifCJKkr-Regular.slim.ttf",
-    "/fonts/NotoSansCJKkr-Regular.slim.ttf",
-    "/fonts/NotoSansCJKkr-Bold.slim.ttf",
+    `/fonts/NotoSerifCJKkr-Regular.slim.ttf?v=${FONT_VER}`,
+    `/fonts/NotoSansCJKkr-Regular.slim.ttf?v=${FONT_VER}`,
+    `/fonts/NotoSansCJKkr-Bold.slim.ttf?v=${FONT_VER}`,
   ],
 };
 

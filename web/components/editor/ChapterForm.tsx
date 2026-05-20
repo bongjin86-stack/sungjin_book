@@ -168,7 +168,9 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
     if (!title.trim() && !body.trim()) return;
     const payload = {
       chapterNum: chapterNum.trim() || "1장",
-      title: title.trim() || "(제목 없음)",
+      // 빈 제목은 빈 문자열로 보관. UI 표시는 placeholder("(제목 없음)")로 별도 처리.
+      // 데이터에 placeholder 문자열을 박으면 Typst 미리보기에 그대로 출력되어 어색해진다.
+      title: title.trim(),
       subtitle: subtitle.trim(),
       body: body.trim(),
       charCount,
@@ -220,7 +222,26 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
           >
             {isEdit ? "편집" : "챕터"}
           </span>
-          <span className="text-[13px] font-semibold text-text-secondary">{chapterNum}</span>
+          {/* 챕터 번호 — 인라인 편집 가능. hover 시 살짝 강조해 클릭 가능함을 알림. */}
+          <input
+            type="text"
+            value={chapterNum}
+            onChange={(e) => {
+              setChapterNum(e.target.value);
+              onChange?.({
+                chapterNum: e.target.value,
+                title,
+                subtitle,
+                body,
+                includeInToc,
+                tocTitle,
+                showChapterNumber,
+              });
+            }}
+            aria-label="챕터 번호"
+            className="text-[13px] font-semibold text-text-secondary bg-transparent border border-transparent rounded px-1 py-[1px] outline-none hover:border-border focus:border-accent focus:bg-white max-w-[110px]"
+            style={{ width: `${Math.max(4, chapterNum.length + 1)}ch` }}
+          />
           <span className="text-[11px] text-text-muted">
             {isEdit ? "기존 챕터 편집 중" : "저장하면 다음 챕터로 이어서 씁니다"}
           </span>
@@ -243,6 +264,25 @@ export function ChapterForm({ mode, onSaveNew, onSaveEdit, onChange }: ChapterFo
           }}
           placeholder="챕터 제목 (없어도 됨)"
           className="w-full border-none outline-none text-[24px] font-bold text-text-primary bg-transparent leading-[1.3] placeholder:text-[#D4D0C8] placeholder:font-normal"
+        />
+        {/* 부제 입력 — 제목 아래 작게. 비워두면 PDF에도 안 박힘. */}
+        <input
+          type="text"
+          value={subtitle}
+          onChange={(e) => {
+            setSubtitle(e.target.value);
+            onChange?.({
+              chapterNum,
+              title,
+              subtitle: e.target.value,
+              body,
+              includeInToc,
+              tocTitle,
+              showChapterNumber,
+            });
+          }}
+          placeholder="부제 (선택)"
+          className="w-full mt-1 border-none outline-none text-[14px] italic text-text-muted bg-transparent leading-[1.4] placeholder:text-[#D4D0C8] placeholder:not-italic"
         />
         <div className="h-px bg-border mt-4" />
       </div>

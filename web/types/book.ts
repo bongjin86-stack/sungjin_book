@@ -28,12 +28,23 @@ export interface BookOptions {
   // 레이어 3 — 켜기/끄기
   showPageNumber: boolean;
   pageNumberPosition: "bottom-outside" | "bottom-center" | "top-outside";
+  /** 본문 쪽번호 형식. 아라비아 1·2·3 또는 로마자 i·ii (드물게 사용). */
+  pageNumberFormat: "arabic" | "roman";
+  /** 앞부분(속표지~서문 등 매터) 쪽번호. Vellum/Atticus 표준:
+   *  - none: 표시 안 함 (한국 단행본 통례)
+   *  - roman: 로마자 i·ii·iii (영문 단행본 통례)
+   *  본문은 항상 1부터 새로 시작. */
+  frontMatterNumbering: "none" | "roman";
   hideChapterStartPageNumber: boolean;
   paragraphIndent: boolean;
 
   // 챕터 스타일 (개인 취향 — 테마와 무관)
   dropCaps: boolean;
   sceneBreakStyle: "asterisk" | "line" | "none";
+  // 러닝 헤더 — 짝수: 책 제목, 홀수: 챕터 제목 (Reedsy/Cambric 베이스라인)
+  runningHeader: boolean;
+  /** Vellum 스타일 여백 가이드 — 미리보기에 점선 박스로 본문 영역 표시 */
+  showMarginGuide: boolean;
 }
 
 export interface BookMeta {
@@ -173,11 +184,15 @@ export const DEFAULT_OPTIONS: BookOptions = {
 
   showPageNumber: true,
   pageNumberPosition: "bottom-outside",
+  pageNumberFormat: "arabic",
+  frontMatterNumbering: "none",
   hideChapterStartPageNumber: true,
   paragraphIndent: true,
 
   dropCaps: false,
   sceneBreakStyle: "asterisk",
+  runningHeader: false,
+  showMarginGuide: false,
 };
 
 export function createEmptyBook(

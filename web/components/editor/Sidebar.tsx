@@ -230,6 +230,50 @@ export function Sidebar({
             onChange={(v) => onChangeOptions({ showPageNumber: v === "show" })}
           />
 
+          {/* "표시"일 때만 펼침. Vellum/Atticus 패턴 — 매터/본문 자동 분리.
+              사용자가 매번 결정하지 않게 옵션 최소화. */}
+          {options.showPageNumber && (
+            <div className="pl-2 border-l border-[rgba(0,0,0,0.06)] ml-1 mt-1 mb-1">
+              <PillGroup<"bottom-outside" | "bottom-center" | "top-outside">
+                label="위치"
+                value={options.pageNumberPosition}
+                options={[
+                  { value: "bottom-outside", label: "하단 바깥" },
+                  { value: "bottom-center", label: "하단 가운데" },
+                  { value: "top-outside", label: "상단 바깥" },
+                ]}
+                onChange={(v) => onChangeOptions({ pageNumberPosition: v })}
+              />
+              <PillGroup<"arabic" | "roman">
+                label="본문 형식"
+                value={options.pageNumberFormat}
+                options={[
+                  { value: "arabic", label: "1·2·3" },
+                  { value: "roman", label: "i·ii" },
+                ]}
+                onChange={(v) => onChangeOptions({ pageNumberFormat: v })}
+              />
+              <PillGroup<"none" | "roman">
+                label="앞부분"
+                value={options.frontMatterNumbering}
+                options={[
+                  { value: "none", label: "없음" },
+                  { value: "roman", label: "i·ii" },
+                ]}
+                onChange={(v) => onChangeOptions({ frontMatterNumbering: v })}
+              />
+              <PillGroup<"show" | "hide">
+                label="챕터 시작"
+                value={options.hideChapterStartPageNumber ? "hide" : "show"}
+                options={[
+                  { value: "show", label: "표시" },
+                  { value: "hide", label: "숨김" },
+                ]}
+                onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v === "hide" })}
+              />
+            </div>
+          )}
+
           {/* 세부 조정 아코디언 */}
           <button
             type="button"
@@ -286,11 +330,7 @@ export function Sidebar({
                 checked={options.paragraphIndent}
                 onChange={(v) => onChangeOptions({ paragraphIndent: v })}
               />
-              <ToggleRow
-                label="챕터 시작 쪽번호 숨김"
-                checked={options.hideChapterStartPageNumber}
-                onChange={(v) => onChangeOptions({ hideChapterStartPageNumber: v })}
-              />
+              {/* 챕터 시작 쪽번호는 위 "쪽번호" 그룹 안에서 관리 — 중복 토글 제거 */}
               <PillGroup
                 label="장면 전환 구분자"
                 value={options.sceneBreakStyle}
@@ -300,6 +340,21 @@ export function Sidebar({
                   { value: "none", label: "없음" },
                 ]}
                 onChange={(v) => onChangeOptions({ sceneBreakStyle: v })}
+              />
+              <ToggleRow
+                label="러닝 헤더"
+                checked={options.runningHeader}
+                onChange={(v) => onChangeOptions({ runningHeader: v })}
+              />
+              <ToggleRow
+                label="드롭캡"
+                checked={options.dropCaps}
+                onChange={(v) => onChangeOptions({ dropCaps: v })}
+              />
+              <ToggleRow
+                label="여백 가이드"
+                checked={options.showMarginGuide}
+                onChange={(v) => onChangeOptions({ showMarginGuide: v })}
               />
             </div>
           )}
