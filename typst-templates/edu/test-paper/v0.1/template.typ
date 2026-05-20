@@ -33,11 +33,11 @@
 )[#text(font: sans-fonts, size: 0.8em, fill: luma(80))[#label]]
 
 // 텍스트 안에 끼어든 <그림>/<표>를 박스로 치환.
-// show 규칙은 호출 컨텍스트의 스코프 안에서 동작한다.
+// $...$ 마커는 인라인 수식으로 해석 (eval markup 모드).
 #let render-text(s) = {
   show "<그림>": placeholder("그림")
   show "<표>":   placeholder("표")
-  s
+  eval(s, mode: "markup")
 }
 
 // ── 묶음 지문에서 ID로 객체 찾기 ────────────────────────────────────────────
@@ -81,8 +81,14 @@
     #h(0.4em)#text(font: sans-fonts, size: 0.85em, fill: luma(80))[\[#(q.score)점\]]
   ]
   #v(0.2em, weak: true)
-  #for c in q.choices {
-    render-choice(c)
+  #if q.choices.len() == 0 [
+    #text(font: sans-fonts, size: 0.85em, fill: luma(140), style: "italic")[
+      \[보기: 표/그림 안에 있어 텍스트 추출 단계에서 빠짐 — v2에서 회수\]
+    ]
+  ] else {
+    for c in q.choices {
+      render-choice(c)
+    }
   }
 ]
 
@@ -106,8 +112,9 @@
   set par(justify: true, leading: 0.55em, first-line-indent: 0pt)
 
   // 헤더 (1단 — 한 번만 그림)
+  let subject-name = if "subject" in data.meta { data.meta.subject } else { "국어" }
   align(center)[
-    #text(font: sans-fonts, weight: "bold", size: 16pt)[국어 영역]
+    #text(font: sans-fonts, weight: "bold", size: 16pt)[#subject-name 영역]
     #v(0.2em, weak: true)
     #text(font: sans-fonts, size: 8.5pt, fill: luma(110))[
       #data.meta.source — #data.questions.len() 문항 (v0.1 골격)

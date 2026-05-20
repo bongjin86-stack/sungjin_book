@@ -24,33 +24,38 @@ from pathlib import Path
 
 EXP = Path(__file__).resolve().parent.parent  # experiments/edu-import
 ROOT = EXP.parent.parent  # sungjin_book
-JSON_PATH = EXP / "out" / "korean-questions.json"
-TEMPLATE_REL = "typst-templates/edu/test-paper/v0.1/template.typ"
+DEFAULT_JSON = EXP / "out" / "korean-questions.json"
+TEMPLATE_REL = "typst-templates/edu/test-paper/v0.2/template.typ"
 FONTS = ROOT / "fonts"
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=10, help="앞 N문항만 (0=전체)")
+    ap.add_argument("--input", default=str(DEFAULT_JSON), help="입력 JSON 경로")
+    ap.add_argument("--subject", default=None, help="종목명 (헤더 표기)")
     ap.add_argument("--out", default="out/korean-test-paper.pdf")
     args = ap.parse_args()
 
-    if not JSON_PATH.exists():
-        print(f"[render] 입력 없음: {JSON_PATH}")
+    json_path = Path(args.input)
+    if not json_path.exists():
+        print(f"[render] 입력 없음: {json_path}")
         return 1
 
-    raw = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    raw = json.loads(json_path.read_text(encoding="utf-8"))
     questions = raw["questions"]
     if args.limit > 0:
         questions = questions[: args.limit]
     keep_pids = {q["passage_id"] for q in questions if q["passage_id"]}
     passages = [p for p in raw["passages"] if p["id"] in keep_pids]
 
+    subject = args.subject or raw.get("subject", "국어")
     data = {
         "meta": {
             "source": raw["source"],
             "extracted_at": raw["extracted_at"],
             "schema": raw["schema"],
+            "subject": subject,
         },
         "passages": passages,
         "questions": questions,
