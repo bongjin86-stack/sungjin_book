@@ -27,9 +27,9 @@ Thumbs.db
 # typst.ts WASM (npm install 후 postinstall로 자동 복사, 22MB)
 web/public/wasm/
 
-# typst.ts 폰트 (빌드 스크립트로 자동 생성, ~6MB)
-# OFL.txt 라이센스만 commit, .ttf 본체는 build-fonts.mjs로 재생성
-web/public/fonts/*.ttf
+# typst.ts 폰트
+# 슬림 .ttf 본체는 git에 커밋(Vercel에 python+fontTools 없어 빌드 불가).
+# 폰트 갱신 시: scripts/build-fonts.mjs 로컬 실행 후 결과물 커밋.
 build/fonts-src/
 
 # typst-templates 복사본 (postinstall로 자동, 단일 source of truth는 root /typst-templates)
