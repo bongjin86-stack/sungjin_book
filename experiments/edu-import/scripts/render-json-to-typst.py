@@ -25,7 +25,7 @@ from pathlib import Path
 EXP = Path(__file__).resolve().parent.parent  # experiments/edu-import
 ROOT = EXP.parent.parent  # sungjin_book
 DEFAULT_JSON = EXP / "out" / "korean-questions.json"
-TEMPLATE_REL = "typst-templates/edu/test-paper/v0.2/template.typ"
+TEMPLATE_REL = "typst-templates/edu/test-paper/v0.3/template.typ"
 FONTS = ROOT / "fonts"
 
 
