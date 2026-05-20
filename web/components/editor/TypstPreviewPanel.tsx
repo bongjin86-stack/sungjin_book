@@ -104,10 +104,7 @@ export function TypstPreviewPanel({ bookData, activeBlockId, onFallback }: Props
       if (b.type === "interlude") continue;
       target += 2;
     }
-    setPageIdx((prev) => {
-      const max = Math.max(0, pageCount - 1);
-      return Math.min(target, max);
-    });
+    setPageIdx(Math.min(target, Math.max(0, pageCount - 1)));
   }, [activeBlockId, state, bookData.blocks, pageCount]);
 
   // pageIdx 변경 → SVG viewBox를 해당 페이지 영역으로 좁힘.

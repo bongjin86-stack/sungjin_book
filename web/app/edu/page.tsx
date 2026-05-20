@@ -25,12 +25,20 @@ const SUBJECTS: Subject[] = [
   { id: "science", label: "과학탐구", available: false },
 ];
 
+interface RawTestPaper {
+  source?: string;
+  extracted_at?: string;
+  schema?: string;
+  passages: unknown[];
+  questions: unknown[];
+}
+
 /**
  * 추출 raw JSON에 meta를 덧입힌다.
  * raw: { source, extracted_at, schema, passages, questions }
  * v0.3 template는 data.meta.subject를 읽음.
  */
-function withMeta(raw: any, subject: Subject) {
+function withMeta(raw: RawTestPaper, subject: Subject) {
   return {
     meta: {
       source: raw.source,
