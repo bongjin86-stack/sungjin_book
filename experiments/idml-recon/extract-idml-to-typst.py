@@ -28,15 +28,66 @@ ROOT = Path(__file__).resolve().parent.parent.parent  # sungjin_book
 
 # ── 보정 룰 ─────────────────────────────────────────────────────────────────
 FONT_MAP = {
-    "Sandoll 고딕Neo1": '("Noto Sans KR",)',
+    # 산스 — 한국 무료 라이센스 Pretendard 우선
+    "Sandoll 고딕Neo1": '("Pretendard", "Noto Sans KR")',
+    "Sandoll 고딕Neo2": '("Pretendard", "Noto Sans KR")',
+    "AdobeGothicStd-Bold": '("Pretendard", "Noto Sans KR")',
+    # 명조 — Noto Serif KR
     "Sandoll 명조Neo1": '("Noto Serif KR",)',
-    "Sandoll 고딕Neo2": '("Noto Sans KR",)',
     "Sandoll 명조Neo2": '("Noto Serif KR",)',
     "윤명조140": '("Noto Serif KR",)',
     "윤명조150": '("Noto Serif KR",)',
     "AdobeMyungjoStd-Medium": '("Noto Serif KR",)',
-    "AdobeGothicStd-Bold": '("Noto Sans KR",)',
 }
+
+# 자간 표준 범위 (em 단위) — typography.typ와 일치
+TRACKING_RANGE = (-0.08, 0.02)
+# line-height 비율 범위
+LINE_HEIGHT_RANGE = (1.20, 2.00)
+# 본문 폰트 크기 범위 (pt)
+SIZE_RANGE = (6.0, 72.0)
+
+
+def validate_spec(name: str, spec: dict) -> list[str]:
+    """spec dict가 typography 표준 범위 안인지 검사. 위반 메시지 리스트 반환."""
+    warnings = []
+
+    # tracking (em 단위 문자열, 예: "-0.04em")
+    t = spec.get("tracking", "")
+    if isinstance(t, str) and t.endswith("em"):
+        try:
+            v = float(t[:-2])
+            if v < TRACKING_RANGE[0] or v > TRACKING_RANGE[1]:
+                warnings.append(f"  tracking {v}em 표준 범위 {TRACKING_RANGE} 밖")
+        except ValueError:
+            pass
+
+    # size + leading (pt 단위 문자열)
+    s = spec.get("size", "")
+    l = spec.get("leading", "")
+    s_pt = l_pt = None
+    if isinstance(s, str) and s.endswith("pt"):
+        try:
+            s_pt = float(s[:-2])
+            if s_pt < SIZE_RANGE[0] or s_pt > SIZE_RANGE[1]:
+                warnings.append(f"  size {s_pt}pt 표준 범위 {SIZE_RANGE} 밖")
+        except ValueError:
+            pass
+    if isinstance(l, str) and l.endswith("pt"):
+        try:
+            l_pt = float(l[:-2])
+        except ValueError:
+            pass
+
+    if s_pt and l_pt:
+        ratio = l_pt / s_pt
+        if ratio < LINE_HEIGHT_RANGE[0] or ratio > LINE_HEIGHT_RANGE[1]:
+            warnings.append(
+                f"  line-height {ratio:.2f} (leading {l_pt}pt / size {s_pt}pt) "
+                f"표준 범위 {LINE_HEIGHT_RANGE} 밖"
+            )
+
+    return warnings
 
 # IDML FontStyle → typst weight
 WEIGHT_MAP = {
@@ -508,6 +559,111 @@ def render_master_spreads_dump(masters: dict, idml_name: str, page_w: float, pag
     return "\n".join(lines)
 
 
+def _slug(name: str) -> str:
+    """master 이름 → typst 식별자 (한글 OK, 특수문자 변환)."""
+    return name.replace("-", "_").replace("*", "star").replace(" ", "_").replace("(", "").replace(")", "")
+
+
+def _typst_str(s: str) -> str:
+    """파이썬 string → typst string literal (따옴표 + escape)."""
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def render_master_pages_typ(masters: dict, page_w: float, page_h: float, idml_name: str) -> str:
+    """master spread → typst master-pages.typ 자동 생성.
+    frame 분류 결과를 보고 footer / outer-label 자동 박음.
+    """
+    lines = [
+        f"// IDML 자동 추출 — {idml_name}",
+        "// MasterSpread별 master-spec 자동 생성. 직접 편집 대신 추출기 보정 룰 추가 권장.",
+        "",
+        '#import "/typst-templates/edu/design-system/master-page.typ": master-spec',
+        '#import "/typst-templates/edu/presets/simply-classic/colors.typ": swatches',
+        "",
+        "// 메인 청 (CMYK 시안 100% — Japan Color 2001 근사)",
+        '#let accent-strong = swatches.at("C=100 M=0 Y=0 K=0", default: rgb("#0091db"))',
+        "",
+    ]
+
+    for ms_name, ms_data in masters.items():
+        footers_left = []
+        footers_right = []
+        outer_labels_left = []
+        outer_labels_right = []
+        for f in ms_data["frames"]:
+            pos = classify_frame_position(f, page_w, page_h)
+            if "bottom" in pos:
+                if pos.startswith("left"):
+                    footers_left.append(f)
+                else:
+                    footers_right.append(f)
+            elif "top-outer" in pos:
+                if pos.startswith("left"):
+                    outer_labels_left.append(f)
+                else:
+                    outer_labels_right.append(f)
+
+        slug = _slug(ms_name)
+        lines.append(f"// Master: {ms_name}")
+        lines.append(f"#let master_{slug} = master-spec(")
+        lines.append(f"  width: {page_w:.2f}pt,")
+        lines.append(f"  height: {page_h:.2f}pt,")
+        lines.append("  margin: (inside: 56.69pt, outside: 141.73pt, top: 56.69pt, bottom: 56.69pt),")
+        lines.append("  header: none,")
+
+        # 푸터 (좌/우 미러)
+        if footers_left or footers_right:
+            left_text = footers_left[0]["text"] if footers_left else ""
+            right_text = footers_right[0]["text"] if footers_right else ""
+            lines.append("  footer: context {")
+            lines.append("    let pn = counter(page).get().at(0)")
+            lines.append("    let is-even = calc.rem(pn, 2) == 0")
+            lines.append("    let body = if is-even {")
+            lines.append(f'      text(font: ("Noto Sans KR",), size: 9pt)[#pn#h(1.5em){left_text}]')
+            lines.append("    } else {")
+            lines.append(f'      text(font: ("Noto Sans KR",), size: 9pt)[{right_text}#h(1.5em)#pn]')
+            lines.append("    }")
+            lines.append("    align(if is-even { left } else { right })[#body]")
+            lines.append("  },")
+            lines.append("  footer-descent: 8mm,")
+
+        # outer 라벨 (좌측 페이지에 박힘)
+        if outer_labels_left:
+            # ty 정렬: 위(작은 ty) → 아래
+            outer_labels_left.sort(key=lambda f: f["ty"])
+            top_text = outer_labels_left[0]["text"]  # 위 = PART
+            sub_text = outer_labels_left[1]["text"] if len(outer_labels_left) > 1 else ""
+            lines.append("  background: context {")
+            lines.append("    let pn = counter(page).get().at(0)")
+            lines.append("    let is-even = calc.rem(pn, 2) == 0")
+            lines.append("    if is-even {")
+            lines.append("      place(left + top, dx: 8mm, dy: 18mm)[")
+            lines.append(f'        #text(font: ("Noto Sans KR",), size: 10pt, weight: "bold", fill: accent-strong)[{top_text}]')
+            if sub_text:
+                lines.append("        \\")
+                lines.append(f'        #text(font: ("Noto Sans KR",), size: 9pt)[{sub_text}]')
+            lines.append("      ]")
+            lines.append("    }")
+            lines.append("  },")
+
+        lines.append(")")
+        lines.append("")
+
+    # 본문 페이지 master를 main으로 (첫 master 또는 이름 휴리스틱)
+    main_candidate = None
+    for ms_name in masters:
+        if "파트" in ms_name or "에피소드" in ms_name or "본문" in ms_name:
+            main_candidate = ms_name
+            break
+    if not main_candidate:
+        main_candidate = next(iter(masters.keys()), None)
+    if main_candidate:
+        lines.append(f"// 기본 main master — 본문 페이지용 (이름 휴리스틱)")
+        lines.append(f"#let main-master = master_{_slug(main_candidate)}")
+
+    return "\n".join(lines)
+
+
 def render_colors_typ(colors: dict[str, str], idml_name: str) -> str:
     lines = [
         f"// IDML 자동 추출 — {idml_name}",
@@ -564,6 +720,20 @@ def main() -> int:
         render_master_spreads_dump(masters, idml_path.name, page_w, page_h),
         encoding="utf-8",
     )
+    (out_dir / "master-pages.typ").write_text(
+        render_master_pages_typ(masters, page_w, page_h, idml_path.name),
+        encoding="utf-8",
+    )
+
+    # 표준 범위 검증 — typography.typ의 atom 범위와 일치
+    total_warnings = 0
+    for name, spec in {**paras, **chars}.items():
+        ws = validate_spec(name, spec)
+        if ws:
+            total_warnings += len(ws)
+            print(f"[validate] {name}:")
+            for w in ws:
+                print(w)
 
     print(f"[extract] paragraph styles: {len(paras)}")
     print(f"[extract] character styles: {len(chars)}")
@@ -571,6 +741,7 @@ def main() -> int:
     print(f"[extract] master spreads:  {len(masters)}")
     n_frames = sum(len(m['frames']) for m in masters.values())
     print(f"[extract] master frames:   {n_frames}")
+    print(f"[validate] 표준 범위 위반: {total_warnings}건 (위 참고)")
     print(f"[extract] → {out_dir}/paragraph-styles.typ")
     print(f"[extract] → {out_dir}/colors.typ")
     print(f"[extract] → {out_dir}/master-spreads-dump.txt")
