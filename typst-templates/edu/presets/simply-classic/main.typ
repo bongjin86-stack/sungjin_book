@@ -24,38 +24,92 @@
 #let accent = swatches.at("C=100 M=0 Y=0 K=0")
 
 #set page(..mp.main-master)
-#set text(font: ("Noto Serif KR",), size: 10pt, lang: "ko", cjk-latin-spacing: auto)
+#set text(font: ("Batang", "Noto Serif KR"), size: 10pt, lang: "ko", cjk-latin-spacing: auto)
 #set par(leading: 0.7em, justify: true)
 
-// 본문 흐름 — 우리 데이터(평가원 시험지 추출 JSON)를 IDML 디자인으로 식자
-#let prev-pid = none
-#for q in data.questions {
-  // 묶음 진입
-  if q.passage_id != prev-pid {
-    let p = none
-    for pp in data.passages { if pp.id == q.passage_id { p = pp } }
-    if p != none {
-      // 묶음 헤더 — [n~m] 부분만 청색 강조
-      apply-para-style(
-        pick("물음에답하시오"),
-        [
-          #text(fill: accent, weight: "bold")[\[#p.range.at(0)~#p.range.at(1)\]]
-          #h(0.5em)
-          #p.header
-        ],
-      )
-      // 묶음 본문 — \n으로 단락 분리해 들여쓰기 발동
-      for para in p.body.split("\n") {
-        if para.trim() != "" {
-          apply-para-style(pick("지문:지문"), para)
-        }
-      }
-    }
-    prev-pid = q.passage_id
-  }
+// 본문 흐름 — passage는 풀 폭, questions은 2단 (원본 시험지 식자 관례)
+#let render-boki(boki-text) = {
+  // <보기> 회색 박스 — 발문과 선지 사이
+  block(
+    fill: rgb("#f1f1f1"),
+    stroke: 0.3pt + rgb("#888"),
+    inset: (x: 10pt, y: 8pt),
+    width: 100%,
+    radius: 0pt,
+  )[
+    #align(center)[#text(size: 8.5pt, weight: "bold")[< 보기 >]]
+    #v(2pt)
+    #apply-para-style(pick("보기"), boki-text)
+  ]
+}
+
+#let render-question(q) = {
   apply-para-style(pick("번호(NEW)"), [#str(q.number)])
   apply-para-style(pick("문제명조"), q.stem)
+  if "boki" in q { render-boki(q.boki) }
   for c in q.choices {
     apply-para-style(pick("선지"), [#c.glyph#h(0.3em)#c.text])
   }
+}
+
+// passage_id별로 묶고 — passage 본문 + 그에 속한 문제들 set 단위 식자
+#let group-by-passage(questions) = {
+  let groups = ()
+  let cur-pid = none
+  let cur-list = ()
+  for q in questions {
+    if q.passage_id != cur-pid {
+      if cur-list.len() > 0 {
+        groups.push((pid: cur-pid, qs: cur-list))
+      }
+      cur-pid = q.passage_id
+      cur-list = ()
+    }
+    cur-list.push(q)
+  }
+  if cur-list.len() > 0 {
+    groups.push((pid: cur-pid, qs: cur-list))
+  }
+  groups
+}
+
+#let groups = group-by-passage(data.questions)
+
+// 페이지 전체를 2단 flow로 — passage + 출처 + 낱말 + 문제 모두 한 흐름
+#show: it => columns(2, gutter: 6mm, it)
+
+#for g in groups {
+  let p = none
+  for pp in data.passages { if pp.id == g.pid { p = pp } }
+
+  if p != none {
+    if p.header != "" {
+      apply-para-style(
+        pick("물음에답하시오"),
+        [
+          #if p.range != none {
+            text(fill: accent, weight: "bold")[\[#p.range.at(0)~#p.range.at(1)\]]
+            h(0.5em)
+          }
+          #p.header
+        ],
+      )
+    }
+    for para in p.body.split("\n") {
+      if para.trim() != "" {
+        apply-para-style(pick("지문:지문"), para)
+      }
+    }
+    if "source" in p {
+      align(right)[#text(size: 9pt)[#p.source]]
+    }
+    if "glossary" in p {
+      v(4pt)
+      for g in p.glossary {
+        apply-para-style(pick("보기명조"), [\* #g])
+      }
+    }
+  }
+
+  for q in g.qs { render-question(q) }
 }

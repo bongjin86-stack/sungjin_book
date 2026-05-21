@@ -6,7 +6,28 @@
 
 ## 이어서 하자 트리거 — 다음 세션 첫 보고
 
-### 진행 위치 (직전 한 발: 같은 콘텐츠 시각 diff)
+### 진행 위치 (직전 한 발: simply-classic 시각 정합도 한계점 도달)
+
+**측정 metric 2종으로 진짜 격차 노출**
+- pixel similarity 95.0% (한계 — metric이 글자 위치 어긋남에 둔감)
+- **SSIM 72.4%** — 사람 눈 분간 가까운 metric. 진짜 격차는 28%p.
+- visual-diff.py에 scikit-image SSIM 자동 적용.
+
+**한 페이지 직접 입력 baseline 박힘 (data.json = p13 콘텐츠)**
+- simply-classic main.typ에 `boki`/`source`/`glossary` 추가 (페이지 부속 박스).
+- 페이지 전체를 `columns(2)`로 wrap — passage + Q1·2·3 자동 balance 분배.
+- 좌단 (passage + 출처 + 낱말 + Q1) + 우단 (Q2 + Q3 + <보기> 회색박스) 원본과 거의 같은 레이아웃.
+- 폰트 Noto Serif KR → Batang fallback (Windows 한국어 명조).
+
+**격차 솔직 진단 (눈으로 본)**
+- 본문 wrap 줄당 글자 수 미세 차 — 폰트(Batang vs Sandoll 명조Neo) + 자간.
+- 글자 위치 미세 어긋남 (1~5pt 단위).
+- 푸터 페이지 번호 다름 (우리 p1 vs 원본 p13).
+- 2단 사이 세로선 미적용.
+
+**100% 시각 일치 가능성**
+- IDML→typst 자동 흡수만으로는 SSIM 95%+ 매우 어려움.
+- 필요 조건: (1) Sandoll 명조Neo 정확 매칭 (Source Han Serif가 최선 대안) (2) Spread XML 페이지 매핑 자동화 (3) 자간·줄간격 미세 fine-tuning.
 
 **Story XML → JSON 추출기 박힘** — `experiments/idml-recon/extract-story-content.py`
 - 720 Story 순회. ParagraphStyleRange 시퀀스 → (style, text) flat.
