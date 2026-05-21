@@ -1,33 +1,89 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-21 KST 밤 (Story XML → JSON + 첫 시각 diff 95.8%)
-> 단계: **교재 트랙 — IDML 흡수 R&D 진행 중**
-> 작업 브랜치: `main` 단일
+> 마지막 업데이트: 2026-05-22 KST 새벽 (STS L1 v27 + Edu100 진입 화면 + 컨셉 정리 push)
+> 단계: **Phase Ⅰ MVP 흐름 진행 중 + 내일 Phase Ⅳ IDML 배경 추출 R&D**
+> 작업 브랜치: `main` 단일 / `backup-pre-edu100-2026-05-22` 백업
 
 ## 이어서 하자 트리거 — 다음 세션 첫 보고
 
-### 진행 위치 (직전 한 발: simply-classic 시각 정합도 한계점 도달)
+### 한 줄 위치
+**STS L1 문제 STS 완성(v27) + Edu100 진입 화면 박힘 + preset 컨셉 정리. 내일 IDML 배경 추출(Phase Ⅳ) 시작.**
 
-**측정 metric 2종으로 진짜 격차 노출**
-- pixel similarity 95.0% (한계 — metric이 글자 위치 어긋남에 둔감)
-- **SSIM 72.4%** — 사람 눈 분간 가까운 metric. 진짜 격차는 28%p.
-- visual-diff.py에 scikit-image SSIM 자동 적용.
+### task 상태 (어제 작업 결과)
 
-**한 페이지 직접 입력 baseline 박힘 (data.json = p13 콘텐츠)**
-- simply-classic main.typ에 `boki`/`source`/`glossary` 추가 (페이지 부속 박스).
-- 페이지 전체를 `columns(2)`로 wrap — passage + Q1·2·3 자동 balance 분배.
-- 좌단 (passage + 출처 + 낱말 + Q1) + 우단 (Q2 + Q3 + <보기> 회색박스) 원본과 거의 같은 레이아웃.
-- 폰트 Noto Serif KR → Batang fallback (Windows 한국어 명조).
+✅ **완료 (18개)**:
+- v22~v27 L1 문제 STS 완성 (룰 5개 + 토큰 + 사용자 확정 시각)
+- design-tokens.typ refactor (typography role + space + align-rule + page tokens)
+- main.typ 컴포넌트 분리 (render-question, render-choice, render-passage, render-boki)
+- STS-SPEC.md (4 Layer + Preset 컨셉 + 5 Phase 비전)
+- A4 master + Edu100 진입 화면 (EduSetupScreen)
+- backup-pre-edu100-2026-05-22 브랜치 push
+- Pretendard + Source Han Serif KR 다운 (build/fonts/)
 
-**격차 솔직 진단 (눈으로 본)**
-- 본문 wrap 줄당 글자 수 미세 차 — 폰트(Batang vs Sandoll 명조Neo) + 자간.
-- 글자 위치 미세 어긋남 (1~5pt 단위).
-- 푸터 페이지 번호 다름 (우리 p1 vs 원본 p13).
-- 2단 사이 세로선 미적용.
+⏳ **남은 (2개)**:
+- **#21 IDML 배경 추출 R&D — 내일 사무실**
+- #20 /edu 작업화면 simply-classic 통합 (Phase Ⅱ — 미루기)
 
-**100% 시각 일치 가능성**
-- IDML→typst 자동 흡수만으로는 SSIM 95%+ 매우 어려움.
-- 필요 조건: (1) Sandoll 명조Neo 정확 매칭 (Source Han Serif가 최선 대안) (2) Spread XML 페이지 매핑 자동화 (3) 자간·줄간격 미세 fine-tuning.
+### v27 사용자 확정 디자인 (절대 흔들지 말 것)
+
+**문항번호**: Pretendard ExtraBold 14pt 청색(#0091db)
+**지시문**: Pretendard Medium 10.5pt 검정(#222)
+**선지**: Batang 명조 10pt 검정
+**좌측 정렬 라인**: 01 / 지시문 / ① 글자 모두 column.left
+**들여쓰기 라인**: ① 다음 텍스트 + wrap된 둘째 줄 = column.left + 14pt
+**간격**: 번호↔지시문 9pt, 지시문↔첫선지 14pt, 선지↔선지 8pt, 선지wrap leading 6.5pt, 문제사이 24pt
+**baseline grid**: 18pt
+
+### 핵심 컨셉 합의 (어제 정리)
+
+> **Preset = "한 묶음" — IDML 1개 = 1 preset = 학원선생 클릭 단위**
+- 문제 스타일과 배경 스타일을 분리하지 않음
+- preset 안에 L1(문제) + L2(배경)이 함께 들어있음 (Vellum 패턴)
+- 새 디자인 추가 = IDML 1개 추출 = preset 1개 완성
+
+### 내일 IDML 배경 추출 가이드 (Phase Ⅳ 첫 한 발)
+
+`typst-templates/edu/design-system/STS-SPEC.md` 3절 "추출 가이드" 표 참고.
+
+**표적**:
+- Spread XML의 Rectangle/TextFrame 자유 frame 위치
+- FillColor + bbox → 색박스
+- Line element → 라인/구분선
+- PART 라벨 외측 (큰 청색)
+- column 구조 (단 수, gutter, 세로선)
+
+**작업 위치**:
+- 추출기: `experiments/idml-recon/` 새 스크립트 (`extract-decorations.py` 등)
+- 결과 파일: `typst-templates/edu/presets/simply-classic/decorations.typ` (새 파일)
+- master-pages.typ와 합쳐 simply-classic 배경 완성
+
+**Story 추출과 같은 패턴**: 어제 만든 `extract-story-content.py` 보면 IDML XML 다루는 방법 동일.
+
+### 검증된 파이프라인 (어제 박힘)
+
+```
+.idml
+  ↓ extract-idml-to-typst.py     (스타일/색/master)
+  ↓ extract-story-content.py     (Story → content.json)
+  ↓ [내일] extract-decorations.py (배경 자유 frame/색박스/라인)
+data.json
+  ↓ typst compile simply-classic/main.typ
+output/*.pdf
+```
+
+### 현재 흐름 (Edu100)
+
+```
+/ (성진북스 메인)
+└─ /edu (Edu100)
+   ├─ 진입 화면: EduSetupScreen (제목·저자·과목·A4)  ✅
+   └─ 작업 화면: 옛 v0.3 시험지 시스템 (simply-classic 통합은 Phase Ⅱ)  ⏳
+```
+
+### 다음 세션 첫 한 발 결정
+
+내일 사무실 일정이면 → **IDML 배경 추출 R&D 시작**.
+오늘 안 끝났으면 → 위 v27 디자인 확인 + 추가 미세 조정 있으면.
 
 **Story XML → JSON 추출기 박힘** — `experiments/idml-recon/extract-story-content.py`
 - 720 Story 순회. ParagraphStyleRange 시퀀스 → (style, text) flat.
