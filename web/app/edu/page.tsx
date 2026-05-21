@@ -1,14 +1,15 @@
 "use client";
 
-// /edu — 교재(시험지) 트랙 MVP.
-// 평가원형 추출 JSON을 v0.3 템플릿으로 컴파일해 미리보기 + PDF 다운로드.
-// 단행본 /editor와 같은 typst.ts 인프라를 공유. 풀 에디터 없음 — 좁은 흐름.
+// /edu — Edu100: 교재 제작 홈페이지.
+// 진입: EduSetupScreen (제목/저자/과목 입력) → 시작하기 누르면 작업 화면.
+// 작업: 평가원형 추출 JSON을 시험지 템플릿으로 컴파일 → 미리보기 + PDF 다운로드.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileTestPaperSvg,
   compileTestPaperPdf,
 } from "@/lib/typst/compiler";
+import { EduSetupScreen, type EduProjectSetup } from "@/components/onboarding/EduSetupScreen";
 
 interface Subject {
   id: string;
@@ -102,6 +103,8 @@ type State =
   | { kind: "error"; message: string };
 
 export default function EduPage() {
+  // setup이 null이면 진입 화면, 값 있으면 작업 화면
+  const [setup, setSetup] = useState<EduProjectSetup | null>(null);
   const [subjectId, setSubjectId] = useState<string>("korean");
   const [state, setState] = useState<State>({ kind: "idle" });
   const [pageIdx, setPageIdx] = useState(0);
@@ -223,6 +226,18 @@ export default function EduPage() {
   const canPrev = pageIdx > 0;
   const canNext = pageIdx < max;
 
+  // setup 안 됐으면 진입 화면
+  if (!setup) {
+    return (
+      <EduSetupScreen
+        onStart={(s) => {
+          setSetup(s);
+          setSubjectId(s.subjectId);
+        }}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen flex flex-col bg-bg">
       {/* 헤더 */}
@@ -232,14 +247,22 @@ export default function EduPage() {
             성진북스
           </a>
           <span className="text-text-muted text-[11px]">·</span>
-          <span className="text-[12px] text-text-secondary">교재</span>
+          <span className="text-[12px] text-text-secondary">Edu100</span>
+          <span className="text-text-muted text-[11px]">·</span>
+          <span className="text-[12px] text-text-primary font-semibold">{setup.title}</span>
+          {setup.author && (
+            <>
+              <span className="text-text-muted text-[11px]">·</span>
+              <span className="text-[11px] text-text-muted">{setup.author}</span>
+            </>
+          )}
         </div>
-        <a
-          href="/editor"
+        <button
+          onClick={() => setSetup(null)}
           className="text-[11px] text-text-muted hover:text-accent transition-colors"
         >
-          단행본 모드 →
-        </a>
+          ← 새 교재
+        </button>
       </header>
 
       <div className="flex-1 flex min-h-0">
