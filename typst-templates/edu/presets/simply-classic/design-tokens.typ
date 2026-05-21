@@ -144,7 +144,7 @@
   // 한 문제 안 (intra-question)
   number-to-stem:    6pt,   // ❶ 번호 → ❷ stem
   stem-to-choices:   14pt,  // ❷ stem → 첫 선지 (사용자: 9pt 좁음, 18pt 넓음)
-  between-choices:   6pt,   // 선지 ↔ 선지
+  between-choices:   8pt,   // 선지 ↔ 선지 (= 한 선지 안 wrap 줄간격과 일치, baseline grid 정렬)
   boki-around:       18pt,  // <보기> 박스 위·아래 (grid 1배)
 
   // 문제 간격 (inter-question)
