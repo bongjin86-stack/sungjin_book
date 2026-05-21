@@ -59,7 +59,7 @@
       #glyph
     ]
     #set text(font: t.font.serif-fallback-glyph, size: 10pt, tracking: -0.04em)
-    #set par(leading: t.baseline-grid - 10pt, justify: true)
+    #set par(leading: t.space.choice-wrap-leading, justify: true)
     #body
   ]
 }
