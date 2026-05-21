@@ -16,10 +16,12 @@
 #import "/typst-templates/edu/design-system/paragraph-style.typ": apply-para-style
 #import "/typst-templates/edu/presets/simply-classic/paragraph-styles.typ": paragraph-styles
 #import "/typst-templates/edu/presets/simply-classic/master-pages.typ" as mp
+#import "/typst-templates/edu/presets/simply-classic/colors.typ": swatches
 
 #let data = json("/data.json")
 #let s = paragraph-styles
 #let pick(name) = s.at(name, default: (:))
+#let accent = swatches.at("C=100 M=0 Y=0 K=0")
 
 #set page(..mp.main-master)
 #set text(font: ("Noto Serif KR",), size: 10pt, lang: "ko", cjk-latin-spacing: auto)
@@ -33,17 +35,27 @@
     let p = none
     for pp in data.passages { if pp.id == q.passage_id { p = pp } }
     if p != none {
+      // 묶음 헤더 — [n~m] 부분만 청색 강조
       apply-para-style(
         pick("물음에답하시오"),
-        [\[#p.range.at(0)~#p.range.at(1)\] #p.header],
+        [
+          #text(fill: accent, weight: "bold")[\[#p.range.at(0)~#p.range.at(1)\]]
+          #h(0.5em)
+          #p.header
+        ],
       )
-      apply-para-style(pick("지문:지문"), p.body)
+      // 묶음 본문 — \n으로 단락 분리해 들여쓰기 발동
+      for para in p.body.split("\n") {
+        if para.trim() != "" {
+          apply-para-style(pick("지문:지문"), para)
+        }
+      }
     }
     prev-pid = q.passage_id
   }
   apply-para-style(pick("번호(NEW)"), [#str(q.number)])
-  apply-para-style(pick("문제(NEW)"), q.stem)
+  apply-para-style(pick("문제명조"), q.stem)
   for c in q.choices {
-    apply-para-style(pick("선지"), [#c.glyph  #c.text])
+    apply-para-style(pick("선지"), [#c.glyph#h(0.3em)#c.text])
   }
 }

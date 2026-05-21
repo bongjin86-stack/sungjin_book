@@ -296,11 +296,11 @@ export default function EduPage() {
             </pre>
           )}
 
-          <div className="flex-1 min-h-0 flex items-center justify-center px-5 py-5 overflow-auto">
+          <div className="flex-1 min-h-0 flex justify-center px-4 py-4 overflow-auto bg-bg">
             <div
               ref={svgHostRef}
-              className="bg-white shadow-md max-w-full max-h-full"
-              style={{ aspectRatio: "210 / 297" }}
+              className="bg-white shadow-md w-full max-w-[760px] h-fit"
+              style={{ aspectRatio: "220 / 300" }}
             />
           </div>
 

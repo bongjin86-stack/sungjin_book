@@ -71,8 +71,24 @@ ALIGN_MAP = {
 }
 
 
+# Japan Color 2001 Coated 프로파일 근사 LUT.
+# 단순 수학 CMYK→RGB 변환은 인쇄 색공간과 차이 큼. 가장 빈도 높은 색만 보정.
+# 그 외는 단순 수학 폴백.
+_JAPAN_COLOR_LUT = {
+    (100, 0,   0,   0):   "#0091db",  # 시안 100% (단순 변환 #00ffff)
+    (0,   100, 0,   0):   "#e4007f",  # 마젠타 100%
+    (0,   0,   100, 0):   "#fff100",  # 옐로 100%
+    (100, 100, 0,   0):   "#1d2088",  # 청람 (블루)
+    (0,   100, 100, 0):   "#e60012",  # 빨강
+    (100, 0,   100, 0):   "#009944",  # 녹색
+    (0,   0,   0,   100): "#1a1a1a",  # 흑색 (인쇄 K100은 완전 검정 아님)
+}
+
 def cmyk_to_rgb_hex(c: float, m: float, y: float, k: float) -> str:
-    """CMYK 0~100% → #RRGGBB"""
+    """CMYK 0~100% → #RRGGBB. Japan Color 2001 LUT 우선, 폴백은 단순 수학."""
+    key = (round(c), round(m), round(y), round(k))
+    if key in _JAPAN_COLOR_LUT:
+        return _JAPAN_COLOR_LUT[key]
     r = (1 - c/100) * (1 - k/100)
     g = (1 - m/100) * (1 - k/100)
     b = (1 - y/100) * (1 - k/100)
@@ -106,6 +122,13 @@ def get_child_value(el, name: str) -> str | None:
 def extract_paragraph_style(el) -> dict:
     """ParagraphStyle XML element → spec dict."""
     spec: dict[str, str] = {}
+
+    # BasedOn (부모 스타일) — 후처리 시 상속 해결용. 일반 spec dict에 _based_on으로 저장
+    based_on = get_child_value(el, "BasedOn")
+    if based_on and not based_on.startswith("$ID"):
+        # "ParagraphStyle/지문%3a지문" → "지문:지문"
+        parent = based_on.replace("ParagraphStyle/", "").replace("%3a", ":")
+        spec["_based_on"] = parent
 
     # font (자식 AppliedFont 또는 직접 attr)
     font = get_child_value(el, "AppliedFont")
@@ -180,6 +203,35 @@ def extract_paragraph_style(el) -> dict:
     return spec
 
 
+def resolve_inheritance(styles: dict[str, dict]) -> dict[str, dict]:
+    """BasedOn 상속 처리. 부모 dict 위에 자식이 override하는 방식.
+    부모 → 자식 토폴로지 따라 누적. 순환 참조 방어.
+    """
+    resolved: dict[str, dict] = {}
+
+    def resolve(name: str, visiting: set) -> dict:
+        if name in resolved:
+            return resolved[name]
+        if name in visiting:  # 순환 방어
+            return {}
+        if name not in styles:
+            return {}
+        visiting.add(name)
+        own = {k: v for k, v in styles[name].items() if k != "_based_on"}
+        parent_name = styles[name].get("_based_on")
+        merged = {}
+        if parent_name:
+            merged.update(resolve(parent_name, visiting))
+        merged.update(own)  # 자식 override 우선
+        visiting.discard(name)
+        resolved[name] = merged
+        return merged
+
+    for name in styles:
+        resolve(name, set())
+    return resolved
+
+
 def extract_styles_xml(styles_xml: Path) -> tuple[dict[str, dict], dict[str, dict]]:
     tree = ET.parse(styles_xml)
     root = tree.getroot()
@@ -198,6 +250,9 @@ def extract_styles_xml(styles_xml: Path) -> tuple[dict[str, dict], dict[str, dic
                 continue
             # CharacterStyle도 같은 속성 (단락 옵션 제외)
             chars[name] = extract_paragraph_style(el)
+    # BasedOn 상속 적용
+    paras = resolve_inheritance(paras)
+    chars = resolve_inheritance(chars)
     return paras, chars
 
 

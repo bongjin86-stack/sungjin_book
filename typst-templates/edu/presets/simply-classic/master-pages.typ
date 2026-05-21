@@ -11,10 +11,10 @@
 //   - [left-top-outer]    "PART 2"             → 좌측 페이지 outer 라벨 (위, 청색)
 
 #import "/typst-templates/edu/design-system/master-page.typ": master-spec
+#import "/typst-templates/edu/presets/simply-classic/colors.typ": swatches
 
-// 메인 청 — IDML CMYK 시안 100%를 Japan Color 2001 Coated 프로파일로 근사
-// (자동 추출 색 #00ffff는 너무 밝음. 색 변환 정확화는 별도 task)
-#let accent-strong = rgb("#0091db")
+// IDML 색 견본에서 메인 청 lookup (CMYK 시안 100% → Japan Color 2001 근사)
+#let accent-strong = swatches.at("C=100 M=0 Y=0 K=0")
 
 // 푸터 — 좌/우 페이지 분기
 //   좌측 페이지(짝수): "심플리[고전 소설]" + 페이지번호 (좌측 정렬)
