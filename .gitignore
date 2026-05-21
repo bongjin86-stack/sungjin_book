@@ -62,3 +62,11 @@ experiments/edu-import/out/
 experiments/edu-import/node_modules/
 experiments/edu-import/.venv/
 experiments/edu-import/package-lock.json
+
+# IDML 자동 추출 R&D — unzip 작업물 (재생 가능, 추출기 코드만 git에)
+experiments/idml-recon/*/
+
+# 원본 인디자인 작업물 (저작권 + 큰 용량) — 시스템 안쪽 자료
+/*.idml
+/성진_2027_공감연구소_기출의테마DNA1.0_진행중_선생님용.pdf
+/성진_2027_공감연구소_심플리_고전소설.pdf

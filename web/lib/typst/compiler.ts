@@ -108,24 +108,37 @@ export async function compileBookSvg(book: unknown): Promise<string> {
 }
 
 // ─── 교재(시험지) 컴파일 ──────────────────────────────────────────────────────
-// v0.3 시험지 템플릿은 절대 경로 import (`#import "/typst-templates/_core/...":*`)
-// 라서 core·v0.3 두 파일을 그 경로 그대로 가상 파일시스템에 박는다.
-
-const TEST_PAPER_MAIN_SRC = `#import "/typst-templates/edu/test-paper/v0.3/template.typ": test-paper
-#let data = json("/data.json")
-#test-paper(data)
-`;
+// preset main.typ 자체를 mainContent(entry)로 컴파일.
+// 단순 #import는 module 안 set page 같은 side effect를 발동시키지 않으므로
+// main.typ 내용 자체를 fetch해서 mainContent로 박는다.
 
 async function loadTestPaperSources(): Promise<void> {
-  // v0.3는 blocks/ variant 라이브러리를 import — 모두 가상 FS에 박혀 있어야 함.
+  // v0.3 blocks variant 라이브러리 + design-system layer + 프리셋 파일 모두 가상 FS에.
   const paths = [
     "/typst-templates/_core/sungjin-core.typ",
+    // blocks (variant 라이브러리)
     "/typst-templates/edu/blocks/multiple-choice/academy.typ",
+    "/typst-templates/edu/blocks/multiple-choice/publisher.typ",
     "/typst-templates/edu/blocks/short-answer/academy.typ",
     "/typst-templates/edu/blocks/passage/sidebar-label.typ",
+    "/typst-templates/edu/blocks/passage/boxed-dashed.typ",
+    "/typst-templates/edu/blocks/passage/plain.typ",
     "/typst-templates/edu/blocks/layout/two-col-rule.typ",
     "/typst-templates/edu/blocks/layout/one-col.typ",
     "/typst-templates/edu/test-paper/v0.3/template.typ",
+    // design-system (인디자인 개념 매핑 layer)
+    "/typst-templates/edu/design-system/paragraph-style.typ",
+    "/typst-templates/edu/design-system/master-page.typ",
+    // presets/gonggam-rates (첫 프리셋)
+    "/typst-templates/edu/presets/gonggam-rates/colors.typ",
+    "/typst-templates/edu/presets/gonggam-rates/paragraph-styles.typ",
+    "/typst-templates/edu/presets/gonggam-rates/master-pages.typ",
+    "/typst-templates/edu/presets/gonggam-rates/main.typ",
+    // presets/simply-classic (IDML 자동 추출)
+    "/typst-templates/edu/presets/simply-classic/colors.typ",
+    "/typst-templates/edu/presets/simply-classic/paragraph-styles.typ",
+    "/typst-templates/edu/presets/simply-classic/master-pages.typ",
+    "/typst-templates/edu/presets/simply-classic/main.typ",
   ];
   const srcs = await Promise.all(
     paths.map((p) =>
@@ -140,16 +153,29 @@ async function loadTestPaperSources(): Promise<void> {
   }
 }
 
-/** 시험지 데이터 JSON을 v0.3 템플릿으로 컴파일한 SVG 반환. */
+/** preset main.typ 내용을 fetch해서 mainContent로 반환. */
+async function fetchPresetMainSrc(paperData: unknown): Promise<string> {
+  const preset =
+    ((paperData as { meta?: { preset?: string } })?.meta?.preset) ??
+    "gonggam-rates";
+  const path = `/typst-templates/edu/presets/${preset}/main.typ`;
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`preset main fetch ${path}: ${res.status}`);
+  return res.text();
+}
+
+/** 시험지 데이터 JSON을 프리셋 main.typ로 컴파일한 SVG 반환. */
 export async function compileTestPaperSvg(paperData: unknown): Promise<string> {
   await loadTestPaperSources();
   await addSource("/data.json", JSON.stringify(paperData));
-  return compileSvg(TEST_PAPER_MAIN_SRC);
+  const mainSrc = await fetchPresetMainSrc(paperData);
+  return compileSvg(mainSrc);
 }
 
-/** 시험지 데이터 JSON을 v0.3 템플릿으로 컴파일한 PDF 바이너리 반환. */
+/** 시험지 데이터 JSON을 프리셋 main.typ로 컴파일한 PDF 바이너리 반환. */
 export async function compileTestPaperPdf(paperData: unknown): Promise<Uint8Array> {
   await loadTestPaperSources();
   await addSource("/data.json", JSON.stringify(paperData));
-  return compilePdf(TEST_PAPER_MAIN_SRC);
+  const mainSrc = await fetchPresetMainSrc(paperData);
+  return compilePdf(mainSrc);
 }

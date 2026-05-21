@@ -1,0 +1,159 @@
+# IDML 자동 추출 — 성진_2027_공감연구소_심플리_고전소설.idml
+# Master Spread별 TextFrame + Story 콘텐츠 + 위치.
+# 다음 단계: 좌표 분류 → master-pages.typ + main.typ 자동 생성.
+
+## master: 2-파트2-같이하기
+  - frame 1:
+      text: 'PART 2'
+      applied-style: $ID/NormalParagraphStyle
+      tx: 175.18  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: '심플리[고전 소설]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -505.13  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 3:
+      text: '같이하기'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -279.90
+      local-bbox: (-75.00, -75.00) → (-12.64, -60.89)
+      rotation: horizontal (0°)
+  - frame 4:
+      text: 'PART 2'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -295.63
+      local-bbox: (-75.00, -75.00) → (-12.64, -59.27)
+      rotation: horizontal (0°)
+
+## master: 5-빠른정답
+  - frame 1:
+      text: '빠른 정답'
+      applied-style: $ID/NormalParagraphStyle
+      tx: 175.18  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: '심플리[고전 시가]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -505.13  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+
+## master: 3-에필로그
+  - frame 1:
+      text: 'PART 3'
+      applied-style: $ID/NormalParagraphStyle
+      tx: 175.18  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: '심플리[고전 소설]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -505.13  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 3:
+      text: '에피소드 Ⅱ'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -279.90
+      local-bbox: (-75.00, -75.00) → (-12.64, -60.89)
+      rotation: horizontal (0°)
+  - frame 4:
+      text: 'PART 3'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -295.63
+      local-bbox: (-75.00, -75.00) → (-12.64, -60.89)
+      rotation: horizontal (0°)
+
+## master: 2*-파트2-혼자하기
+  - frame 1:
+      text: 'PART 2'
+      applied-style: $ID/NormalParagraphStyle
+      tx: 175.18  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: '심플리[고전 소설]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -505.13  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+
+## master: 1-파트1
+  - frame 1:
+      text: '프롤로그'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -279.90
+      local-bbox: (-75.00, -75.00) → (-12.64, -60.89)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: 'PART 1'
+      applied-style: 지문:지문_내어쓰기
+      tx: -491.93  ty: -295.63
+      local-bbox: (-75.00, -75.00) → (-12.64, -59.27)
+      rotation: horizontal (0°)
+  - frame 3:
+      text: 'PART 1'
+      applied-style: $ID/NormalParagraphStyle
+      tx: 175.18  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+  - frame 4:
+      text: '심플리[고전 소설]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -505.13  ty: 387.35
+      local-bbox: (-75.97, -11.76) → (405.92, 6.31)
+      rotation: horizontal (0°)
+
+## master: Z-창고
+  - frame 1:
+      text: '[A]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -573.59  ty: -100.86
+      local-bbox: (-18.22, -18.68) → (-4.82, -8.68)
+      rotation: horizontal (0°)
+  - frame 2:
+      text: 'ⓐ  ⓑ  ⓒ ①증가감소감소②증가증가감소③증가감소증가④감소증가증가⑤감소증가감소'
+      applied-style: 문제와선지:선지
+      tx: -466.13  ty: -311.22
+      local-bbox: (-75.00, -98.46) → (255.01, 24.65)
+      rotation: horizontal (0°)
+  - frame 3:
+      text: ''
+      applied-style: 지문:지문
+      tx: -129.66  ty: -201.66
+      local-bbox: (-75.00, -75.00) → (-1.02, -56.57)
+      rotation: horizontal (0°)
+  - frame 4:
+      text: '에'
+      applied-style: 문제와선지:문제
+      tx: -129.66  ty: -169.80
+      local-bbox: (-75.00, -75.00) → (17.13, -47.06)
+      rotation: horizontal (0°)
+  - frame 5:
+      text: '①ⓐ\u2009: 그 사람에게 그런 식은 안 통한다.ⓑ\u2009: 전깃줄에 전류가 통한다.②ⓐ\u2009: 그와 나는 서로 통하는 면이 있다.ⓑ\u2009: 청년기를 통해 노력의 중요성을 익혔다.③ⓐ\u2009: 이 길은 바다로 가는 길과 통해 있다.ⓑ\u2009: 모두 비상구를 통해 안전하게 빠져나갔다.④ⓐ\u2009: 이곳은 바람이 잘 통해 빨래가 잘 마른다.ⓑ\u2009: 그런 얄팍한 수는 나에게 통하지 않는다.⑤ⓐ\u2009: 철저한 실습을 통해 이론을 확실히 익힌다.ⓑ\u2009: 망원경을 통해 저 멀리까지 내다보았다.'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -466.13  ty: 210.45
+      local-bbox: (-75.00, -75.00) → (395.27, 114.69)
+      rotation: horizontal (0°)
+  - frame 6:
+      text: ''
+      applied-style: 문제와선지:보기
+      tx: -129.66  ty: -128.41
+      local-bbox: (-75.00, -75.00) → (17.13, -45.82)
+      rotation: horizontal (0°)
+  - frame 7:
+      text: '40다음은 (가), (나)를 읽고 학생이 작성한 활동지의 일부이다. ⓐ\u2009~\u2009ⓒ\u2009에 대한 평가를 바르게 짝지은 것은?공통점◦ 음악에 대한 견해를 설명하기 위해 그 견해와 대비되는 견해를 제시함. ·············································· ⓐ⋮차이점◦ (가)와 달리 (나)는 특정 음악 작품을 예로 제시함. ··············································································· ⓑ◦ (나)와 달리 (가)는 음악을 다른 예술 갈래와 비교함. ··········································································· ⓒ⋮ ⓐ  ⓑ  ⓒ ①적절적절적절②적절적절부적절③적절부적절적절④부적절적절적절⑤부적절부적절부적절'
+      applied-style: 문제와선지:번호
+      tx: -466.13  ty: -73.54
+      local-bbox: (-75.00, -75.00) → (395.27, 201.88)
+      rotation: horizontal (0°)
+  - frame 8:
+      text: '[가]'
+      applied-style: $ID/NormalParagraphStyle
+      tx: -573.59  ty: -100.86
+      local-bbox: (-18.22, -18.68) → (-3.01, -8.68)
+      rotation: horizontal (0°)

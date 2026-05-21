@@ -1,8 +1,49 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-21 KST (교재 variant 골격 + /edu MVP 박힘. 단행본은 동결)
-> 단계: **교재 트랙 — 식자 variant 라이브러리 구축 중**
+> 마지막 업데이트: 2026-05-21 KST 저녁 (IDML 자동 추출기 첫 컷 + simply-classic 프리셋 + design-system 토대)
+> 단계: **교재 트랙 — IDML 흡수 R&D 진행 중**
 > 작업 브랜치: `main` 단일
+
+## 이어서 하자 트리거 — 다음 세션 첫 보고 (사용자가 "이어서 하자" 등으로 트리거하면 이 표 다시 띄울 것)
+
+### 진행 위치
+- design-system layer 박힘 (`typst-templates/edu/design-system/{paragraph-style,master-page}.typ`)
+- 첫 손 프리셋 박힘 (`typst-templates/edu/presets/gonggam-rates/` — 손으로 4파일)
+- 인디자인 IDML → typst 자동 추출기 첫 컷 박힘 (`experiments/idml-recon/extract-idml-to-typst.py`)
+- IDML 자동 추출 프리셋 박힘 (`typst-templates/edu/presets/simply-classic/` — 4파일 + master-spreads-dump.txt)
+- web/edu에 preset dispatch 박힘 (`web/lib/typst/compiler.ts` + `web/app/edu/page.tsx`)
+- CLI + 브라우저(:3003) 둘 다 simply-classic 컴파일 동작 확인
+
+### 원본 PDF p9 vs 우리 simply-classic 캡처 차이 (남은 작업)
+| 요소 | 원본 (인디자인) | 우리 (IDML 추출) |
+|---|---|---|
+| 페이지 크기 220×300mm | ✅ | ✅ |
+| 마진 inside/outside/top/bottom 20/50/20/20mm | ✅ | ✅ |
+| 좌측 outer 라벨 `PART 2 / 같이하기` | ✅ | ❌ master spread frame 추출했지만 master-pages.typ에 안 박힘 |
+| 좌측 하단 푸터 `16 심플리[고전 소설]` | ✅ | ❌ 같은 이유 |
+| 청색 `[1~4]` 발문 라벨 | ✅ | ❌ 묶음 헤더가 본문과 합쳐짐 |
+| `[A] [B]` 좌측 박스 라벨 | ✅ | ❌ Z-창고 master에 있지만 spread 자유 frame 미추출 |
+| 본문 들여쓰기·단락 간격 | ✅ | ⚠️ 약함 |
+| 번호 큰 청색 산스 | ✅ | ⚠️ 색 시안 #00ffff 너무 밝음 |
+| 폰트 Sandoll | ✅ | ⚠️ Noto로 대체 |
+
+### 다음 한 발 후보 (b → a → c → d 순서 권고)
+- **(b) master spread 푸터/세로 라벨 자동 적용** ← 이미 추출 데이터 있음. 박기만 하면 +15% 모사. **첫 한 발 권고**
+- **(a) 색 변환 정확화** — CMYK 시안 100% → `#0091db` 매핑 룰. 한 줄 추가
+- **(c) BasedOn 상속** — 빈 paragraph style dict 채우기. 추출기 보강
+- **(d) Object style + Spread 자유 frame** — 가장 큰 R&D, 시간 더
+
+### 이번 세션 핵심 결정
+- IDML 흡수 = 디자인 입력 채널. SaaS 모델 (디자이너 1회 + 작가 반복)
+- 포지셔닝: **교재용 Vellum** — HWP → JSON → 인디자인 디자인 자동 입힘 → PDF
+- typst `set page` quirk 우회: master page는 `master-spec(...)` dict + `set page(..master)` spread (top-level 호출 강제)
+- 가장 큰 추출 단위 5개: master page / spread / paragraph style / object style / color → 각각 ~10~30% 임팩트
+
+### 관련 memory
+- `product_vision_textbook_vellum.md`
+- `product_vision_idml_intake.md`
+- `product_vision_rule_based.md`
+- `project_track_pivot_2026_05.md`
 
 ## 한 줄 정체성
 

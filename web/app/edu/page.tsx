@@ -36,18 +36,62 @@ interface RawTestPaper {
 /**
  * 추출 raw JSON에 meta를 덧입힌다.
  * raw: { source, extracted_at, schema, passages, questions }
- * v0.3 template는 data.meta.subject를 읽음.
+ * v0.3 template는 data.meta.subject + data.meta.style 읽음.
+ *
+ * 임시(검증 단계): 첫 문제에 더미 정답률 박아 publisher variant 식자 확인.
  */
 function withMeta(raw: RawTestPaper, subject: Subject) {
+  const rawQs = raw.questions as Array<Record<string, unknown>>;
+  // 검증 단계: 모든 문제에 더미 정답률 박기 (시드 기반 의사 난수 — 캡처 안정성).
+  const prng = (seed: number) => {
+    let s = seed;
+    return () => {
+      s = (s * 1664525 + 1013904223) % 0x100000000;
+      return s / 0x100000000;
+    };
+  };
+  const questions = rawQs.map((q, idx) => {
+    const rng = prng(idx + 1);
+    const choices = (q.choices as Array<Record<string, unknown>> | undefined) ?? [];
+    const correctIdx = Math.floor(rng() * Math.max(1, choices.length));
+    const correctRate = {
+      화작: Math.floor(rng() * 50) + 40,
+      언매: Math.floor(rng() * 50) + 45,
+    };
+    return {
+      ...q,
+      correct_rate: correctRate,
+      choices: choices.map((c, i) => ({
+        ...c,
+        rate:
+          i === correctIdx
+            ? correctRate
+            : { 정답률: Math.floor(rng() * 18) + 1 },
+        is_correct: i === correctIdx,
+      })),
+    };
+  });
   return {
     meta: {
       source: raw.source,
       extracted_at: raw.extracted_at,
       schema: raw.schema,
       subject: subject.label,
+      mode: "teacher-book",
+      preset: "simply-classic",
+      style: {
+        multiple_choice: "publisher",
+        passage: "plain",
+        layout: "one-col",
+      },
+      heading: {
+        outer_vertical: "Theme 1",
+        outer_vertical_sub: "같이하기",
+        footer_outer: "PART2 같이하기 | Theme 1",
+      },
     },
     passages: raw.passages,
-    questions: raw.questions,
+    questions,
   };
 }
 

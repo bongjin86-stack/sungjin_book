@@ -1,0 +1,583 @@
+// IDML 자동 추출 — 성진_2027_공감연구소_심플리_고전소설.idml
+// extract-idml-to-typst.py 결과. 직접 편집보다 추출기 보정 룰 추가 권장.
+
+// ── Paragraph Styles ────────────────────────────────────────────────────────
+#let paragraph-styles = (
+  "보기명조": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.5pt,
+    tracking: -0.04em,
+    leading: 17.0pt,
+    left-indent: 36.85039370078741pt,
+    first-line-indent: -13.039370078740157pt,
+  ),
+  "보기박스": (
+  ),
+  "지문A 사본": (
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "보기": (
+    size: 10.0pt,
+    leading: 18.0pt,
+    left-indent: 12.47244094488189pt,
+    first-line-indent: -12.47244094488189pt,
+  ),
+  "문제명조": (
+    font: ("Noto Serif KR",),
+    size: 9.7pt,
+    tracking: -0.025em,
+    space-after: 5.669291338582678pt,
+  ),
+  "문제(NEW)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+  ),
+  "지문 Copy": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 9.0pt,
+    tracking: -0.015em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "본문1": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 11.0pt,
+    tracking: -0.03em,
+    leading: 20.0pt,
+    first-line-indent: 8.503937007874017pt,
+    space-before: 2.0pt,
+  ),
+  "선지(NEW)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    left-indent: 11.338582677165356pt,
+    first-line-indent: -11.338582677165356pt,
+  ),
+  "선지": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    leading: 15.0pt,
+    left-indent: 22.67716535433071pt,
+    first-line-indent: -11.338582677165356pt,
+    space-after: 2.834645669291339pt,
+  ),
+  "보기(NEW)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "지문-언내": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.015em,
+    leading: 13.0pt,
+  ),
+  "문제 Copy": (
+    size: 9.5pt,
+    space-before: 42.51968503937008pt,
+    space-after: 8.503937007874017pt,
+  ),
+  "머릿말3": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 8.5pt,
+    tracking: -0.01em,
+    leading: 17.0pt,
+  ),
+  "번호": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 14.0pt,
+    fill: rgb("#00ffff"),
+  ),
+  "번호(NEW)": (
+    font: ("Noto Sans KR",),
+    weight: "extrabold",
+    space-before: 42.51968503937008pt,
+  ),
+  "표-뎃스츠(중앙)": (
+    leading: 13.0pt,
+    alignment: "center",
+  ),
+  "물음에답하시오": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    tracking: -0.05em,
+    space-after: 8.503937007874017pt,
+  ),
+  " ¹ÙÅÁ±Û": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+  ),
+  "<?AID 0014?>탕글": (
+    weight: "regular",
+    size: 9.0pt,
+    fill: rgb("#00ffff"),
+  ),
+  "Normal": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    space-after: 8.0pt,
+  ),
+  "바탕글": (
+    font: ("Noto Serif KR",),
+    weight: "medium",
+    size: 9.0pt,
+    fill: rgb("#00ffff"),
+    space-after: 8.0pt,
+  ),
+  "지문:물음에답하시오": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+  ),
+  "지문:(가)": (
+    weight: "regular",
+  ),
+  "지문:지문": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "지문:앞부분의 줄거리": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+    space-after: 8.503937007874017pt,
+  ),
+  "지문:지문 내어쓰기": (
+  ),
+  "지문:지문(A) 들여쓰기": (
+    left-indent: 17.007874015748033pt,
+  ),
+  "지문:중략": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    space-before: 8.503937007874017pt,
+    space-after: 8.503937007874017pt,
+    alignment: "center",
+  ),
+  "지문:지은이, <수>": (
+    alignment: "right",
+  ),
+  "지문:참조": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 8.5pt,
+    tracking: -0.04em,
+    leading: 14.0pt,
+    space-before: 8.503937007874017pt,
+  ),
+  "지문:참조(2줄이상)": (
+  ),
+  "지문:지문_문제": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.2pt,
+    tracking: -0.013em,
+    leading: 12.0pt,
+  ),
+  "지문:지문_내어쓰기": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 9.0pt,
+    tracking: -0.013em,
+    leading: 16.0pt,
+  ),
+  "지문:지문(NEW)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "지문:앞&중략부분의 줄거리": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    space-before: 8.503937007874017pt,
+    space-after: 8.503937007874017pt,
+  ),
+  "지문:지문(내)": (
+  ),
+  "지문:지문(A) 내여쓰기": (
+    left-indent: 17.007874015748033pt,
+  ),
+  "지문:지은이 & 1수": (
+    alignment: "right",
+  ),
+  "지문:지문(첫)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "지문:지문(NEW) 내어쓰기": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+  ),
+  "지문:지문-(꺽)": (
+    left-indent: 17.007874015748033pt,
+  ),
+  "문제와선지:번호": (
+    font: ("Noto Sans KR",),
+    weight: "extrabold",
+    size: 14.0pt,
+    fill: rgb("#00ffff"),
+    tracking: -0.04em,
+    leading: 18.0pt,
+    left-indent: 12.47244094488189pt,
+    first-line-indent: -12.47244094488189pt,
+    space-before: 42.51968503937008pt,
+  ),
+  "문제와선지:문제": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.025em,
+    leading: 14.0pt,
+    space-after: 5.669291338582678pt,
+  ),
+  "문제와선지:선지": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    left-indent: 11.338582677165356pt,
+    first-line-indent: -11.338582677165356pt,
+  ),
+  "문제와선지:보기": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "문제와선지:보기 (들여쓰기X)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+  ),
+  "문제와선지:보기 (가운데)": (
+    alignment: "center",
+  ),
+  "문제와선지:보기(내)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+  ),
+  "기타:이미지 텍스트(고딕)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 8.0pt,
+    tracking: -0.04em,
+    alignment: "center",
+  ),
+  "해설편:B03 본문:독서:독서-해설본문(첫) (GREP)": (
+  ),
+  "해설편:B03 본문:독서:독서-해설본문(숫자) (GREP)": (
+    left-indent: 8.503937007874017pt,
+    first-line-indent: -8.503937007874017pt,
+  ),
+  "해설편:B03 본문:문학:문학-해설본문(첫) (GREP)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 9.2pt,
+    tracking: -0.030000000000000002em,
+    leading: 15.5pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "STEP 1 & 공통:본문-고딕": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.5pt,
+    tracking: -0.04em,
+    leading: 18.0pt,
+    first-line-indent: 8.503937007874017pt,
+  ),
+  "STEP 1 & 공통:출처": (
+    weight: "extrabold",
+    size: 8.0pt,
+    fill: rgb("#00ffff"),
+    space-after: 5.669291338582678pt,
+  ),
+  "STEP 1 & 공통:분석:#키워드": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 8.0pt,
+    fill: rgb("#00ffff"),
+    tracking: -0.04em,
+    leading: 14.0pt,
+    space-before: 5.669291338582678pt,
+  ),
+  "문제:보기:보기": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 8.0pt,
+    tracking: -0.015em,
+    leading: 14.0pt,
+    first-line-indent: 6.519685039370079pt,
+  ),
+  "아이콘:포인트 텍스트": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 10.0pt,
+    tracking: -0.03em,
+    leading: 14.0pt,
+    space-before: 5.669291338582678pt,
+  ),
+  "아이콘:선택지링크 아이콘": (
+    fill: rgb("#ffffff"),
+    alignment: "center",
+  ),
+)
+
+// ── Character Styles ───────────────────────────────────────────────────────
+#let character-styles = (
+  "보기내텍스트": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.0pt,
+    tracking: -0.04em,
+    leading: 17.0pt,
+  ),
+  "문제번호": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+  ),
+  "밑줄": (
+  ),
+  "밑줄+볼드": (
+    weight: "regular",
+  ),
+  "본문+밑줄+볼드": (
+    weight: "regular",
+  ),
+  "밑줄 0.5": (
+  ),
+  "본문(명조 볼드)": (
+    weight: "regular",
+  ),
+  "컬러": (
+    fill: rgb("#00ffff"),
+  ),
+  "윗별": (
+    font: ("Noto Serif KR",),
+    weight: "bold",
+    fill: rgb("#00ffff"),
+  ),
+  "별 가운데": (
+    font: ("Noto Serif KR",),
+    weight: "bold",
+    fill: rgb("#00ffff"),
+  ),
+  "고딕 볼드 (06semi-B)": (
+    weight: "regular",
+  ),
+  "본문 고어(명조)": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    size: 9.5pt,
+    fill: rgb("#000000"),
+  ),
+  "한자깨짐": (
+    font: ("Noto Serif KR",),
+  ),
+  "본문 고어(명조) 볼드": (
+    weight: "bold",
+  ),
+  "본문 고어(명조) 밑줄": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    size: 9.5pt,
+  ),
+  "본문 고어(고딕)": (
+    font: ("Noto Serif KR",),
+  ),
+  "기울이기": (
+  ),
+  "볼드 40": (
+    weight: "regular",
+  ),
+  "본고딕": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+  ),
+  "본고딕+기울이기": (
+  ),
+  "·····": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    size: 9.5pt,
+    fill: rgb("#000000"),
+  ),
+  "밑줄 0.5(볼드용)": (
+  ),
+  "밑줄 0.3": (
+  ),
+  "고딕 볼드": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.7pt,
+  ),
+  "빠른정답 그렙": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    fill: rgb("#00ffff"),
+  ),
+  "수식(기울이기)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    style: "italic",
+  ),
+  "컬러(예외)": (
+    fill: rgb("#00ffff"),
+  ),
+  "분석 대괄호 볼드": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 9.0pt,
+    fill: rgb("#00ffff"),
+  ),
+  "지문고어": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 9.5pt,
+  ),
+  "지문고어밑줄": (
+  ),
+  "자간 맞추기": (
+    tracking: -0.1em,
+  ),
+  "한자깨짐(본문)": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+  ),
+  "산돌고딕 볼드(이름)": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+  ),
+  "윗줄_기울이기": (
+  ),
+  "고어-명조": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    tracking: -0.025em,
+  ),
+  "윗별_밑줄": (
+  ),
+  "한자깨짐(본문) 밑줄": (
+  ),
+  "보기-고딕볼드": (
+    weight: "regular",
+  ),
+  "본문-고딕볼드": (
+    font: ("Noto Sans KR",),
+    leading: 17.5pt,
+  ),
+  "참조 별위": (
+    font: ("Noto Serif KR",),
+    weight: "bold",
+    fill: rgb("#00ffff"),
+  ),
+  "문제숫자": (
+    weight: "regular",
+    size: 13.0pt,
+    fill: rgb("#000000"),
+  ),
+  "볼드": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+    size: 10.0pt,
+  ),
+  "명조밑줄": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 10.0pt,
+    leading: 13.0pt,
+  ),
+  "명조(볼드)": (
+    weight: "regular",
+  ),
+  "고어명조(본문)": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    size: 9.2pt,
+  ),
+  "고어명조(볼드)": (
+    font: ("Noto Serif KR",),
+    weight: "bold",
+    size: 9.2pt,
+  ),
+  "참조 별위+밑줄": (
+    font: ("Noto Serif KR",),
+    weight: "bold",
+    fill: rgb("#00ffff"),
+  ),
+  "고어명조(밑줄)": (
+    font: ("Noto Serif KR",),
+    weight: "light",
+    size: 9.2pt,
+  ),
+  "한자": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+  ),
+  "산돌고딕 EX볼드": (
+    font: ("Noto Sans KR",),
+    weight: "extrabold",
+  ),
+  "인물명": (
+    font: ("Noto Sans KR",),
+    weight: "regular",
+  ),
+  "해설편:B03 본문:B03 본문-괄호 고딕": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 8.0pt,
+  ),
+  "해설편:B01 6각형 아이콘:문학-화살표 컬러(문학메인컬러 녹색)": (
+    fill: rgb("#00ffff"),
+  ),
+  "해설편:B01 6각형 아이콘:독서-화살표 컬러(독서메인컬러 파랑)": (
+  ),
+  "문제편:A02 공통 문자스타일:본문 9.2pt": (
+    font: ("Noto Serif KR",),
+    weight: "regular",
+    size: 9.2pt,
+    fill: rgb("#000000"),
+  ),
+  "문제편:A02 공통 문자스타일:공통-볼드": (
+    weight: "regular",
+  ),
+)
