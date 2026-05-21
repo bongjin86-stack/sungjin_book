@@ -79,37 +79,72 @@
 - 박스: 한 문제 (윗단 + 아랫단 + 선택적 보기박스)
 - 박스는 가능한 한 column 안에서 자르지 않음 (`breakable: false` 후보)
 
-### 정의해야 할 룰 (TODO)
+### 추출 가이드 (내일 IDML 배경 추출의 표적)
+
+내일 IDML Spread XML에서 추출해서 채울 데이터 슬롯:
+
+| 추출 대상 | 무엇 | 어떻게 |
+|--|--|--|
+| **자유 frame 위치** | 페이지마다 박힌 box, 라벨, 색박스 | Spread XML의 Rectangle/TextFrame ItemTransform |
+| **색 채움 영역** | 회색 배경, 청색 라벨 영역 | Rectangle의 FillColor + bbox |
+| **라인/구분선** | 수평선, 세로 구분선, 점선 | Line element + StrokeColor + StrokeWeight |
+| **이미지 placeholder** | 그림 들어갈 자리 | Rectangle + Image placeholder |
+| **페이지 헤더/푸터 위치** | y 좌표·정렬 | TextFrame y < margin.top 또는 y > height - margin.bottom |
+| **PART 라벨 위치** | 외측 큰 청색 라벨 | TextFrame 좌측 상단, font size 큼, accent color |
+| **column 구조** | 단 수, gutter, 세로선 | TextFrame width × position 분석 |
+
+추출 결과는 `master-pages.typ` (이미 일부 자동 생성) 확장 또는 `decorations.typ` 새 파일로.
+
+### 정의해야 할 룰 (TODO — 내일 추출 결과로 채움)
 
 **RULE P1 — 단 수 (columns)**
 - 1단: 수학·이미지 많은 과목 (가로폭 필요)
 - 2단: 국어·사탐·과탐 (text 많고 단 균형)
 - preset 토큰: `columns: 1 | 2`
+- ✅ 이미 구현 (page-1col, page-2col)
 
 **RULE P2 — 묶음 배치 (passage + questions)**
 - 지문이 먼저 흘러간 후 묶음 안 문제들이 이어짐
 - 지문 끝에 출처/낱말 라인 (`passage-source`, `passage-glossary`)
 - 한 묶음의 모든 문제가 같은 페이지에 있을 필요는 없음
+- ✅ 부분 구현 (v22 group-by-passage)
 
 **RULE P3 — 박스 column 분배**
 - 자동 sequential fill (좌단 가득 후 우단)
 - 박스(특히 boki 박스 포함 question)은 column 경계 넘지 않음
+- ✅ 부분 구현 (set page columns + boki breakable: false)
 
-**RULE P4 — 긴 문제 분할**
+**RULE P4 — 긴 문제 분할** (미정의 — 내일 디자인 검토)
 - 한 문제가 한 column보다 길면 분할 가능
-- 어디에서 자를지: stem 다음 / 선지 사이 (TODO 디자인 결정)
+- 어디에서 자를지: stem 다음 / 선지 사이 / 박스 후 / 임의
+- IDML reference 보고 결정 (디자이너 의도 발견)
 
-**RULE P5 — 헤더/푸터**
+**RULE P5 — 헤더/푸터** (master-pages-a4 부분 구현)
 - 짝수 페이지: PART N + 페이지 번호 좌측
 - 홀수 페이지: 제목 + 페이지 번호 우측
 - 챕터 시작 페이지: 푸터 숨김 후보
+- ✅ A4 master 부분 구현 (제목 · 과목 · 페이지번호)
 
-### 토큰 (TODO)
+**RULE P6 — 배경 decoration** (TODO — 내일)
+- PART 라벨 외측 (큰 청색)
+- 회색 색박스 (보기·테마 영역)
+- 라인 (수평 구분선, 세로 단 구분)
+- 이미지/표 placeholder
 
-- `page.columns`: 1 | 2
-- `page.column-gutter`: 6mm (현재값)
-- `page.column-rule`: none | 0.3pt + gray (세로선)
-- `box.breakable`: false (문제 박스 column 넘김 금지)
+### 토큰 (현재값 + TODO)
+
+```typst
+// 현재 (design-tokens.typ)
+page-1col, page-2col      ✅ columns/gutter/rule 토글
+master-pages              ✅ 자동 추출 master
+master-pages-a4           ✅ A4 변형
+
+// 내일 추가
+decorations.typ           TODO — IDML 배경 추출 결과
+  rect-fills              색박스 배열 (color × bbox)
+  lines                   라인 배열 (stroke × from/to)
+  part-label              PART 외측 라벨 (text × position × style)
+```
 
 ## 4. Layer 3 — Chapter 룰 (TODO)
 
