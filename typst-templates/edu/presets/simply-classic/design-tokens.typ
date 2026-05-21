@@ -202,17 +202,17 @@
 // ── Typography (시각 위계 spec override) ────────────────────────────────────
 //
 // paragraph-styles.typ는 IDML 자동 추출. 이 토큰은 그 위에 override.
-// 사용자 확정 (v26): 윗단 고딕 계열, 선지는 명조 그대로.
+// 사용자 확정 (v27): 윗단 Pretendard (모던 고딕), 선지는 명조 그대로.
 #let typography = (
   question-number: (
-    font: ("Malgun Gothic", "Noto Sans KR"),
-    size: 15pt,
+    font: ("Pretendard", "Malgun Gothic", "Noto Sans KR"),
+    size: 14pt,
     weight: "extrabold",
     fill: rgb("#0091db"),
   ),
   question-stem: (
-    font: ("Malgun Gothic", "Noto Sans KR"),
-    size: 11.5pt,
+    font: ("Pretendard", "Malgun Gothic", "Noto Sans KR"),
+    size: 10.5pt,
     weight: "medium",
     fill: rgb("#222222"),
   ),
