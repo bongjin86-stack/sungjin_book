@@ -142,8 +142,8 @@
 // baseline-grid의 0.5x/1x/1.5x 배수로 박는 게 시각 일관성 좋음.
 #let space = (
   // 한 문제 안 (intra-question)
-  number-to-stem:    6pt,   // ❶ 번호 → ❷ stem
-  stem-to-choices:   14pt,  // ❷ stem → 첫 선지 (사용자: 9pt 좁음, 18pt 넓음)
+  number-to-stem:    9pt,   // ❶ 번호 → ❷ stem (사용자 v26: 6pt 좁음, 살짝 더)
+  stem-to-choices:   14pt,  // ❷ stem → 첫 선지
   between-choices:   8pt,   // 선지 ↔ 선지
   choice-wrap-leading: 6.5pt, // 한 선지 안 wrap 줄간격 (다른 선지 사이보다 살짝 좁게)
   boki-around:       18pt,  // <보기> 박스 위·아래 (grid 1배)
@@ -197,6 +197,26 @@
 //   - 윗단 (number + stem)이 아랫단 (choices)보다 시각적으로 큼
 //   - 색은 청색(accent)을 번호와 passage-header에만, 나머지는 검정
 //   - weight는 stem만 medium, 나머지 regular
+
+
+// ── Typography (시각 위계 spec override) ────────────────────────────────────
+//
+// paragraph-styles.typ는 IDML 자동 추출. 이 토큰은 그 위에 override.
+// 사용자 확정 (v26): 윗단 고딕 계열, 선지는 명조 그대로.
+#let typography = (
+  question-number: (
+    font: ("Malgun Gothic", "Noto Sans KR"),
+    size: 15pt,
+    weight: "extrabold",
+    fill: rgb("#0091db"),
+  ),
+  question-stem: (
+    font: ("Malgun Gothic", "Noto Sans KR"),
+    size: 11.5pt,
+    weight: "medium",
+    fill: rgb("#222222"),
+  ),
+)
 
 
 // ── 박스 (Box) ────────────────────────────────────────────────────────────────

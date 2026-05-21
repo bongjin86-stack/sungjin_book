@@ -69,10 +69,16 @@
 #let _pad2(n) = if n < 10 { "0" + str(n) } else { str(n) }
 
 #let render-question(q) = {
-  // 윗단
-  apply-para-style(pick("번호(NEW)"), [#_pad2(q.number)])
+  // 윗단 — IDML 추출 spec 위에 STS typography 토큰 override (font, size, weight, color)
+  apply-para-style(
+    pick("번호(NEW)") + t.typography.question-number,
+    [#_pad2(q.number)],
+  )
   v(t.space.number-to-stem, weak: true)
-  apply-para-style(pick("문제명조"), q.stem)
+  apply-para-style(
+    pick("문제명조") + t.typography.question-stem,
+    q.stem,
+  )
   v(t.space.stem-to-choices, weak: true)
 
   // boki (있을 때)
