@@ -1,7 +1,14 @@
 // presets/simply-classic/design-tokens.typ
 //
-// simply-classic 디자인 시스템의 명명·간격·정렬 토큰.
-// v21에서 사용자 시각 검증으로 확정된 값들.
+// STS (Sungjin Typography System) — simply-classic preset 토큰.
+// 룰·체계 전체는 design-system/STS-SPEC.md 참조.
+//
+// 이 파일은 simply-classic이 STS 룰에서 override하는 값들:
+//   - 색 (accent 청색)
+//   - 폰트 (Source Han Serif KR / Batang fallback)
+//   - 간격 (Q2 룰의 값)
+//   - 정렬 indent (Q1 룰의 14pt)
+//   - baseline grid (Q5 룰의 18pt)
 //
 // 사용:
 //   #import "/typst-templates/edu/presets/simply-classic/design-tokens.typ" as tokens
@@ -200,4 +207,19 @@
   radius:      0pt,
   breakable:   false,  // column 경계 넘지 않음
   label-size:  8.5pt,
+)
+
+
+// ── Layer 2: Page 토큰 (단 수·gutter·rule) ──────────────────────────────────
+//
+// 사용자 정의 변수로 toggle. JSON 데이터에 `layout` 필드 또는 main 호출 시 override.
+#let page-1col = (
+  columns: 1,
+  gutter: 0pt,
+  rule: none,
+)
+#let page-2col = (
+  columns: 2,
+  gutter: 6mm,
+  rule: none,         // simply-classic 원본은 column rule 없음
 )

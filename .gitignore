@@ -77,3 +77,5 @@ experiments/idml-recon/*/
 
 # Source Han Serif 다운로드 .otf (재다운 가능)
 build/fonts/source-han/
+data-1col.json
+data-backup.json

@@ -16,9 +16,12 @@
 #let data = json("/data.json")
 #let pick(name) = paragraph-styles.at(name, default: (:))
 
+// Layer 2: 단 수 — data.layout 또는 default 2단
+#let _layout = if "layout" in data and data.layout == "1col" { t.page-1col } else { t.page-2col }
+
 
 // ── 페이지 + 글로벌 텍스트 ───────────────────────────────────────────────────
-#set page(..mp.main-master, columns: 2)
+#set page(..mp.main-master, columns: _layout.columns)
 #set text(font: t.font.serif, size: 10pt, lang: "ko", cjk-latin-spacing: auto)
 #set par(leading: 0.7em, justify: true)
 
