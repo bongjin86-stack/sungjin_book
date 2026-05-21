@@ -24,7 +24,7 @@
 #let accent = swatches.at("C=100 M=0 Y=0 K=0")
 
 #set page(..mp.main-master)
-#set text(font: ("Batang", "Noto Serif KR"), size: 10pt, lang: "ko", cjk-latin-spacing: auto)
+#set text(font: ("Source Han Serif KR", "Batang", "Noto Serif KR"), size: 10pt, lang: "ko", cjk-latin-spacing: auto)
 #set par(leading: 0.7em, justify: true)
 
 // 본문 흐름 — passage는 풀 폭, questions은 2단 (원본 시험지 식자 관례)

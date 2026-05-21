@@ -74,3 +74,6 @@ experiments/idml-recon/*/
 /*.idml
 /성진_2027_공감연구소_기출의테마DNA1.0_진행중_선생님용.pdf
 /성진_2027_공감연구소_심플리_고전소설.pdf
+
+# Source Han Serif 다운로드 .otf (재다운 가능)
+build/fonts/source-han/
