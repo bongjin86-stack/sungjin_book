@@ -45,10 +45,11 @@
 }
 
 // 식자 간격 — 명시적 v() 박아 column 모드에서도 확정.
-#let GAP-NUMBER-TO-STEM = 18pt    // 큰 번호 ↔ 발문
-#let GAP-STEM-TO-CHOICES = 9pt    // 발문 ↔ 첫 선지
-#let GAP-BETWEEN-CHOICES = 6pt    // 선지 ↔ 선지 (한 줄 leading의 약 60%)
-#let GAP-BOKI-AROUND = 18pt       // <보기> 박스 위아래
+#let GAP-NUMBER-TO-STEM = 6pt       // 큰 번호 ↔ 발문
+#let GAP-STEM-TO-CHOICES = 9pt      // 발문 ↔ 첫 선지
+#let GAP-BETWEEN-CHOICES = 6pt      // 선지 ↔ 선지
+#let GAP-BOKI-AROUND = 18pt         // <보기> 박스 위아래
+#let GAP-BETWEEN-QUESTIONS = 24pt   // 문제 set 사이 여백 (01번 끝 ↔ 02번 시작)
 
 // 한 자리 → "01", 두 자리 → "12" (원본 시험지 zero-pad 관례)
 #let _pad2(n) = if n < 10 { "0" + str(n) } else { str(n) }
@@ -63,9 +64,11 @@
     v(GAP-BOKI-AROUND, weak: true)
   }
   for c in q.choices {
-    apply-para-style(pick("선지"), [#c.glyph#h(0.3em)#c.text])
+    // ① 글자 + 텍스트 직접 붙임 — first-line-indent의 절댓값이 ① 글자 폭과 정렬
+    apply-para-style(pick("문제와선지:선지"), [#c.glyph #c.text])
     v(GAP-BETWEEN-CHOICES, weak: true)
   }
+  v(GAP-BETWEEN-QUESTIONS, weak: true)
 }
 
 // passage_id별로 묶고 — passage 본문 + 그에 속한 문제들 set 단위 식자
