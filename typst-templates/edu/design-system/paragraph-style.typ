@@ -84,18 +84,29 @@
   let _min-block-space = _typst-leading
   let _block-above = _get(spec, "space-before")
   let _block-below = _get(spec, "space-after")
+  // IDML의 left-indent + first-line-indent(negative) 조합 = hanging indent.
+  // Typst 0.14는 par.hanging-indent로 wrap된 줄만 들여쓰기 처리. first-line-indent negative 직접 적용 안 됨.
+  // 변환: first-line-indent가 negative면 그 절댓값을 hanging-indent로, block.inset.left는 0.
+  let _fli = _get(spec, "first-line-indent")
+  let _left-indent = _get(spec, "left-indent")
+  let _is-hanging = _fli < 0pt
+  let _hanging = if _is-hanging { -_fli } else { 0pt }
+  let _block-inset-left = if _is-hanging { 0pt } else { _left-indent }
+  let _par-fli = if _is-hanging { 0pt } else { _fli }
+
   block(
     above: if _block-above > 0pt { _grid-snap(_block-above) } else { _min-block-space },
     below: if _block-below > 0pt { _grid-snap(_block-below) } else { _min-block-space },
     inset: (
-      left: _get(spec, "left-indent"),
+      left: _block-inset-left,
       right: _get(spec, "right-indent"),
     ),
   )[
     #set par(
       justify: a == "justify",
       leading: _typst-leading,
-      first-line-indent: _get(spec, "first-line-indent"),
+      first-line-indent: _par-fli,
+      hanging-indent: _hanging,
     )
     #set text(
       font: _get(spec, "font"),

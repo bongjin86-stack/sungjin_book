@@ -46,10 +46,10 @@
 
 // 식자 간격 — 명시적 v() 박아 column 모드에서도 확정.
 #let GAP-NUMBER-TO-STEM = 6pt       // 큰 번호 ↔ 발문
-#let GAP-STEM-TO-CHOICES = 9pt      // 발문 ↔ 첫 선지
+#let GAP-STEM-TO-CHOICES = 14pt     // 발문 ↔ 첫 선지 (사용자: 9pt 좁음)
 #let GAP-BETWEEN-CHOICES = 6pt      // 선지 ↔ 선지
 #let GAP-BOKI-AROUND = 18pt         // <보기> 박스 위아래
-#let GAP-BETWEEN-QUESTIONS = 24pt   // 문제 set 사이 여백 (01번 끝 ↔ 02번 시작)
+#let GAP-BETWEEN-QUESTIONS = 24pt   // 문제 set 사이 여백
 
 // 한 자리 → "01", 두 자리 → "12" (원본 시험지 zero-pad 관례)
 #let _pad2(n) = if n < 10 { "0" + str(n) } else { str(n) }
@@ -64,8 +64,27 @@
     v(GAP-BOKI-AROUND, weak: true)
   }
   for c in q.choices {
-    // ① 글자 + 텍스트 직접 붙임 — first-line-indent의 절댓값이 ① 글자 폭과 정렬
-    apply-para-style(pick("문제와선지:선지"), [#c.glyph #c.text])
+    // ① 글자와 텍스트 분리. place + inset 패턴.
+    // block.inset.left = 14pt → 텍스트가 14pt 안쪽. ① 글자는 place로 -14pt → block.left.
+    // 결과: ① 글자(block.left), 텍스트 첫 줄(block.left + 14pt), wrap된 둘째 줄(block.left + 14pt). 정렬 보장.
+    block(
+      above: 0pt,
+      below: 0pt,
+      width: 100%,
+      inset: (left: 14pt),
+    )[
+      #place(left + top, dx: -14pt, dy: 0pt)[
+        #set text(font: ("Batang",), size: 10pt)
+        #c.glyph
+      ]
+      #set text(
+        font: ("Batang", "Source Han Serif KR", "Noto Serif KR"),
+        size: 10pt,
+        tracking: -0.04em,
+      )
+      #set par(leading: 8pt, justify: true)
+      #c.text
+    ]
     v(GAP-BETWEEN-CHOICES, weak: true)
   }
   v(GAP-BETWEEN-QUESTIONS, weak: true)
