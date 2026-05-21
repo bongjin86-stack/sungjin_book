@@ -128,27 +128,102 @@
 
 ## 6. Preset 시스템
 
-각 디자인은 preset으로:
-- `presets/simply-classic/` — 심플리 고전소설 (IDML 자동 추출)
-- `presets/gonggam-rates/` — 공감연구소 정답률 (손박음)
-- 향후: `presets/sinkukpan/` — 신국판 단행본
-- ...
+### 핵심 컨셉 — Preset = "한 묶음"
 
-preset이 override하는 것:
-- 색 (accent)
-- 폰트 (serif 우선순위)
-- 간격 (space.*) 토큰
-- 정렬 indent (align-rule.choice-text-indent)
-- baseline grid (필요 시)
-- page 토큰 (columns, gutter, rule)
+> **IDML 1개 = 1 preset = 학원선생이 고르는 단위.**
 
-룰 자체는 STS 공통. preset은 룰의 값만 override.
+문제 스타일과 배경 스타일을 **분리하지 않는다**. 디자이너가 만든 한 묶음 안에 문제(L1) + 배경(L2)이 들어있고, 사용자는 한 번 클릭으로 통째 적용. Vellum 패턴 (Pier·Crimson 같은 서식이 폰트+마진+챕터 디자인 한 묶음).
+
+```
+preset (디자이너 1명의 1 묶음)
+  ├─ L1 부분: paragraph-styles + design-tokens (문제 식자)
+  └─ L2 부분: master-pages + decoration (배경·페이지)
+```
+
+### 이유
+
+- IDML이 원래 한 묶음으로 설계됨. 분리하면 디자이너 의도 깨짐.
+- 학원선생 입장 — "이 시험지처럼" 한 번 클릭이 쉬움. 조합 옵션 = 헷갈림.
+- 추출 1번 = preset 1개 완성. 분리하면 추출 N×M번.
+
+### 디렉토리 구조
+
+```
+/typst-templates/edu/presets/
+   simply-classic/              ← preset 1 (IDML "심플리 고전소설")
+      design-tokens.typ          토큰 (색·폰트·간격) — 사용자 override 가능
+      paragraph-styles.typ       L1 문제 스타일 (IDML 자동 추출)
+      master-pages.typ           L2 배경 스타일 (IDML 자동 추출, 신국판)
+      master-pages-a4.typ        L2 배경 스타일 (A4 변형)
+      colors.typ                 IDML 색 swatch
+      main.typ                   L1+L2 식자 시퀀스
+   gonggam-rates/               ← preset 2 (IDML "공감연구소 정답률")
+      ...
+   학원형-A/                    ← 앞으로 추가 (IDML 1개씩)
+      ...
+```
+
+### Preset 추가 = IDML 1개 추출
+
+새 디자인을 시스템에 넣는 흐름:
+1. 디자이너의 IDML 받음 (또는 PDF로부터 reverse engineer)
+2. `extract-idml-to-typst.py` 실행 → L1 부분 자동 추출
+3. `extract-story-content.py` 실행 → 본문 분석
+4. master spread 추출 → L2 배경 부분 (현재 R&D)
+5. design-tokens.typ로 토큰 분리
+6. 새 preset 디렉토리 완성
+
+### Tokens — 사용자 override 가능
+
+같은 preset 룰 위에 토큰만 바꿔 변형:
+- 색 (accent): 청색 → 빨강 → 초록
+- 폰트 (serif/sans): Source Han → Nanum → KoPub
+- 간격 (space): 더 좁게 / 더 넓게
+- 페이지 (columns): 1단/2단 토글
+
+> 룰 자체는 STS 공통. preset은 IDML에서 추출한 룰의 값. Tokens는 그 위에 사용자가 추가 override.
+
+### 학원선생 UI (구상)
+
+```
+[심플리 고전소설] [공감연구소 정답률] [학원형 A] [모의평가형] [모던]
+   ↑ 한 번 클릭 = preset 통째 적용 (문제 + 배경)
+
+미세 조정 (선택):
+  ┌─ 색 ─────────┐ ┌─ 폰트 ─────┐
+  │ ● ● ● ●     │ │ Pretendard │ ← 토큰 override
+  └─────────────┘ └────────────┘
+```
 
 ## 7. IDML 흡수 R&D
 
-IDML 원본을 STS 룰로 매핑하는 과정:
-1. **Style 추출** — paragraph-styles.typ 자동 생성 (✅)
-2. **Master 추출** — master-pages.typ 자동 생성 (✅)
-3. **Story 추출** — 본문 텍스트 → JSON (✅)
+IDML 원본을 STS preset으로 매핑하는 과정:
+1. **Style 추출** — paragraph-styles.typ 자동 생성 (✅ simply-classic)
+2. **Master 뼈대 추출** — master-pages.typ 자동 생성 (✅ simply-classic)
+3. **Story 콘텐츠 추출** — 본문 텍스트 → JSON (✅ extract-story-content.py)
 4. **Spread 페이지 매핑** — 페이지별 frame 위치 (미완)
-5. **배경 추출** — 자유 배치 frame, 색박스, 라인, decorations (TODO)
+5. **배경 깊이 추출** — Spread XML의 자유 frame, 색박스, 라인, decorations (내일)
+
+### 추출 우선순위 (Phase Ⅳ — 차별화)
+
+5번 (배경 깊이 추출)이 진짜 차별화. 같은 콘텐츠가 더 다양한 책 모양 → preset N개 늘림 → 학원선생 선택 폭.
+
+## 8. 비전 — 학원계 Vellum
+
+### 5 Phase 로드맵
+
+| Phase | 무엇 | 가치 |
+|--|--|--|
+| **Ⅰ** | MVP 흐름 (HWP 업로드 → simply-classic → PDF) | 학원선생 1명이 끝까지 사용 가능 |
+| **Ⅱ** | 문제 스타일 N개 (preset 5개) | 사용자가 골라봄 |
+| **Ⅲ** | 베타 출시 + 학원 커뮤니티 피드백 | 진짜 사용자 의견 |
+| **Ⅳ** | 조판/배경 R&D (IDML 깊이 추출) | 차별화 |
+| **Ⅴ** | Vellum-like 부가 (쪽번호·메타·챕터 누적·회원 저장) | 한 권 완성 도구 |
+
+### 진행 원칙
+
+> "한 흐름이 끝까지 동작" 우선. 그 다음 늘림.
+
+지금 위치: Ⅰ 진행 중 (Edu100 진입 화면 ✅, 작업 화면 simply-classic 통합은 Ⅱ에서).
+
+내일: Phase Ⅳ의 첫 한 발 = IDML 배경 추출.
