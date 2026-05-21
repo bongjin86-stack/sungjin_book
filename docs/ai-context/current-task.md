@@ -6,44 +6,82 @@
 
 ## 이어서 하자 트리거 — 다음 세션 첫 보고 (사용자가 "이어서 하자" 등으로 트리거하면 이 표 다시 띄울 것)
 
-### 진행 위치
-- design-system layer 박힘 (`typst-templates/edu/design-system/{paragraph-style,master-page}.typ`)
-- 첫 손 프리셋 박힘 (`typst-templates/edu/presets/gonggam-rates/` — 손으로 4파일)
-- 인디자인 IDML → typst 자동 추출기 첫 컷 박힘 (`experiments/idml-recon/extract-idml-to-typst.py`)
-- IDML 자동 추출 프리셋 박힘 (`typst-templates/edu/presets/simply-classic/` — 4파일 + master-spreads-dump.txt)
-- web/edu에 preset dispatch 박힘 (`web/lib/typst/compiler.ts` + `web/app/edu/page.tsx`)
-- CLI + 브라우저(:3003) 둘 다 simply-classic 컴파일 동작 확인
+### 진행 위치 (마지막 commit: `f860ffa`)
 
-### 원본 PDF p9 vs 우리 simply-classic 캡처 차이 (남은 작업)
-| 요소 | 원본 (인디자인) | 우리 (IDML 추출) |
+**토대 layer 박힘**
+- `typst-templates/edu/design-system/`
+  - `paragraph-style.typ` — apply-para-style(spec, body)
+  - `master-page.typ` — master-spec dict + footer/세로 라벨 헬퍼
+  - `typography.typ` — **한국어 책 조판 표준 atoms** (출처 6개 자료 인용)
+    - line-height 1.3/1.5/1.65/1.8 ratio
+    - tracking -0.030em (본문) / -0.050em (제목)
+    - size 8/9/10/11/13/18/28pt
+    - margin ratio (Van de Graaf canon)
+    - 본문 폭 한국어 28~50자
+    - ink-body #222 (완전 검정 아님)
+    - validate(spec) — 범위 밖 경고
+
+**프리셋 (2개)**
+- `presets/gonggam-rates/` — 공감연구소 정답률 페이지. 손 박음.
+- `presets/simply-classic/` — 심플리 고전소설. IDML 자동 추출 + master-pages.typ 자동 생성.
+
+**IDML → typst 추출기 (experiments/idml-recon/)**
+- `extract-idml-to-typst.py` — paragraph style 59 + character style 56 + 색 견본 11 + master spread frame 24
+- 보정 룰: CMYK→RGB (Japan Color 2001 LUT, 시안 100%→#0091db), 폰트 매핑 (Sandoll→Pretendard 우선), FontStyle→weight, 1/1000em→em
+- BasedOn 상속 (resolve_inheritance) — 부모 dict + 자식 override
+- master spread frame 좌표 분류 (classify_frame_position — left/right + top/middle/bottom + outer/inner/body)
+- master-pages.typ 자동 생성 (render_master_pages_typ)
+- **validate_spec** — IDML 추출값을 typography 표준 범위와 비교. simply-classic 118 styles 중 2건만 위반.
+- **visual-diff.py** — PIL+numpy 픽셀 diff (mean / changed ratio / similarity), 옵션 SSIM
+  - 첫 비교: 원본 PDF p9 vs 우리 edu-p2 → 유사도 **89.7%** (콘텐츠 다르니 제한적)
+
+**web 통합**
+- `/` (HomeSelect) → 단행본 / 교재 분기 카드
+- `/book` → 단행본 onboarding
+- `/edu` → 교재. preset dispatch + 더미 정답률 + 미리보기 max-w 760px
+
+### typography 표준 (검증된 자료)
+
+| 항목 | 표준값 | 출처 |
 |---|---|---|
-| 페이지 크기 220×300mm | ✅ | ✅ |
-| 마진 inside/outside/top/bottom 20/50/20/20mm | ✅ | ✅ |
-| 좌측 outer 라벨 `PART 2 / 같이하기` | ✅ | ❌ master spread frame 추출했지만 master-pages.typ에 안 박힘 |
-| 좌측 하단 푸터 `16 심플리[고전 소설]` | ✅ | ❌ 같은 이유 |
-| 청색 `[1~4]` 발문 라벨 | ✅ | ❌ 묶음 헤더가 본문과 합쳐짐 |
-| `[A] [B]` 좌측 박스 라벨 | ✅ | ❌ Z-창고 master에 있지만 spread 자유 frame 미추출 |
-| 본문 들여쓰기·단락 간격 | ✅ | ⚠️ 약함 |
-| 번호 큰 청색 산스 | ✅ | ⚠️ 색 시안 #00ffff 너무 밝음 |
-| 폰트 Sandoll | ✅ | ⚠️ Noto로 대체 |
+| 줄당 글자 수 | 한국어 30~45자 | Bringhurst, Butterick, Tinker(1963) |
+| line-height ratio | 한국어 1.5~1.7 | Bringhurst, Material Design, Apple HIG |
+| 자간 tracking | 한국어 본문 -0.03~-0.05em | 산돌·BG 폰트 가이드, KS X 1026 |
+| 마진 비율 (안:밖:위:아래) | 1:2:1:2 (Van de Graaf) | Bringhurst |
+| 금칙 처리 | KS X 1026 | 한국 산업 규격 |
+| 본문 색 | #222~#333 (회색 톤) | 인쇄·웹 표준 |
+| 폰트 페어링 | 명조 본문 + 산스 제목 | 출판 관례 |
 
-### 다음 한 발 후보 (b → a → c → d 순서 권고)
-- **(b) master spread 푸터/세로 라벨 자동 적용** ← 이미 추출 데이터 있음. 박기만 하면 +15% 모사. **첫 한 발 권고**
-- **(a) 색 변환 정확화** — CMYK 시안 100% → `#0091db` 매핑 룰. 한 줄 추가
-- **(c) BasedOn 상속** — 빈 paragraph style dict 채우기. 추출기 보강
-- **(d) Object style + Spread 자유 frame** — 가장 큰 R&D, 시간 더
+검증된 자료: practicaltypography.com, Bringhurst 책, WCAG 2.1, 한국타이포그라피학회, Material Design Typography, Tailwind `@tailwindcss/typography`.
+
+### 남은 작업
+
+**(α) 원본 IDML Story → JSON 추출 + 같은 콘텐츠로 시각 diff** ← **진짜 검증 가능해지는 한 발**
+- 지금 시각 diff 89.7%는 콘텐츠가 달라서 (고전소설 vs 시험지). 같은 콘텐츠로 비교해야 식자 정확도 측정 가능.
+
+**#21 character style 자동 적용** — Story XML의 CharacterStyleRange → 인라인 강조(밑줄·볼드·기호) 적용. 우리 데이터엔 강조 마커 없어 효과 제한적.
+
+**#22 Spread 자유 frame 추출** — 가장 큰 R&D. 개별 페이지의 [A]/[B] 박스, 자료 박스 같은 자유 배치 추출 + typst place() 매핑. 인디자인 자유 모델 vs typst 흐름 모델 매핑 룰 필요.
+
+**미세 조정** — 줄 사이 간격(leading 미세값), 단어 간격, 단락 간격 등 사용자가 시각 보면서 최소~최대 박기.
 
 ### 이번 세션 핵심 결정
-- IDML 흡수 = 디자인 입력 채널. SaaS 모델 (디자이너 1회 + 작가 반복)
-- 포지셔닝: **교재용 Vellum** — HWP → JSON → 인디자인 디자인 자동 입힘 → PDF
-- typst `set page` quirk 우회: master page는 `master-spec(...)` dict + `set page(..master)` spread (top-level 호출 강제)
-- 가장 큰 추출 단위 5개: master page / spread / paragraph style / object style / color → 각각 ~10~30% 임팩트
+
+- **R&D Phase 0 (토대)** — typography 표준이 IDML 추출 정확도의 검증 기준. 우리가 새로 발명 X, 검증된 자료 인용.
+- **시각 diff 도구가 진짜 검증 지표** — 객관 룰 통과 + 시각 점수 0.97+면 사람 분간 X.
+- **누적 정확도의 수학** — 디자인 N개 변환할수록 보정 룰 사전 ↑ → 자동 정확도 95%+ 도달 가능.
+- **폰트 라이센스** — Pretendard로 한국 무료 라이센스 우선. Sandoll류는 자동 매핑.
 
 ### 관련 memory
-- `product_vision_textbook_vellum.md`
-- `product_vision_idml_intake.md`
-- `product_vision_rule_based.md`
-- `project_track_pivot_2026_05.md`
+
+- `product_vision_textbook_vellum.md` — 교재용 Vellum 포지셔닝
+- `product_vision_idml_intake.md` — IDML = 디자인 입력 채널
+- `product_vision_rule_based.md` — AI 없는 결정론적 규칙
+- `project_track_pivot_2026_05.md` — 단행본 동결 / 교재 우선
+
+### 트리거 시 첫 한 발 권고
+
+**(α) 원본 IDML Story → JSON 추출** — 같은 콘텐츠로 시각 diff 측정. 그게 진짜 R&D 정확도 검증.
 
 ## 한 줄 정체성
 
