@@ -22,6 +22,12 @@ import argparse
 import sys
 from pathlib import Path
 
+# Windows 콘솔(cp949)에서도 한글/em-dash 출력 가능하게
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except AttributeError:
+    pass
+
 try:
     from PIL import Image
     import numpy as np

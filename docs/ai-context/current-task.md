@@ -1,12 +1,52 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-21 KST 저녁 (IDML 자동 추출기 첫 컷 + simply-classic 프리셋 + design-system 토대)
+> 마지막 업데이트: 2026-05-21 KST 밤 (Story XML → JSON + 첫 시각 diff 95.8%)
 > 단계: **교재 트랙 — IDML 흡수 R&D 진행 중**
 > 작업 브랜치: `main` 단일
 
-## 이어서 하자 트리거 — 다음 세션 첫 보고 (사용자가 "이어서 하자" 등으로 트리거하면 이 표 다시 띄울 것)
+## 이어서 하자 트리거 — 다음 세션 첫 보고
 
-### 진행 위치 (마지막 commit: `f860ffa`)
+### 진행 위치 (직전 한 발: 같은 콘텐츠 시각 diff)
+
+**Story XML → JSON 추출기 박힘** — `experiments/idml-recon/extract-story-content.py`
+- 720 Story 순회. ParagraphStyleRange 시퀀스 → (style, text) flat.
+- 스타일 leaf 매칭 (`문제와선지:문제` ≠ choice): 번호/문제/선지/지문/물음/보기/출처 분류.
+- 상태 기계로 정규화 → `{passages, questions}` 우리 평가원 스키마.
+- 결과: passages 31, questions 119 (1~59 번호. 같이하기+혼자하기 두 번씩).
+
+**같은 콘텐츠 시각 diff 첫 컷**
+- subset(passage p1 + Q1~4) → simply-classic main.typ → 37쪽 PDF.
+- 우리 p36 vs 원본 p13 (둘 다 1번 문제 있는 페이지) 비교.
+- **similarity 95.8%** (이전 89.7% 다른 콘텐츠 → +6.1%p).
+- diff PNG: 같은 텍스트가 다른 위치 — 단락→페이지 분할이 안 맞아 통째 어긋남. 식자 자체는 비슷.
+
+### 다음 한 발 후보
+
+**(β) 페이지 매핑** — 진짜 정확도 측정하려면 같은 콘텐츠가 같은 페이지에 박혀야.
+1. Story 순서를 Spreads/*.xml에서 페이지 위치로 정렬 (지금은 첫 number 기준).
+2. 한 IDML 페이지 = 어떤 Story들 = 어떤 문제 set → 그 set만 한 페이지에 식자.
+3. 페이지별 diff → 각 페이지 점수 평균.
+
+**(γ) passage body 정확화** — 첫 passage에 66KB 텍스트 모이는 버그. passage_header 안 잡힌 채 본문이 시작되면 default p1로 흡수. story 정렬 + passage_header 검출 강화.
+
+**(δ) 단순 첫 페이지 시뮬레이션** — IDML의 첫 본문 페이지(원본 p13)에 들어가는 콘텐츠만 우리 typst에 식자. set 단위 잘라 한 페이지에 박히게. 그 한 페이지 99% 도달이 첫 목표점.
+
+### 검증된 파이프라인
+
+```
+.idml
+  ↓ extract-idml-to-typst.py    (스타일/색/master)
+  ↓ extract-story-content.py    (Story → content.json)
+data.json
+  ↓ typst compile simply-classic/main.typ
+output/simply-classic-ours.pdf
+  ↓ PyMuPDF render PNG
+output/ours-q1.png
+  ↓ visual-diff.py vs reference-q1.png
+similarity 95.8%
+```
+
+### 진행 위치 (직전 직전 commit: `cd9821c`)
 
 **토대 layer 박힘**
 - `typst-templates/edu/design-system/`

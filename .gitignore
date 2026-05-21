@@ -4,10 +4,14 @@ node_modules/
 
 # Build / Output
 output/*.pdf
+output/*.png
 dist/
 build/
 .next/
 .astro/
+
+# IDML 시각 diff 입력 (저작권 콘텐츠 일시 dump)
+/data.json
 
 # Env
 .env
