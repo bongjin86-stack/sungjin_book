@@ -1,5 +1,5 @@
-import { BookSetupScreen } from "@/components/onboarding/BookSetupScreen";
+import { HomeSelect } from "@/components/onboarding/HomeSelect";
 
 export default function HomePage() {
-  return <BookSetupScreen />;
+  return <HomeSelect />;
 }
