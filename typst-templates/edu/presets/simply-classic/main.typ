@@ -11,6 +11,7 @@
 #import "/typst-templates/edu/design-system/paragraph-style.typ": apply-para-style
 #import "/typst-templates/edu/presets/simply-classic/paragraph-styles.typ": paragraph-styles
 #import "/typst-templates/edu/presets/simply-classic/master-pages.typ" as mp
+#import "/typst-templates/edu/presets/simply-classic/master-pages-a4.typ" as mp-a4
 #import "/typst-templates/edu/presets/simply-classic/design-tokens.typ" as t
 
 #let data = json("/data.json")
@@ -19,9 +20,20 @@
 // Layer 2: 단 수 — data.layout 또는 default 2단
 #let _layout = if "layout" in data and data.layout == "1col" { t.page-1col } else { t.page-2col }
 
+// Page master — meta.size: "A4" 면 A4, default는 신국판(simply-classic 원본)
+#let _meta = data.at("meta", default: (:))
+#let _master = if _meta.at("size", default: "") == "A4" {
+  mp-a4.a4-master(
+    title: _meta.at("title", default: ""),
+    subject: _meta.at("subject", default: ""),
+  )
+} else {
+  mp.main-master
+}
+
 
 // ── 페이지 + 글로벌 텍스트 ───────────────────────────────────────────────────
-#set page(..mp.main-master, columns: _layout.columns)
+#set page(.._master, columns: _layout.columns)
 #set text(font: t.font.serif, size: 10pt, lang: "ko", cjk-latin-spacing: auto)
 #set par(leading: 0.7em, justify: true)
 
