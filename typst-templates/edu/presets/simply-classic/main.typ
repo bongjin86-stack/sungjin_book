@@ -43,12 +43,24 @@
   ]
 }
 
+// 식자 간격 — 웹의 margin과 동일 개념. 미세 조정 슬라이더.
+#let GAP-NUMBER-TO-STEM = 4pt    // 큰 번호 ↔ 발문 사이
+#let GAP-STEM-TO-CHOICES = 6pt   // 발문 ↔ 첫 선지 사이
+#let GAP-BETWEEN-CHOICES = 2pt   // 선지 ↔ 선지 사이
+#let GAP-BOKI-AROUND = 6pt       // <보기> 박스 위아래
+
 #let render-question(q) = {
   apply-para-style(pick("번호(NEW)"), [#str(q.number)])
+  v(GAP-NUMBER-TO-STEM, weak: true)
   apply-para-style(pick("문제명조"), q.stem)
-  if "boki" in q { render-boki(q.boki) }
+  v(GAP-STEM-TO-CHOICES, weak: true)
+  if "boki" in q {
+    render-boki(q.boki)
+    v(GAP-BOKI-AROUND, weak: true)
+  }
   for c in q.choices {
     apply-para-style(pick("선지"), [#c.glyph#h(0.3em)#c.text])
+    v(GAP-BETWEEN-CHOICES, weak: true)
   }
 }
 

@@ -62,6 +62,13 @@
     inner-body
   }
 
+  // InDesign leading = baseline-to-baseline (CSS line-height와 동일).
+  // Typst par.leading = 줄 사이 *추가* 공간 (즉 line-height - font-size).
+  // 따라서 IDML 추출값에서 size를 빼야 같은 시각 결과.
+  let _idml-leading = _get(spec, "leading")
+  let _size = _get(spec, "size")
+  let _typst-leading = if _idml-leading > _size { _idml-leading - _size } else { _idml-leading }
+
   block(
     above: _get(spec, "space-before"),
     below: _get(spec, "space-after"),
@@ -72,7 +79,7 @@
   )[
     #set par(
       justify: a == "justify",
-      leading: _get(spec, "leading"),
+      leading: _typst-leading,
       first-line-indent: _get(spec, "first-line-indent"),
     )
     #set text(
