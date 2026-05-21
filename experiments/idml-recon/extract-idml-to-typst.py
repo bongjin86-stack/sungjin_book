@@ -255,6 +255,87 @@ def render_paragraph_styles_typ(paras: dict[str, dict], chars: dict[str, dict], 
     return "\n".join(lines)
 
 
+def extract_page_geometry(idml_dir: Path) -> tuple[float, float]:
+    """첫 MasterSpread의 Page GeometricBounds에서 페이지 너비/높이 추출.
+    GeometricBounds: "top left bottom right" (pt 단위)
+    """
+    for ms_path in sorted((idml_dir / "MasterSpreads").glob("*.xml")):
+        t = ET.parse(ms_path)
+        for el in t.getroot().iter():
+            tag = el.tag.split('}')[-1] if '}' in el.tag else el.tag
+            if tag == "Page":
+                bounds = el.get("GeometricBounds", "")
+                try:
+                    top, left, bottom, right = map(float, bounds.split())
+                    return (right - left, bottom - top)
+                except (ValueError, IndexError):
+                    pass
+    return (595.0, 842.0)  # A4 폴백
+
+
+def classify_frame_position(frame, page_w: float, page_h: float) -> str:
+    """frame의 spread 절대 좌표 → 페이지+위치 카테고리.
+    spread spine을 x=0으로 가정 (인디자인 facing pages 표준).
+
+    반환: "{page}-{vertical}-{horizontal}" 예: "left-bottom-outer"
+      page: left | right
+      vertical: top | middle | bottom
+      horizontal: outer | inner | body
+    """
+    if not frame["local_bbox"]:
+        return "unknown"
+    bx0, by0, bx1, by1 = frame["local_bbox"]
+    # spread 절대 좌상단
+    sx = frame["tx"] + bx0
+    sy = frame["ty"] + by0
+    w = bx1 - bx0
+    h = by1 - by0
+    cx = sx + w / 2  # spread 중심 x
+    cy = sy + h / 2  # spread 중심 y
+
+    # 페이지 분류 (spread x=0이 spine — IDML facing pages)
+    if cx < 0:
+        page = "left"
+        # 좌측 페이지 페이지-상대 x (0=outside, page_w=spine)
+        page_x = cx + page_w
+    else:
+        page = "right"
+        # 우측 페이지 페이지-상대 x (0=spine, page_w=outside)
+        page_x = cx
+
+    # 페이지-상대 y (spread y 중앙=0 → 페이지 top=0)
+    page_y = cy + page_h / 2
+
+    # 수직 카테고리
+    if page_y < page_h * 0.18:
+        vertical = "top"
+    elif page_y > page_h * 0.82:
+        vertical = "bottom"
+    else:
+        vertical = "middle"
+
+    # 수평 카테고리 (마진 폭은 페이지 너비의 25%로 가정)
+    edge = page_w * 0.25
+    if page == "left":
+        # outside = 좌측 가장자리 (page_x 작은 쪽)
+        if page_x < edge:
+            horizontal = "outer"
+        elif page_x > page_w - edge:
+            horizontal = "inner"
+        else:
+            horizontal = "body"
+    else:
+        # outside = 우측 가장자리 (page_x 큰 쪽)
+        if page_x > page_w - edge:
+            horizontal = "outer"
+        elif page_x < edge:
+            horizontal = "inner"
+        else:
+            horizontal = "body"
+
+    return f"{page}-{vertical}-{horizontal}"
+
+
 def extract_master_spreads(idml_dir: Path) -> dict:
     """MasterSpread XML 안 TextFrame + Story 텍스트 + 위치 추출."""
     masters = {}
@@ -337,18 +418,19 @@ def extract_master_spreads(idml_dir: Path) -> dict:
     return masters
 
 
-def render_master_spreads_dump(masters: dict, idml_name: str) -> str:
-    """추출 결과를 사람이 읽기 좋게 dump (yaml-ish)."""
+def render_master_spreads_dump(masters: dict, idml_name: str, page_w: float, page_h: float) -> str:
+    """추출 결과를 사람이 읽기 좋게 dump + 위치 분류."""
     lines = [
         f"# IDML 자동 추출 — {idml_name}",
-        "# Master Spread별 TextFrame + Story 콘텐츠 + 위치.",
-        "# 다음 단계: 좌표 분류 → master-pages.typ + main.typ 자동 생성.",
+        f"# 페이지 크기: {page_w:.2f} × {page_h:.2f} pt ({page_w*25.4/72:.1f} × {page_h*25.4/72:.1f} mm)",
+        "# Master Spread별 TextFrame + Story 콘텐츠 + 위치 + 분류.",
         "",
     ]
     for ms_name, ms_data in masters.items():
         lines.append(f"## master: {ms_name}")
         for i, f in enumerate(ms_data["frames"]):
-            lines.append(f"  - frame {i+1}:")
+            position = classify_frame_position(f, page_w, page_h)
+            lines.append(f"  - frame {i+1}: [{position}]")
             lines.append(f"      text: {f['text']!r}")
             lines.append(f"      applied-style: {f['applied_para_style']}")
             lines.append(f"      tx: {f['tx']:.2f}  ty: {f['ty']:.2f}")
@@ -358,7 +440,6 @@ def render_master_spreads_dump(masters: dict, idml_name: str) -> str:
                     f"({f['local_bbox'][0]:.2f}, {f['local_bbox'][1]:.2f}) "
                     f"→ ({f['local_bbox'][2]:.2f}, {f['local_bbox'][3]:.2f})"
                 )
-            # 회전 판별 (matrix a=cos, b=sin)
             a, b = f["rotation_a"], f["rotation_b"]
             if abs(a) < 0.01 and abs(b) > 0.9:
                 rot = "vertical (90°)" if b > 0 else "vertical (-90°)"
@@ -421,10 +502,11 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    # Master spread 추출 (TextFrame + Story 콘텐츠 + 위치)
+    # Master spread 추출 (TextFrame + Story 콘텐츠 + 위치) + 페이지 기하
+    page_w, page_h = extract_page_geometry(work_dir)
     masters = extract_master_spreads(work_dir)
     (out_dir / "master-spreads-dump.txt").write_text(
-        render_master_spreads_dump(masters, idml_path.name),
+        render_master_spreads_dump(masters, idml_path.name, page_w, page_h),
         encoding="utf-8",
     )
 
