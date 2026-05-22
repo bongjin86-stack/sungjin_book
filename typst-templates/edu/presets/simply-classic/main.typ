@@ -300,6 +300,8 @@
     if p != none { render-passage(p) }
     if p != none and p.at("layout_mode", default: "default") == "question-split" {
       colbreak(weak: true)
+    } else if p != none and g.qs.len() > 0 {
+      v(t.space.passage-to-questions, weak: true)
     }
     for q in g.qs { render-question(q) }
   }

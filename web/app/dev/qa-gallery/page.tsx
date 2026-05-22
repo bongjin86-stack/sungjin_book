@@ -218,47 +218,19 @@ export default function QaGalleryPage() {
                   style={{
                     display: "grid",
                     gap: 12,
-                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
                   }}
                 >
                   {history.map((group, index) => {
-                    const firstPage = group.pages[0];
                     return (
                       <article
                         key={group.id}
                         style={{
                           background: "#fff",
                           border: "1px solid #e0ded7",
-                          display: "grid",
-                          gridTemplateColumns: firstPage ? "86px 1fr" : "1fr",
-                          minHeight: 112,
                           overflow: "hidden",
                         }}
                       >
-                        {firstPage ? (
-                          <a
-                            href={firstPage.src}
-                            target="_blank"
-                            style={{
-                              background: "#e8e6df",
-                              display: "block",
-                              minHeight: 112,
-                              overflow: "hidden",
-                            }}
-                          >
-                            <img
-                              src={firstPage.src}
-                              alt={`${group.title} thumbnail`}
-                              style={{
-                                display: "block",
-                                height: "100%",
-                                objectFit: "cover",
-                                objectPosition: "top center",
-                                width: "100%",
-                              }}
-                            />
-                          </a>
-                        ) : null}
                         <div style={{ padding: 10 }}>
                           <div
                             style={{
@@ -302,17 +274,69 @@ export default function QaGalleryPage() {
                             {group.base} / {group.pages.length} page
                             {group.pages.length === 1 ? "" : "s"}
                           </p>
+                          {group.pages.length > 0 ? (
+                            <div
+                              style={{
+                                display: "grid",
+                                gap: 6,
+                                gridTemplateColumns: "repeat(auto-fill, minmax(54px, 1fr))",
+                                marginBottom: 8,
+                              }}
+                            >
+                              {group.pages.map((page) => (
+                                <a
+                                  key={page.src}
+                                  href={page.src}
+                                  target="_blank"
+                                  title={`${group.title} p${page.page}`}
+                                  style={{
+                                    background: "#e8e6df",
+                                    border: "1px solid #e0ded7",
+                                    display: "block",
+                                    height: 78,
+                                    overflow: "hidden",
+                                    position: "relative",
+                                  }}
+                                >
+                                  <img
+                                    src={page.src}
+                                    alt={`${group.title} p${page.page}`}
+                                    style={{
+                                      display: "block",
+                                      height: "100%",
+                                      objectFit: "cover",
+                                      objectPosition: "top center",
+                                      width: "100%",
+                                    }}
+                                  />
+                                  <span
+                                    style={{
+                                      background: "rgba(255,255,255,0.86)",
+                                      bottom: 2,
+                                      color: "#555",
+                                      fontSize: 10,
+                                      padding: "1px 3px",
+                                      position: "absolute",
+                                      right: 2,
+                                    }}
+                                  >
+                                    p{page.page}
+                                  </span>
+                                </a>
+                              ))}
+                            </div>
+                          ) : null}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                             {group.pdf ? (
                               <a href={group.pdf} target="_blank" style={{ fontSize: 12 }}>
                                 PDF
                               </a>
                             ) : null}
-                            {firstPage ? (
-                              <a href={firstPage.src} target="_blank" style={{ fontSize: 12 }}>
-                                PNG
+                            {group.pages.map((page) => (
+                              <a key={page.src} href={page.src} target="_blank" style={{ fontSize: 12 }}>
+                                p{page.page}
                               </a>
-                            ) : null}
+                            ))}
                           </div>
                         </div>
                       </article>

@@ -153,6 +153,7 @@
 
   // passage 영역
   after-passage-body:  6pt,   // passage 본문 → 출처
+  passage-to-questions: 14pt,  // passage 박스 → 첫 문제. 번호가 박스에 붙지 않게 확보.
   after-source:        4pt,   // 출처 → 낱말
 )
 
