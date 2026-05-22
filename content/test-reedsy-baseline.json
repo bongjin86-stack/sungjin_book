@@ -1,0 +1,38 @@
+{
+  "schema": "sungjin-book/v1",
+  "meta": {
+    "title": "테스트 책",
+    "subtitle": "Reedsy/Cambric 베이스라인 적용 테스트",
+    "author": "성진북스 베타",
+    "publisher": "성진북스",
+    "options": {
+      "showChapterNumber": true,
+      "bodyFont": "serif",
+      "bodyFontSize": "10pt",
+      "lineSpacing": "normal",
+      "showPageNumber": true,
+      "pageNumberPosition": "bottom-outside",
+      "hideChapterStartPageNumber": true,
+      "paragraphIndent": true,
+      "dropCaps": true,
+      "runningHeader": true
+    }
+  },
+  "blocks": [
+    { "type": "half-title", "title": "테스트 책", "subtitle": "Reedsy/Cambric 베이스라인 적용 테스트", "author": "성진북스 베타", "publisher": "성진북스" },
+    { "type": "copyright", "body": "초판 1쇄 2026년 5월 20일\n저자 성진북스 베타\n발행 성진북스\nCopyright © 2026 성진북스" },
+    { "type": "toc", "entries": [
+      { "chapterNum": "제 1 장", "title": "처음" },
+      { "chapterNum": "제 2 장", "title": "다음" }
+    ] },
+    { "type": "matter-page", "title": "서문", "body": "이 책은 짧은 서문이다. 페이지 위쪽에 덜렁이지 않고 가운데 정렬되어 보여야 한다." },
+    { "type": "chapter", "number": 1, "title": "처음" },
+    { "type": "paragraph", "text": "첫 단락이다. 드롭캡이 켜져 있다면 이 단락의 첫 글자가 크게 보일 것이다. 한국어 본문의 첫 인상을 의도적으로 키워 책 시작의 시각적 신호를 분명히 한다." },
+    { "type": "paragraph", "text": "둘째 단락부터는 들여쓰기가 적용된다. 한국 단행본 표준이다. 양끝 정렬·금칙·한영 자간 같은 KLREQ 룰이 본진 Typst와 우리 템플릿에서 자동으로 처리된다." },
+    { "type": "paragraph", "text": "셋째 단락이다. 러닝 헤더가 켜져 있으면 짝수 페이지에는 책 제목이, 홀수 페이지에는 챕터 제목이 나타난다. 챕터 시작 페이지에는 헤더가 없다." },
+    { "type": "chapter", "number": 2, "title": "다음" },
+    { "type": "paragraph", "text": "두 번째 챕터의 첫 단락이다. 드롭캡이 다시 적용된다. 챕터 첫 페이지 위쪽 여백은 8em에서 5em으로 줄였다. 너무 많이 비어있던 인상을 개선했다." },
+    { "type": "paragraph", "text": "이 단락은 드롭캡 없이 일반 단락으로 렌더된다. 어절 단위 줄바꿈(KLREQ G3)이 적용된다." },
+    { "type": "matter-page", "title": "저자 소개", "body": "성진북스 베타 — 한국어 단행본 자동 조판 도구를 만드는 중. 짧은 저자 소개는 가운데 정렬된다." }
+  ]
+}

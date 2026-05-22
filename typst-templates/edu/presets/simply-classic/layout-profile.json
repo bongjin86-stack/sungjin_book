@@ -1,0 +1,94 @@
+{
+  "preset": "simply-classic",
+  "version": 1,
+  "page": {
+    "width_pt": 623.62,
+    "height_pt": 850.39,
+    "width_mm": 220.0,
+    "height_mm": 300.0
+  },
+  "body_frame": {
+    "x_pt": 141.73,
+    "y_pt": 56.69,
+    "w_pt": 240.94,
+    "h_pt": 729.84,
+    "columns_most_common": 1,
+    "gutter_pt_median": 0.0
+  },
+  "stats": {
+    "total_text_frames": 224,
+    "body_candidate_frames": 100,
+    "applied_masters_used_top10": {
+      "u9106e": 60,
+      "u436de": 38,
+      "n": 2
+    }
+  },
+  "samples": [
+    {
+      "spread": "Spread_u7778c.xml",
+      "page": "4",
+      "applied_master": "n",
+      "self": "u8566e",
+      "story": "u85671",
+      "x": 73.4173228346458,
+      "y": 242.92913385826796,
+      "w": 453.54330708661416,
+      "h": 491.98769821362464,
+      "columns": 2,
+      "gutter": 22.67716535433071
+    },
+    {
+      "spread": "Spread_u7778c.xml",
+      "page": "5",
+      "applied_master": "n",
+      "self": "u856b5",
+      "story": "u85671",
+      "x": 85.03937007874018,
+      "y": 242.92913385826887,
+      "w": 453.5433070866143,
+      "h": 467.7165354330699,
+      "columns": 2,
+      "gutter": 22.67716535433071
+    },
+    {
+      "spread": "Spread_u93569.xml",
+      "page": "12",
+      "applied_master": "u9106e",
+      "self": "u93f90",
+      "story": "u93f93",
+      "x": 56.84291338582682,
+      "y": 76.18152658057261,
+      "w": 240.94488188976436,
+      "h": 679.2515442855677,
+      "columns": 1,
+      "gutter": 0.0
+    },
+    {
+      "spread": "Spread_u93569.xml",
+      "page": "12",
+      "applied_master": "u9106e",
+      "self": "u93fa7",
+      "story": "u93f93",
+      "x": 325.41732283464586,
+      "y": 56.692913385826614,
+      "w": 240.64488188976378,
+      "h": 740.5800273142463,
+      "columns": 1,
+      "gutter": 0.0
+    },
+    {
+      "spread": "Spread_u93569.xml",
+      "page": "13",
+      "applied_master": "u9106e",
+      "self": "u9408c",
+      "story": "u94024",
+      "x": 325.98425196850394,
+      "y": 56.69291338582843,
+      "w": 240.9448818897639,
+      "h": 737.007874015746,
+      "columns": 1,
+      "gutter": 0.0
+    }
+  ]
+}

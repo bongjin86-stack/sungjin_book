@@ -1,0 +1,184 @@
+{
+  "generatedAt": "2026-05-22T08:37:55.175Z",
+  "sourceDir": "experiments/idml-recon",
+  "groups": [
+    {
+      "id": "block-engine-product",
+      "title": "Block Engine Product QA",
+      "description": "Product-quality block engine check. Same HWP sample rebuilt as preset blocks[] and rendered through simply-classic.",
+      "base": "block-engine-product",
+      "updatedAt": "2026-05-22T08:37:21.921Z",
+      "pdf": "/dev/qa-gallery/block-engine-product/block-engine-product.pdf",
+      "pages": [
+        {
+          "page": 1,
+          "src": "/dev/qa-gallery/block-engine-product/block-engine-product-p1.png"
+        },
+        {
+          "page": 2,
+          "src": "/dev/qa-gallery/block-engine-product/block-engine-product-p2.png"
+        },
+        {
+          "page": 3,
+          "src": "/dev/qa-gallery/block-engine-product/block-engine-product-p3.png"
+        },
+        {
+          "page": 4,
+          "src": "/dev/qa-gallery/block-engine-product/block-engine-product-p4.png"
+        },
+        {
+          "page": 5,
+          "src": "/dev/qa-gallery/block-engine-product/block-engine-product-p5.png"
+        }
+      ]
+    },
+    {
+      "id": "block-engine-smoke",
+      "title": "Block Engine smoke test",
+      "description": "Small connection test for preset block buttons -> blocks[] -> chapters[] -> PDF.",
+      "base": "block-engine-smoke",
+      "updatedAt": "2026-05-22T08:25:56.483Z",
+      "pdf": "/dev/qa-gallery/block-engine-smoke/block-engine-smoke.pdf",
+      "pages": [
+        {
+          "page": 1,
+          "src": "/dev/qa-gallery/block-engine-smoke/block-engine-smoke-p1.png"
+        },
+        {
+          "page": 2,
+          "src": "/dev/qa-gallery/block-engine-smoke/block-engine-smoke-p2.png"
+        },
+        {
+          "page": 3,
+          "src": "/dev/qa-gallery/block-engine-smoke/block-engine-smoke-p3.png"
+        }
+      ]
+    },
+    {
+      "id": "hwp-simply-classic-debug",
+      "title": "Latest HWP -> simply-classic sample",
+      "description": "Latest product-quality check. HWP content rendered through the simply-classic preset.",
+      "base": "hwp-simply-classic-debug",
+      "updatedAt": "2026-05-22T07:16:28.056Z",
+      "pdf": "/dev/qa-gallery/hwp-simply-classic-debug/hwp-simply-classic-debug.pdf",
+      "pages": [
+        {
+          "page": 1,
+          "src": "/dev/qa-gallery/hwp-simply-classic-debug/hwp-simply-classic-debug-p1.png"
+        },
+        {
+          "page": 2,
+          "src": "/dev/qa-gallery/hwp-simply-classic-debug/hwp-simply-classic-debug-p2.png"
+        },
+        {
+          "page": 3,
+          "src": "/dev/qa-gallery/hwp-simply-classic-debug/hwp-simply-classic-debug-p3.png"
+        }
+      ]
+    },
+    {
+      "id": "test-chapters",
+      "title": "Chapters schema smoke test",
+      "description": "Older test for the chapters[] EduBook JSON flow. Useful for schema/render regression checks.",
+      "base": "test-chapters",
+      "updatedAt": "2026-05-22T02:21:07.883Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 1,
+          "src": "/dev/qa-gallery/test-chapters/test-chapters-p1.png"
+        },
+        {
+          "page": 2,
+          "src": "/dev/qa-gallery/test-chapters/test-chapters-p2.png"
+        },
+        {
+          "page": 3,
+          "src": "/dev/qa-gallery/test-chapters/test-chapters-p3.png"
+        },
+        {
+          "page": 4,
+          "src": "/dev/qa-gallery/test-chapters/test-chapters-p4.png"
+        },
+        {
+          "page": 5,
+          "src": "/dev/qa-gallery/test-chapters/test-chapters-p5.png"
+        }
+      ]
+    },
+    {
+      "id": "test-single",
+      "title": "Single-book schema smoke test",
+      "description": "Older test for the one-book/simple EduBook JSON flow.",
+      "base": "test-single",
+      "updatedAt": "2026-05-22T02:16:54.690Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 1,
+          "src": "/dev/qa-gallery/test-single/test-single-p1.png"
+        }
+      ]
+    },
+    {
+      "id": "diff-integrated",
+      "title": "Visual diff: original vs integrated",
+      "description": "Pixel diff from an earlier IDML background/body integration check.",
+      "base": "diff-integrated",
+      "updatedAt": "2026-05-22T01:24:39.205Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 12,
+          "src": "/dev/qa-gallery/diff-integrated/diff-integrated-p12.png"
+        }
+      ]
+    },
+    {
+      "id": "ours-integrated",
+      "title": "Our integrated render",
+      "description": "Our rendered page from the earlier IDML integration check.",
+      "base": "ours-integrated",
+      "updatedAt": "2026-05-22T01:24:38.731Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 12,
+          "src": "/dev/qa-gallery/ours-integrated/ours-integrated-p12.png"
+        }
+      ]
+    },
+    {
+      "id": "ref-orig",
+      "title": "Original IDML reference pages",
+      "description": "Original IDML/PDF reference pages used for visual comparison.",
+      "base": "ref-orig",
+      "updatedAt": "2026-05-22T01:08:05.244Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 12,
+          "src": "/dev/qa-gallery/ref-orig/ref-orig-p12.png"
+        },
+        {
+          "page": 13,
+          "src": "/dev/qa-gallery/ref-orig/ref-orig-p13.png"
+        }
+      ]
+    },
+    {
+      "id": "diff-p9-vs-edu",
+      "title": "Old visual diff experiment",
+      "description": "Old comparison image from an early layout experiment.",
+      "base": "diff-p9-vs-edu",
+      "updatedAt": "2026-05-21T10:41:26.307Z",
+      "pdf": null,
+      "pages": [
+        {
+          "page": 2,
+          "src": "/dev/qa-gallery/diff-p9-vs-edu/diff-p9-vs-edu-p2.png"
+        }
+      ]
+    }
+  ]
+}

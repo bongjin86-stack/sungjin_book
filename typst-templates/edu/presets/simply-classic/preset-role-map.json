@@ -1,0 +1,439 @@
+{
+  "preset": "simply-classic",
+  "version": 1,
+  "masters": {
+    "part-cover": [
+      "3-에필로그",
+      "1-파트1"
+    ],
+    "passages": [
+      "2-파트2-같이하기",
+      "2*-파트2-혼자하기"
+    ],
+    "answer-key": [
+      "5-빠른정답"
+    ],
+    "other": [
+      "Z-창고"
+    ]
+  },
+  "roles": {
+    "boki.body": [
+      "문제와선지:보기",
+      "문제와선지:보기 (가운데)",
+      "문제와선지:보기(내)",
+      "보기(NEW)",
+      "문제와선지:보기 (들여쓰기X)",
+      "보기명조",
+      "보기박스",
+      "보기",
+      "문제:보기:보기"
+    ],
+    "question.stem": [
+      "문제와선지:문제",
+      "문제(NEW)",
+      "문제명조",
+      "문제 Copy"
+    ],
+    "passage.body": [
+      "지문:지문",
+      "지문:앞&중략부분의 줄거리",
+      "지문:지문(NEW)",
+      "지문:지문_내어쓰기",
+      "지문 Copy",
+      "지문:지문(첫)",
+      "지문:참조",
+      "지문:앞부분의 줄거리",
+      "지문:중략",
+      "지문:지은이, <수>",
+      "지문:지문(A) 들여쓰기",
+      "지문:참조(2줄이상)",
+      "지문:지문(A) 내여쓰기",
+      "지문:지은이 & 1수",
+      "지문-언내",
+      "지문:(가)",
+      "지문:지문 내어쓰기",
+      "지문:지문_문제",
+      "지문:지문(내)",
+      "지문:지문(NEW) 내어쓰기",
+      "지문:지문-(꺽)"
+    ],
+    "question.choice": [
+      "문제와선지:선지",
+      "선지(NEW)",
+      "선지"
+    ],
+    "question.number": [
+      "문제와선지:번호",
+      "번호",
+      "번호(NEW)"
+    ],
+    "passage.prompt": [
+      "지문:물음에답하시오",
+      "물음에답하시오"
+    ],
+    "passage.source": [
+      "STEP 1 & 공통:출처"
+    ]
+  },
+  "role_evidence": {
+    "boki.body": [
+      {
+        "name": "문제와선지:보기",
+        "reason": "exact: '문제와선지:보기'",
+        "usage": 32,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "03 Lt"
+      },
+      {
+        "name": "문제와선지:보기 (가운데)",
+        "reason": "exact: '문제와선지:보기 (가운데)'",
+        "usage": 4,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "문제와선지:보기(내)",
+        "reason": "exact: '문제와선지:보기(내)'",
+        "usage": 4,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "03 Lt"
+      },
+      {
+        "name": "보기(NEW)",
+        "reason": "exact: '보기(NEW)'",
+        "usage": 2,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "03 Lt"
+      },
+      {
+        "name": "문제와선지:보기 (들여쓰기X)",
+        "reason": "exact: '문제와선지:보기 (들여쓰기X)'",
+        "usage": 2,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "03 Lt"
+      },
+      {
+        "name": "보기명조",
+        "reason": "exact: '보기명조'",
+        "usage": 0,
+        "size_pt": 10.5,
+        "font": "Yoon가변 윤명조105Std_OTF",
+        "weight": "25"
+      },
+      {
+        "name": "보기박스",
+        "reason": "leaf-regex: '^보기'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "보기",
+        "reason": "exact: '보기'",
+        "usage": 0,
+        "size_pt": 10.0,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "문제:보기:보기",
+        "reason": "exact: '문제:보기:보기'",
+        "usage": 0,
+        "size_pt": 8.0,
+        "font": "Yoon가변 윤고딕300Std_OTF",
+        "weight": "20"
+      }
+    ],
+    "question.stem": [
+      {
+        "name": "문제와선지:문제",
+        "reason": "exact: '문제와선지:문제'",
+        "usage": 120,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "05 Md"
+      },
+      {
+        "name": "문제(NEW)",
+        "reason": "exact: '문제(NEW)'",
+        "usage": 22,
+        "size_pt": null,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "04 Rg"
+      },
+      {
+        "name": "문제명조",
+        "reason": "exact: '문제명조'",
+        "usage": 0,
+        "size_pt": 9.7,
+        "font": "Yoon가변 윤고딕105Std_OTF",
+        "weight": ""
+      },
+      {
+        "name": "문제 Copy",
+        "reason": "exact: '문제 Copy'",
+        "usage": 0,
+        "size_pt": 9.5,
+        "font": "",
+        "weight": ""
+      }
+    ],
+    "passage.body": [
+      {
+        "name": "지문:지문",
+        "reason": "exact: '지문:지문'",
+        "usage": 362,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "지문:앞&중략부분의 줄거리",
+        "reason": "exact: '지문:앞&중략부분의 줄거리'",
+        "usage": 45,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "05 Md"
+      },
+      {
+        "name": "지문:지문(NEW)",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 37,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "지문:지문_내어쓰기",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 36,
+        "size_pt": 9.0,
+        "font": "Sandoll 명조Neo1",
+        "weight": "01 Ul"
+      },
+      {
+        "name": "지문 Copy",
+        "reason": "exact: '지문 Copy'",
+        "usage": 24,
+        "size_pt": 9.0,
+        "font": "Yoon가변 윤명조300Std_OTF",
+        "weight": "20"
+      },
+      {
+        "name": "지문:지문(첫)",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 15,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "지문:참조",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 14,
+        "size_pt": 8.5,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "03 Lt"
+      },
+      {
+        "name": "지문:앞부분의 줄거리",
+        "reason": "exact: '지문:앞부분의 줄거리'",
+        "usage": 10,
+        "size_pt": 9.7,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "06 Sb"
+      },
+      {
+        "name": "지문:중략",
+        "reason": "exact: '지문:중략'",
+        "usage": 10,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "03 Bold"
+      },
+      {
+        "name": "지문:지은이, <수>",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 10,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:지문(A) 들여쓰기",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 8,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:참조(2줄이상)",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 4,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:지문(A) 내여쓰기",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 4,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:지은이 & 1수",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 4,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문-언내",
+        "reason": "exact: '지문-언내'",
+        "usage": 0,
+        "size_pt": 10.0,
+        "font": "Yoon가변 윤고딕300Std_OTF",
+        "weight": "30"
+      },
+      {
+        "name": "지문:(가)",
+        "reason": "exact: '지문:(가)'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "",
+        "weight": "03 Bold"
+      },
+      {
+        "name": "지문:지문 내어쓰기",
+        "reason": "exact: '지문:지문 내어쓰기'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:지문_문제",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 0,
+        "size_pt": 9.2,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "05 Md"
+      },
+      {
+        "name": "지문:지문(내)",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      },
+      {
+        "name": "지문:지문(NEW) 내어쓰기",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 0,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "지문:지문-(꺽)",
+        "reason": "path-regex: '^지문(:|$)'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "",
+        "weight": ""
+      }
+    ],
+    "question.choice": [
+      {
+        "name": "문제와선지:선지",
+        "reason": "exact: '문제와선지:선지'",
+        "usage": 267,
+        "size_pt": 10.0,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "선지(NEW)",
+        "reason": "exact: '선지(NEW)'",
+        "usage": 16,
+        "size_pt": null,
+        "font": "Sandoll 명조",
+        "weight": "01 Light"
+      },
+      {
+        "name": "선지",
+        "reason": "exact: '선지'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "Yoon가변 윤명조300Std_OTF",
+        "weight": "20"
+      }
+    ],
+    "question.number": [
+      {
+        "name": "문제와선지:번호",
+        "reason": "exact: '문제와선지:번호'",
+        "usage": 120,
+        "size_pt": 14.0,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "08 Eb"
+      },
+      {
+        "name": "번호",
+        "reason": "exact: '번호'",
+        "usage": 0,
+        "size_pt": 14.0,
+        "font": "나눔고딕",
+        "weight": "ExtraBold"
+      },
+      {
+        "name": "번호(NEW)",
+        "reason": "exact: '번호(NEW)'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "08 Eb"
+      }
+    ],
+    "passage.prompt": [
+      {
+        "name": "지문:물음에답하시오",
+        "reason": "exact: '지문:물음에답하시오'",
+        "usage": 30,
+        "size_pt": 10.0,
+        "font": "Sandoll 고딕Neo1",
+        "weight": "05 Md"
+      },
+      {
+        "name": "물음에답하시오",
+        "reason": "exact: '물음에답하시오'",
+        "usage": 0,
+        "size_pt": null,
+        "font": "Yoon가변 윤고딕200Std_OTF",
+        "weight": "30"
+      }
+    ],
+    "passage.source": [
+      {
+        "name": "STEP 1 & 공통:출처",
+        "reason": "exact: 'STEP 1 & 공통:출처'",
+        "usage": 0,
+        "size_pt": 8.0,
+        "font": "",
+        "weight": "08 Eb"
+      }
+    ]
+  }
+}
