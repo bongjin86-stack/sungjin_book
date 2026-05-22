@@ -140,6 +140,8 @@ export const PassageBlockSchema = z.object({
   range: z.tuple([z.number().int(), z.number().int()]).nullable().default(null),
   header: z.string().default(""),
   body: z.string().default(""),
+  body_rich: RichTextSchema.optional(),
+  layout_mode: PassageLayoutModeSchema.default("default"),
 });
 
 export const QuestionsBlockSchema = z.object({

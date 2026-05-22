@@ -27,6 +27,8 @@ function slugify(name) {
 
 function titleFromBase(base) {
   const known = {
+    "block-engine-product": "Block Engine Product QA",
+    "block-engine-smoke": "Block Engine smoke test",
     "hwp-simply-classic-debug": "Latest HWP -> simply-classic sample",
     "test-chapters": "Chapters schema smoke test",
     "test-single": "Single-book schema smoke test",
@@ -45,6 +47,10 @@ function titleFromBase(base) {
 
 function descriptionFromBase(base) {
   const known = {
+    "block-engine-product":
+      "Product-quality block engine check. Same HWP sample rebuilt as preset blocks[] and rendered through simply-classic.",
+    "block-engine-smoke":
+      "Small connection test for preset block buttons -> blocks[] -> chapters[] -> PDF.",
     "hwp-simply-classic-debug":
       "Latest product-quality check. HWP content rendered through the simply-classic preset.",
     "test-chapters":

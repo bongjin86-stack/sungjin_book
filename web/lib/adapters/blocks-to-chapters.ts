@@ -51,7 +51,8 @@ export function blocksToChapters(blocks: Block[]): Chapter[] {
           range: b.range,
           header: b.header,
           body: b.body,
-          layout_mode: "default",
+          body_rich: b.body_rich,
+          layout_mode: b.layout_mode,
         });
         break;
 

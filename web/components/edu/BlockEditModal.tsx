@@ -141,6 +141,7 @@ function PassageForm({
           range: parsedRange(),
           header: header.trim(),
           body: body.trim(),
+          layout_mode: initial?.layout_mode ?? "default",
         })
       }
       canSave={canSave}
