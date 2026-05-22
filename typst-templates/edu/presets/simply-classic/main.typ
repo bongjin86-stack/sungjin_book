@@ -40,6 +40,9 @@
 
 
 // ── 페이지 + 글로벌 텍스트 ───────────────────────────────────────────────────
+//
+// 기본 페이지는 본문(passages) 기준. chapter loop 안에서 type 따라 set page 갱신.
+// part-cover/answer-key는 1단 + background 제거 (자기 라벨을 직접 그리므로 master 라벨과 충돌 방지).
 #set page(.._master, columns: _layout.columns)
 #set text(font: t.font.serif, size: 10pt, lang: "ko", cjk-latin-spacing: auto)
 #set par(leading: 0.7em, justify: true)
@@ -238,13 +241,21 @@
 }
 
 // ── 디스패치 ────────────────────────────────────────────────────────────────
+//
+// chapter type별 페이지 master + columns 갱신:
+//   part-cover  → 1단, background 제거 (자기 PART 라벨 직접 그림)
+//   passages    → 기본 _master + _layout.columns
+//   answer-key  → master_5_빠른정답 + 1단 + background 제거
 #for c in _chapters {
   if c.type == "part-cover" {
+    set page(.._master, columns: 1, background: none)
     render-part-cover(c.label, c.at("subtitle", default: ""))
   } else if c.type == "passages" {
+    set page(.._master, columns: _layout.columns)
     render-passages-chapter(c.at("passages", default: ()),
                             c.at("questions", default: ()))
   } else if c.type == "answer-key" {
+    set page(..mp.master_5_빠른정답, columns: 1, background: none)
     render-answer-key(c.at("answers", default: (:)))
   }
 }
