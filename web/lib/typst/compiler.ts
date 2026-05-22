@@ -138,7 +138,12 @@ async function loadTestPaperSources(): Promise<void> {
     "/typst-templates/edu/presets/simply-classic/colors.typ",
     "/typst-templates/edu/presets/simply-classic/paragraph-styles.typ",
     "/typst-templates/edu/presets/simply-classic/master-pages.typ",
+    "/typst-templates/edu/presets/simply-classic/master-pages-a4.typ",
+    "/typst-templates/edu/presets/simply-classic/design-tokens.typ",
+    "/typst-templates/edu/presets/simply-classic/decorations.typ",
     "/typst-templates/edu/presets/simply-classic/main.typ",
+    // design-system 공통 atoms
+    "/typst-templates/edu/design-system/typography.typ",
   ];
   const srcs = await Promise.all(
     paths.map((p) =>

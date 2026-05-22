@@ -9,7 +9,16 @@
 ### 한 줄 위치
 **IDML 배경 자동 추출기 박힘 + main.typ background 통합 작동 (95.2%). preset 컨셉 + 입력 형식 결정 박힘. 다음 한 발 = 콘텐츠 JSON에 chapters 필드 + main.typ 분기.**
 
-### 2026-05-22 오전 박힌 것 (이 세션)
+### 2026-05-22 오전 박힌 것 (이 세션 — 외부 점검 통과)
+
+**연결부 봉합 (외부 코드 점검 지시 받아 박음)**
+- 웹 미러 동기화: `node web/scripts/copy-typst-templates.mjs` 실행. decorations·design-tokens·master-pages-a4 미러됨.
+- `web/lib/typst/compiler.ts` loadTestPaperSources에 simply-classic 새 의존 4개 추가 (design-tokens / master-pages-a4 / decorations / typography).
+- `web/lib/schema/edu-book.ts` Zod 스키마 박음 — chapter type 3개(part-cover/passages/answer-key) discriminatedUnion + meta + options + parseEduBook 헬퍼.
+- 샘플 JSON 2개 — `web/public/dev/edu/sample-{single,chapter}-book.json`.
+- npm.cmd run build 통과 (Next.js 14.2.35).
+
+### 2026-05-22 오전 박힌 것 (R&D)
 
 **IDML 배경 추출 R&D — Phase Ⅳ 첫 한 발**
 - `experiments/idml-recon/scout-spreads.py` — 59 spread 한눈 정찰

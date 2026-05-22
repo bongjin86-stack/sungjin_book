@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "title": "심플리 고전소설 전권",
+    "author": "성진학원",
+    "subject": "국어",
+    "watermark": "성진학원"
+  },
+  "preset": "simply-classic",
+  "options": { "size": "A4" },
+  "chapters": [
+    {
+      "type": "part-cover",
+      "label": "PART 1",
+      "subtitle": "프롤로그 — 고전소설 입문"
+    },
+    {
+      "type": "passages",
+      "passages": [
+        {
+          "id": "passage-01",
+          "range": [1, 2],
+          "header": "다음 글을 읽고 물음에 답하시오.",
+          "body": "이때 형주 자사 황공이 부친 황성이 흉노에게 잡혀 갔다는 소식을 듣고 분노하여 군사를 일으켜 정벌하려 하니, 모든 신하가 만류하되 황 자사 듣지 아니하더라."
+        }
+      ],
+      "questions": [
+        {
+          "number": 1,
+          "passage_id": "passage-01",
+          "stem": "윗글의 인물에 대한 설명으로 적절한 것은?",
+          "score": null,
+          "choices": [
+            { "index": 1, "glyph": "①", "text": "황 자사는 신하의 충고를 받아들였다.", "has_placeholder": false },
+            { "index": 2, "glyph": "②", "text": "황 자사는 부친을 구하려는 사명감을 지녔다.", "has_placeholder": false },
+            { "index": 3, "glyph": "③", "text": "황 자사는 흉노와의 화친을 도모하였다.", "has_placeholder": false },
+            { "index": 4, "glyph": "④", "text": "황 자사는 형주의 안정을 우선시했다.", "has_placeholder": false },
+            { "index": 5, "glyph": "⑤", "text": "황 자사는 부친을 원망하고 있다.", "has_placeholder": false }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        },
+        {
+          "number": 2,
+          "passage_id": "passage-01",
+          "stem": "윗글의 서술상 특징으로 적절하지 않은 것은?",
+          "score": 3,
+          "choices": [
+            { "index": 1, "glyph": "①", "text": "사건이 시간 순서대로 전개된다.", "has_placeholder": false },
+            { "index": 2, "glyph": "②", "text": "전지적 작가 시점이 사용되었다.", "has_placeholder": false },
+            { "index": 3, "glyph": "③", "text": "대화를 통해 인물의 갈등이 드러난다.", "has_placeholder": false },
+            { "index": 4, "glyph": "④", "text": "역사적 사건이 배경으로 활용된다.", "has_placeholder": false },
+            { "index": 5, "glyph": "⑤", "text": "독백을 통해 내면이 드러난다.", "has_placeholder": false }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        }
+      ]
+    },
+    {
+      "type": "part-cover",
+      "label": "PART 2",
+      "subtitle": "본격 — 작품 깊이 읽기"
+    },
+    {
+      "type": "passages",
+      "passages": [
+        {
+          "id": "passage-02",
+          "range": [3, 3],
+          "header": "다음 글을 읽고 물음에 답하시오.",
+          "body": "심청이 인당수에 몸을 던지매 검은 물결이 잠깐 갈라지고 황금빛 광채가 둘러쌌으니, 이는 천상의 도움이라."
+        }
+      ],
+      "questions": [
+        {
+          "number": 3,
+          "passage_id": "passage-02",
+          "stem": "윗글에 드러난 인물의 행위로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            { "index": 1, "glyph": "①", "text": "자기 희생을 통해 부모를 구하려 한다.", "has_placeholder": false },
+            { "index": 2, "glyph": "②", "text": "친지의 권유로 결단을 내린다.", "has_placeholder": false },
+            { "index": 3, "glyph": "③", "text": "운명에 순응하여 체념한다.", "has_placeholder": false },
+            { "index": 4, "glyph": "④", "text": "외부 위협에서 도피한다.", "has_placeholder": false },
+            { "index": 5, "glyph": "⑤", "text": "복수를 위해 길을 떠난다.", "has_placeholder": false }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        }
+      ]
+    },
+    {
+      "type": "answer-key",
+      "answers": { "1": "②", "2": "⑤", "3": "①" }
+    }
+  ]
+}

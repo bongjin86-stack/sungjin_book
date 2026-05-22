@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "title": "고전소설 단원 1회 진단평가",
+    "author": "성진학원",
+    "subject": "국어",
+    "watermark": "성진학원 | bongjin86@gmail.com"
+  },
+  "preset": "simply-classic",
+  "options": { "size": "A4" },
+  "chapters": [
+    {
+      "type": "passages",
+      "passages": [
+        {
+          "id": "passage-01",
+          "range": [1, 4],
+          "header": "다음 글을 읽고 물음에 답하시오.",
+          "body": "일일은 승상이 술에 취하시어 책상에 의지하여 잠깐 졸더니 문득 봄바람에 이끌려 한 곳에 다다르니 이곳은 승상이 평소에 고기도 낚으며 풍경을 구경하던 조대(釣臺)라.\n그 위에 상서로운 기운이 어렸거늘 나아가 보니 청룡이 조대에 누웠다가 승상을 보고 고개를 들어 소리를 지르고 반공에 솟거늘, 깨달으니 일장춘몽이라."
+        }
+      ],
+      "questions": [
+        {
+          "number": 1,
+          "passage_id": "passage-01",
+          "stem": "윗글에 대한 설명으로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            { "index": 1, "glyph": "①", "text": "꿈을 통해 미래를 암시한다.", "has_placeholder": false },
+            { "index": 2, "glyph": "②", "text": "공간 이동을 통해 인물의 갈등을 드러낸다.", "has_placeholder": false },
+            { "index": 3, "glyph": "③", "text": "회상을 통해 과거 사건을 재구성한다.", "has_placeholder": false },
+            { "index": 4, "glyph": "④", "text": "외양 묘사로 인물의 성격을 부각한다.", "has_placeholder": false },
+            { "index": 5, "glyph": "⑤", "text": "대화를 통해 인물의 가치관을 드러낸다.", "has_placeholder": false }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        }
+      ]
+    }
+  ]
+}

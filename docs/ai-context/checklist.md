@@ -1,8 +1,30 @@
 # 체크리스트
 
-> 마지막 업데이트: 2026-05-19 KST
+> 마지막 업데이트: 2026-05-22 KST 오전 (Phase Ⅳ 첫 한 발 + 연결부 봉합)
 
-## 트랙 B MVP v1
+## 교재 트랙 — Phase Ⅰ 끝 연결 (지금 진행 중)
+
+### 2026-05-22 오전 박힘
+- [x] IDML 배경 자동 추출기 3종 (`scout-spreads.py` / `inspect-spread.py` / `extract-decorations.py`)
+- [x] simply-classic `decorations.typ` 자동 생성 (59 spreads → 3729 frames)
+- [x] main.typ background 통합 검증 95.2% 시각 일치
+- [x] 입력 형식 결정 박음 (B 챕터별 + C 단일 책, A 자동 분리 ❌)
+- [x] preset 컨셉 + chapter-type→master 매핑 컨셉 박음 (STS-SPEC.md 갱신)
+- [x] 웹 typst 미러 동기화 (decorations·design-tokens·master-pages-a4 포함)
+- [x] `compiler.ts` loadTestPaperSources에 simply-classic 새 의존 4개 추가
+- [x] Zod 콘텐츠 스키마 박음 (`web/lib/schema/edu-book.ts`)
+- [x] 샘플 JSON 2개 (`sample-single-book.json` / `sample-chapter-book.json`)
+- [x] npm.cmd run build 통과 확인
+
+### 남은 (Phase Ⅰ 끝 연결)
+- [ ] main.typ을 chapters[] for문 + chapter-type-to-master 매핑으로 분기 (2순위)
+- [ ] EduSetupScreen에 챕터 추가 UI (3순위)
+- [ ] HWP 변환기 웹 연결 방식 결정 → 구현 (4순위, 별도 결정 필요)
+- [ ] PDF 다운로드에 워터마크 박기
+
+## 단행본 트랙 (동결 중)
+
+### 트랙 B MVP v1
 
 - [x] Next.js 14 + TypeScript + Tailwind 에디터 구성
 - [x] 시작 가이드: 기본 정보 / 책 구성 / 테마 선택
