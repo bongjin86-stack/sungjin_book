@@ -231,6 +231,61 @@
 )
 
 
+// ── 본문 단 외곽 보더 (IDML simply-classic 시그니처) ─────────────────────────
+//
+// IDML 원본 일부 페이지에는 본문 단(좌·우) 외곽에 0.3pt 시안 보더가 있다.
+// 일반 문제지에서는 큰 프레임 박스가 검수선처럼 보일 수 있어 기본 출력에서는 끈다.
+// 필요하면 data.options.debugColumnBorder = true 로 켜서 레이아웃 검수용으로만 본다.
+#let column-border = (
+  enabled: false,
+  width:   0.3pt,
+  color:   rgb("#0091db"),  // accent와 동일 시안
+)
+
+
+// ── passage 머리 (strip block) ───────────────────────────────────────────────
+//
+// `[1~3] 다음 글을 읽고 물음에 답하시오.`를 본문 흐름 안 한 줄이 아니라
+// 본문 단 위 별도 strip block으로 박아 묶음 경계가 한눈에.
+//
+// 톤: IDML simply-classic 본문 단 보더에 어울리는 옅은 청.
+//
+// header strip의 below = 0, body box의 above = 0 으로 박아 두 박스가 시각으로 이어짐.
+#let passage-header = (
+  fill:        rgb("#f3f8fc"),     // 옅은 시안 (보더보다 더 옅음)
+  stroke:      (bottom: 0.4pt + rgb("#0091db")),
+  inset-x:     8pt,
+  inset-y:     5pt,
+  range-fill:  rgb("#0091db"),
+  range-weight: "bold",
+  above:       6pt,   // 새 passage 시작 시 작은 호흡 (chapter loop가 큰 v-space 박음)
+  below:       0pt,   // body box와 시각으로 이어지게 0
+)
+
+
+// ── passage body box (지문 본문만 둘러싸는 박스) ────────────────────────────
+//
+// IDML simply-classic 시그니처: 지문 본문 둘레 청색 0.3pt stroke.
+// header strip 아래 자연스럽게 이어진다 (header.below = 0 + body-box.above = 0).
+// 긴 지문이 column/page 경계를 넘을 수 있어야 하므로 breakable: true.
+//
+// 사용자 지시 범위 (2026-05-22): inset-x 10~14pt, inset-y 8~12pt.
+// 본문이 column 보더 안에 충분한 호흡으로 흐르도록.
+#let passage-body-box = (
+  stroke:   0.3pt + rgb("#0091db"),
+  fill:     none,
+  inset-x:  12pt,   // 보더와 본문 사이 호흡
+  inset-y:  10pt,
+  above:    0pt,    // header strip 바로 아래 붙음
+  below:    0pt,
+  breakable: true,
+)
+
+
+// ── passage 사이 간격 (묶음 경계 강조) ──────────────────────────────────────
+#let between-passages = 24pt
+
+
 // ── Layer 2: Page 토큰 (단 수·gutter·rule) ──────────────────────────────────
 //
 // 사용자 정의 변수로 toggle. JSON 데이터에 `layout` 필드 또는 main 호출 시 override.

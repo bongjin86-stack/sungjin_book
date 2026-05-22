@@ -160,8 +160,13 @@ async function loadTestPaperSources(): Promise<void> {
 
 /** preset main.typ 내용을 fetch해서 mainContent로 반환. */
 async function fetchPresetMainSrc(paperData: unknown): Promise<string> {
+  const data = paperData as {
+    preset?: string;
+    meta?: { preset?: string };
+  };
   const preset =
-    ((paperData as { meta?: { preset?: string } })?.meta?.preset) ??
+    data.preset ??
+    data.meta?.preset ??
     "gonggam-rates";
   const path = `/typst-templates/edu/presets/${preset}/main.typ`;
   const res = await fetch(path);

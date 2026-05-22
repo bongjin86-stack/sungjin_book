@@ -27,9 +27,10 @@
 // Layer 2: 단 수 — data.layout 또는 default 2단
 #let _layout = if "layout" in data and data.layout == "1col" { t.page-1col } else { t.page-2col }
 
-// Page master — meta.size: "A4" 면 A4, default는 신국판(simply-classic 원본)
+// Page master — options.size: "A4" 면 A4, default는 신국판(simply-classic 원본)
 #let _meta = data.at("meta", default: (:))
-#let _master = if _meta.at("size", default: "") == "A4" {
+#let _options = data.at("options", default: (:))
+#let _master = if _options.at("size", default: "") == "A4" {
   mp-a4.a4-master(
     title: _meta.at("title", default: ""),
     subject: _meta.at("subject", default: ""),
@@ -90,63 +91,100 @@
 // ── 컴포넌트: 한 문제 (윗단 + boki? + 아랫단) ────────────────────────────────
 #let _pad2(n) = if n < 10 { "0" + str(n) } else { str(n) }
 
+// 한 문제를 1개 block(breakable: false)로 박는다 — 번호만 column 바닥에 떨어지거나
+// 발문/선지가 어색하게 분리되는 상황 차단. 한 문제가 column보다 길면 다음 column 통째.
+// 5지선다 한 문제 분량은 column 길이의 1/3 이하라 빈 공간 폭증 위험 낮음.
 #let render-question(q) = {
-  // 윗단 — IDML 추출 spec 위에 STS typography 토큰 override (font, size, weight, color)
-  apply-para-style(
-    pick("번호(NEW)") + t.typography.question-number,
-    [#_pad2(q.number)],
-  )
-  v(t.space.number-to-stem, weak: true)
-  apply-para-style(
-    pick("문제명조") + t.typography.question-stem,
-    q.stem,
-  )
-  v(t.space.stem-to-choices, weak: true)
+  block(breakable: false, width: 100%,
+        below: t.space.between-questions, above: 0pt)[
+    // 윗단
+    #apply-para-style(
+      pick("번호(NEW)") + t.typography.question-number,
+      [#_pad2(q.number)],
+    )
+    #v(t.space.number-to-stem, weak: true)
+    #apply-para-style(
+      pick("문제명조") + t.typography.question-stem,
+      q.stem,
+    )
+    #v(t.space.stem-to-choices, weak: true)
 
-  // boki (있을 때)
-  if "boki" in q {
-    render-boki(q.boki)
-    v(t.space.boki-around, weak: true)
-  }
+    // boki (있을 때)
+    #if "boki" in q {
+      render-boki(q.boki)
+      v(t.space.boki-around, weak: true)
+    }
 
-  // 아랫단
-  for c in q.choices {
-    render-choice(c.glyph, c.text)
-    v(t.space.between-choices, weak: true)
-  }
-  v(t.space.between-questions, weak: true)
+    // 아랫단
+    #for c in q.choices {
+      render-choice(c.glyph, c.text)
+      v(t.space.between-choices, weak: true)
+    }
+  ]
 }
 
 
-// ── 컴포넌트: passage (header + body + source + glossary) ────────────────────
+// ── 컴포넌트: passage (header strip + body box + source + glossary) ─────────
+//
+// IDML simply-classic 시그니처 복원:
+//   - header strip block (옅은 시안 배경 + bottom rule)
+//   - 그 아래 body box (청색 0.3pt stroke, breakable)
+//   두 박스가 width 100% + header.below=0 + body-box.above=0 으로 시각 연결.
+//
+// 긴 지문은 body box가 column/page 경계를 넘어 자연스럽게 이어진다.
+//
+// 주의: typst raw에서 `~`는 nbsp로 해석. range 표기 시 "~"를 명시 문자로 박는다.
 #let render-passage(p) = {
-  if p.header != "" {
-    apply-para-style(
-      pick("물음에답하시오"),
-      [
-        #if p.range != none {
-          text(fill: t.color.accent, weight: "bold")[\[#p.range.at(0)~#p.range.at(1)\]]
-          h(0.5em)
-        }
-        #p.header
-      ],
-    )
+  if p.header != "" or p.range != none {
+    block(
+      fill: t.passage-header.fill,
+      stroke: t.passage-header.stroke,
+      inset: (x: t.passage-header.inset-x, y: t.passage-header.inset-y),
+      width: 100%,
+      above: t.passage-header.above,
+      below: t.passage-header.below,
+      breakable: false,
+      sticky: true,
+    )[
+      #if p.range != none {
+        // "~"는 명시 문자로 박음 (typst nbsp 해석 회피).
+        let rng = "[" + str(p.range.at(0)) + "~" + str(p.range.at(1)) + "]"
+        text(fill: t.passage-header.range-fill,
+             weight: t.passage-header.range-weight,
+             size: 10.5pt)[#rng]
+        h(0.6em)
+      }
+      #if p.header != "" {
+        text(size: 9.5pt, fill: t.color.body, weight: "medium")[#p.header]
+      }
+    ]
   }
-  for para in p.body.split("\n") {
-    if para.trim() != "" {
-      apply-para-style(pick("지문:지문"), para)
+  // body box — 지문 본문만 둘러싸는 청색 stroke. column/page 넘으면 분할.
+  block(
+    stroke: t.passage-body-box.stroke,
+    fill: t.passage-body-box.fill,
+    inset: (x: t.passage-body-box.inset-x, y: t.passage-body-box.inset-y),
+    width: 100%,
+    above: t.passage-body-box.above,
+    below: t.passage-body-box.below,
+    breakable: t.passage-body-box.breakable,
+  )[
+    #for para in p.body.split("\n") {
+      if para.trim() != "" {
+        apply-para-style(pick("지문:지문"), para)
+      }
     }
-  }
-  if "source" in p {
-    align(right)[#text(size: 9pt, fill: t.color.muted)[#p.source]]
-    v(t.space.after-source, weak: true)
-  }
-  if "glossary" in p {
-    v(t.space.after-passage-body, weak: true)
-    for g in p.glossary {
-      apply-para-style(pick("보기명조"), [\* #g])
+    #if "source" in p {
+      align(right)[#text(size: 9pt, fill: t.color.muted)[#p.source]]
+      v(t.space.after-source, weak: true)
     }
-  }
+    #if "glossary" in p {
+      v(t.space.after-passage-body, weak: true)
+      for g in p.glossary {
+        apply-para-style(pick("보기명조"), [\* #g])
+      }
+    }
+  ]
 }
 
 
@@ -192,14 +230,57 @@
 }
 
 // passages: 지문 + 문제 묶음.
+//
+// 두 번째 이후 passage는 새 column 또는 새 페이지에서 시작 — header strip + body box
+// 첫 줄들이 column 하단에 잘려 다음 column으로 흘러가는 orphan 방지.
+// 첫 passage는 그대로 시작 (자연스러운 chapter 흐름 유지).
+//
+// 정교한 잔여 높이 측정 대신 colbreak(weak)로 1차 안전 규칙. weak이라 이미 column 시작이면
+// skip되므로 빈 column 폭증 위험 낮음.
 #let render-passages-chapter(passages, questions) = {
   let _passages = passages
-  for g in group-by-passage(questions) {
+  let groups = group-by-passage(questions)
+  let first = true
+  for g in groups {
+    if not first {
+      colbreak(weak: true)
+    }
+    first = false
     let p = none
     for pp in _passages { if pp.id == g.pid { p = pp } }
     if p != none { render-passage(p) }
     for q in g.qs { render-question(q) }
   }
+}
+
+
+// passages 페이지 background — 본문 단 외곽 시안 보더 (IDML simply-classic 시그니처).
+// 페이지 마진 안쪽 본문 영역을 columns 수에 따라 좌·우(또는 1단) rect stroke로 그림.
+//
+// 변수명: typst alignment 키워드(top/left)와 충돌 피하려 m-* 접두 사용.
+#let _passages-background(master, columns, gutter) = {
+  let debug-border = _options.at("debugColumnBorder", default: false)
+  if not (t.column-border.enabled or debug-border) { return none }
+  let pw = master.width
+  let ph = master.height
+  let m = master.margin
+  let m-left = m.inside
+  let m-right = m.outside
+  let m-top = m.top
+  let m-bottom = m.bottom
+  let body-w = pw - m-left - m-right
+  let body-h = ph - m-top - m-bottom
+  let col-w = if columns > 1 { (body-w - gutter * (columns - 1)) / columns } else { body-w }
+  [
+    #for i in range(columns) [
+      #place(top + left,
+             dx: m-left + i * (col-w + gutter),
+             dy: m-top,
+             rect(width: col-w, height: body-h,
+                  stroke: t.column-border.width + t.column-border.color,
+                  fill: none))
+    ]
+  ]
 }
 
 // answer-key: 빠른 정답 표.
@@ -242,16 +323,24 @@
 
 // ── 디스패치 ────────────────────────────────────────────────────────────────
 //
-// chapter type별 페이지 master + columns 갱신:
+// chapter type별 페이지 master + columns + background 갱신:
 //   part-cover  → 1단, background 제거 (자기 PART 라벨 직접 그림)
-//   passages    → 기본 _master + _layout.columns
+//   passages    → master + _layout.columns + 본문 단 외곽 시안 보더 background
 //   answer-key  → master_5_빠른정답 + 1단 + background 제거
+#let _passages-bg = _passages-background(_master, _layout.columns, _layout.gutter)
+
 #for c in _chapters {
   if c.type == "part-cover" {
-    set page(.._master, columns: 1, background: none)
+    set page(
+      width: _master.width,
+      height: _master.height,
+      margin: (x: 20mm, y: 20mm),
+      columns: 1,
+      background: none,
+    )
     render-part-cover(c.label, c.at("subtitle", default: ""))
   } else if c.type == "passages" {
-    set page(.._master, columns: _layout.columns)
+    set page(.._master, columns: _layout.columns, background: _passages-bg)
     render-passages-chapter(c.at("passages", default: ()),
                             c.at("questions", default: ()))
   } else if c.type == "answer-key" {
