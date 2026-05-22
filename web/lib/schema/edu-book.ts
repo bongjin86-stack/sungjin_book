@@ -116,15 +116,75 @@ export const ChapterSchema = z.discriminatedUnion("type", [
 ]);
 export type Chapter = z.infer<typeof ChapterSchema>;
 
+// ── 내부 조판자용 Block (preset manifest와 1:1) ─────────────────────────────
+//
+// chapters[]는 typst 렌더용 정규 표현. blocks[]는 내부 조판자가 UI에서 다루는
+// 단위. UI는 blocks[]를 권위로, 렌더 직전에 blocks→chapters로 normalize.
+//
+// 4가지 kind (toc는 manifest에만 있고 1차 UI에선 disabled):
+//   part-cover   — PART N + 부제 (간지)
+//   passage      — 한 지문 (range, header, body)
+//   questions    — 그에 딸린 문제 묶음 (passage_id로 연결)
+//   quick-answer — 빠른 정답 표
+
+export const PartCoverBlockSchema = z.object({
+  kind: z.literal("part-cover"),
+  id: z.string(),
+  label: z.string().min(1),
+  subtitle: z.string().default(""),
+});
+
+export const PassageBlockSchema = z.object({
+  kind: z.literal("passage"),
+  id: z.string(),
+  range: z.tuple([z.number().int(), z.number().int()]).nullable().default(null),
+  header: z.string().default(""),
+  body: z.string().default(""),
+});
+
+export const QuestionsBlockSchema = z.object({
+  kind: z.literal("questions"),
+  id: z.string(),
+  passage_id: z.string().nullable().default(null),
+  questions: z.array(QuestionSchema).default([]),
+});
+
+export const QuickAnswerBlockSchema = z.object({
+  kind: z.literal("quick-answer"),
+  id: z.string(),
+  /** "1": "②" 형식. */
+  answers: z.record(z.string(), z.string()).default({}),
+});
+
+export const BlockSchema = z.discriminatedUnion("kind", [
+  PartCoverBlockSchema,
+  PassageBlockSchema,
+  QuestionsBlockSchema,
+  QuickAnswerBlockSchema,
+]);
+export type Block = z.infer<typeof BlockSchema>;
+export type PartCoverBlock = z.infer<typeof PartCoverBlockSchema>;
+export type PassageBlock = z.infer<typeof PassageBlockSchema>;
+export type QuestionsBlock = z.infer<typeof QuestionsBlockSchema>;
+export type QuickAnswerBlock = z.infer<typeof QuickAnswerBlockSchema>;
+
 // ── 책 한 권 ────────────────────────────────────────────────────────────
+//
+// blocks[]가 있으면 UI/조판자용 권위. 없으면 chapters[]만 사용 (옛 데이터).
+// 렌더 직전에 blocks → chapters로 normalize (lib/adapters/blocks-to-chapters.ts).
 export const EduBookSchema = z.object({
   meta: MetaSchema,
   /** preset 디렉토리명. 예: "simply-classic", "gonggam-rates". */
   preset: z.string().min(1),
   options: OptionsSchema.default({ size: "A4" }),
-  /** 단일 책도 chapters 1개로 표현. 빈 배열 금지. */
-  chapters: z.array(ChapterSchema).min(1),
-});
+  /** 내부 조판자가 UI에서 다루는 블록 단위. 우선순위 권위. */
+  blocks: z.array(BlockSchema).optional(),
+  /** typst 렌더용 정규 표현. blocks가 있으면 무시 가능 (normalize 결과로 대체). */
+  chapters: z.array(ChapterSchema).optional(),
+}).refine(
+  (book) => (book.blocks?.length ?? 0) > 0 || (book.chapters?.length ?? 0) > 0,
+  { message: "EduBook requires at least one block or chapter." },
+);
 export type EduBook = z.infer<typeof EduBookSchema>;
 
 // ── 도우미 ─────────────────────────────────────────────────────────────

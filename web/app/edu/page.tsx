@@ -1,33 +1,65 @@
 "use client";
 
-// /edu — Edu100: 교재 제작 홈페이지.
-// 진입: EduSetupScreen (제목/저자 입력) → 시작하기 누르면 작업 화면.
-// 작업: 좌측 책 구조 패널 + 가운데 미리보기 + 하단 PDF 다운로드.
+// /edu — Edu100: 내부 조판자용 Preset Block Engine v0.
 //
-// 2026-05-22:
-//   - 종목 사이드바 → 책 구조 사이드바로 변경
-//   - "+ 챕터 추가" 활성화 — ChapterFormModal로 직접 입력 받음 (D-022 첫 어댑터)
-//   - chapters[]가 비었을 때만 샘플 단일 책 미리보기, 추가되면 사용자 chapters로 교체
+// 흐름:
+//   진입 (제목/저자) → 작업 화면
+//   작업 = 좌측 책 구조 (블록 목록 + manifest 기반 추가 버튼)
+//        + 가운데 미리보기 (Typst 컴파일 SVG)
+//        + 하단 PDF 다운로드.
+//
+// 블록 단위 (preset-manifest.json에서 가져옴):
+//   PART / 지문 / 문제 / 빠른 정답
+//
+// 데이터 권위는 blocks[]. 컴파일 직전에 chapters[]로 normalize → main.typ.
+// 껍데기 UI 금지 — 추가 버튼 → JSON → 미리보기 PDF가 즉시 연결되어야 한다.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileTestPaperSvg,
   compileTestPaperPdf,
 } from "@/lib/typst/compiler";
 import { EduSetupScreen, type EduProjectSetup } from "@/components/onboarding/EduSetupScreen";
-import { ChapterFormModal } from "@/components/edu/ChapterFormModal";
+import { BlockEditModal } from "@/components/edu/BlockEditModal";
 import {
-  type ChapterFormData,
-  formToChapters,
-  makeEmptyForm,
-} from "@/lib/adapters/direct-input";
-import type { Chapter } from "@/lib/schema/edu-book";
+  blocksToChapters,
+  newBlockId,
+} from "@/lib/adapters/blocks-to-chapters";
+import type {
+  Block,
+  PartCoverBlock,
+  PassageBlock,
+  QuestionsBlock,
+  QuickAnswerBlock,
+} from "@/lib/schema/edu-book";
+import manifestRaw from "../../../typst-templates/edu/presets/simply-classic/preset-manifest.json";
 
-// 샘플 데이터 — chapters[]가 비었을 때 사용 (단일 책 미리보기).
-const SAMPLE_DATA_SRC = "/dev/edu/sample-single-book.json";
+interface ManifestBlock {
+  type: string;
+  label: string;
+  button: string;
+  renderer: string;
+  enabled: boolean;
+  note?: string;
+}
 
-/** 사용자 setup + chapters → EduBook 형태 JSON. preset은 simply-classic 고정. */
-function buildBookData(setup: EduProjectSetup, chapters: Chapter[]) {
+interface Manifest {
+  id: string;
+  label: string;
+  purpose: string;
+  blocks: ManifestBlock[];
+}
+
+const manifest = manifestRaw as Manifest;
+
+/** preset 블록 정의 중 사이드바에 보일 종류. toc는 1차에선 disabled. */
+const SIDEBAR_BLOCKS = manifest.blocks.filter(
+  (b) => b.type !== "toc",
+);
+
+/** 사용자 setup + blocks → EduBook JSON. preset은 manifest.id 고정. */
+function buildBookData(setup: EduProjectSetup, blocks: Block[]) {
+  const chapters = blocksToChapters(blocks);
   return {
     meta: {
       title: setup.title,
@@ -35,25 +67,10 @@ function buildBookData(setup: EduProjectSetup, chapters: Chapter[]) {
       subject: "",
       watermark: "",
     },
-    preset: "simply-classic",
+    preset: manifest.id,
     options: { size: setup.size },
     chapters,
-  };
-}
-
-/** chapters 비었을 때 — 샘플 데이터에 setup 메타만 박아 미리보기. */
-function withSetup(raw: unknown, setup: EduProjectSetup) {
-  const data = raw as Record<string, unknown>;
-  const existingMeta = (data.meta as Record<string, unknown> | undefined) ?? {};
-  return {
-    ...data,
-    meta: {
-      ...existingMeta,
-      title: setup.title,
-      author: setup.author,
-    },
-    preset: "simply-classic",
-    options: { size: setup.size },
+    blocks,
   };
 }
 
@@ -63,32 +80,39 @@ type State =
   | { kind: "ok"; svg: string; elapsedMs: number }
   | { kind: "error"; message: string };
 
-// 한 사용자 챕터 = 폼 입력값 (라벨/지문/문제). EduBook chapters[]로 펼치면 part-cover + passages 2개.
-interface UserChapter {
-  id: string;
-  form: ChapterFormData;
-}
+type ModalOpen =
+  | { kind: "part-cover"; initial: PartCoverBlock | null }
+  | { kind: "passage"; initial: PassageBlock | null }
+  | { kind: "questions"; initial: QuestionsBlock | null; passages: PassageBlock[] }
+  | { kind: "quick-answer"; initial: QuickAnswerBlock | null }
+  | null;
 
 export default function EduPage() {
-  // setup이 null이면 진입 화면, 값 있으면 작업 화면
   const [setup, setSetup] = useState<EduProjectSetup | null>(null);
   const [state, setState] = useState<State>({ kind: "idle" });
   const [pageIdx, setPageIdx] = useState(0);
   const [pageCount, setPageCount] = useState(0);
   const [downloading, setDownloading] = useState(false);
-  // 사용자가 추가한 챕터들. 비어있으면 샘플 단일 책 미리보기.
-  const [userChapters, setUserChapters] = useState<UserChapter[]>([]);
-  const [modalForm, setModalForm] = useState<ChapterFormData | null>(null);
-  // HWP 업로드 (UI 자리만 — 실제 변환은 4순위에서 박음)
+
+  // 데이터 권위: blocks[]. 빈 배열이면 미리보기는 빈 페이지.
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [modal, setModal] = useState<ModalOpen>(null);
+
+  // HWP 업로드 (UI 자리만 — 실제 변환은 별도)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const svgHostRef = useRef<HTMLDivElement>(null);
 
+  // 현재 등록된 지문 블록만 — "문제" 모달에서 passage_id 선택지로.
+  const passageBlocks = useMemo<PassageBlock[]>(
+    () => blocks.filter((b): b is PassageBlock => b.kind === "passage"),
+    [blocks],
+  );
+
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     const file = files[0];
-    // 확장자 확인 (실제 파싱은 4순위)
     const ok = file.name.toLowerCase().endsWith(".hwp") ||
                file.name.toLowerCase().endsWith(".hwpx");
     if (!ok) {
@@ -98,20 +122,56 @@ export default function EduPage() {
     setUploadedFile(file);
   }
 
-  function openAddChapter() {
-    setModalForm(makeEmptyForm(`PART ${userChapters.length + 1}`));
+  // 추가 버튼 클릭 → 모달 열기 (kind별).
+  function openAddModal(kind: string) {
+    if (kind === "part-cover") {
+      const count = blocks.filter((b) => b.kind === "part-cover").length;
+      setModal({
+        kind: "part-cover",
+        initial: {
+          kind: "part-cover",
+          id: newBlockId("part"),
+          label: `PART ${count + 1}`,
+          subtitle: "",
+        },
+      });
+    } else if (kind === "passage") {
+      setModal({ kind: "passage", initial: null });
+    } else if (kind === "questions") {
+      setModal({ kind: "questions", initial: null, passages: passageBlocks });
+    } else if (kind === "quick-answer") {
+      setModal({ kind: "quick-answer", initial: null });
+    }
   }
 
-  function handleSaveChapter(form: ChapterFormData) {
-    setUserChapters((prev) => [
-      ...prev,
-      { id: `c-${Date.now()}`, form },
-    ]);
-    setModalForm(null);
+  // 기존 블록 클릭 → 편집 모달.
+  function openEditModal(b: Block) {
+    if (b.kind === "part-cover") setModal({ kind: "part-cover", initial: b });
+    else if (b.kind === "passage") setModal({ kind: "passage", initial: b });
+    else if (b.kind === "questions")
+      setModal({ kind: "questions", initial: b, passages: passageBlocks });
+    else if (b.kind === "quick-answer") setModal({ kind: "quick-answer", initial: b });
   }
 
-  // setup 또는 chapters 갱신 → 데이터 재구성 → 컴파일.
-  // userChapters 비어있으면 샘플 단일 책, 있으면 사용자 입력만.
+  function handleSaveBlock(block: Block) {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === block.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = block;
+        return next;
+      }
+      return [...prev, block];
+    });
+    setModal(null);
+  }
+
+  function handleDeleteBlock(id: string) {
+    if (!confirm("이 블록을 삭제할까요?")) return;
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
+  }
+
+  // setup 또는 blocks 갱신 → 컴파일.
   useEffect(() => {
     if (!setup) return;
     let cancelled = false;
@@ -119,20 +179,7 @@ export default function EduPage() {
       const t0 = performance.now();
       setState({ kind: "loading", phase: "컴파일 중" });
       try {
-        let data: unknown;
-        if (userChapters.length === 0) {
-          const res = await fetch(SAMPLE_DATA_SRC);
-          if (!res.ok) throw new Error(`샘플 로드 실패 (${res.status})`);
-          const raw = await res.json();
-          data = withSetup(raw, setup);
-        } else {
-          const allChapters: Chapter[] = userChapters.flatMap((c) => formToChapters(c.form));
-          // chapters 비었으면 typst가 거부 — 빈 passages 1개 박음
-          const safeChapters: Chapter[] = allChapters.length > 0
-            ? allChapters
-            : [{ type: "passages", passages: [], questions: [] }];
-          data = buildBookData(setup, safeChapters);
-        }
+        const data = buildBookData(setup, blocks);
         if (cancelled) return;
         const svg = await compileTestPaperSvg(data);
         if (cancelled) return;
@@ -144,10 +191,8 @@ export default function EduPage() {
         setState({ kind: "error", message: err.message });
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [setup, userChapters]);
+    return () => { cancelled = true; };
+  }, [setup, blocks]);
 
   // SVG → DOM 박기 + 페이지 수 측정
   useEffect(() => {
@@ -162,7 +207,7 @@ export default function EduPage() {
     setPageIdx((prev) => (prev >= pages.length ? 0 : prev));
   }, [state]);
 
-  // pageIdx → viewBox 좁힘 (단행본 TypstPreviewPanel과 동일 패턴)
+  // pageIdx → viewBox 좁힘
   useEffect(() => {
     const host = svgHostRef.current;
     if (!host) return;
@@ -200,19 +245,7 @@ export default function EduPage() {
     if (!setup) return;
     setDownloading(true);
     try {
-      let data: unknown;
-      if (userChapters.length === 0) {
-        const res = await fetch(SAMPLE_DATA_SRC);
-        if (!res.ok) throw new Error(`샘플 로드 실패 (${res.status})`);
-        const raw = await res.json();
-        data = withSetup(raw, setup);
-      } else {
-        const allChapters: Chapter[] = userChapters.flatMap((c) => formToChapters(c.form));
-        const safeChapters: Chapter[] = allChapters.length > 0
-          ? allChapters
-          : [{ type: "passages", passages: [], questions: [] }];
-        data = buildBookData(setup, safeChapters);
-      }
+      const data = buildBookData(setup, blocks);
       const pdf = await compileTestPaperPdf(data);
       const blob = new Blob([pdf as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -235,18 +268,16 @@ export default function EduPage() {
   const canPrev = pageIdx > 0;
   const canNext = pageIdx < max;
 
-  // setup 안 됐으면 진입 화면
   if (!setup) {
     return <EduSetupScreen onStart={(s) => setSetup(s)} />;
   }
 
   return (
     <main className="min-h-screen flex flex-col bg-bg">
-      {/* 챕터 추가/편집 모달 */}
-      <ChapterFormModal
-        initial={modalForm}
-        onClose={() => setModalForm(null)}
-        onSave={handleSaveChapter}
+      <BlockEditModal
+        open={modal}
+        onClose={() => setModal(null)}
+        onSave={handleSaveBlock}
       />
 
       {/* 헤더 */}
@@ -265,6 +296,8 @@ export default function EduPage() {
               <span className="text-[11px] text-text-muted">{setup.author}</span>
             </>
           )}
+          <span className="text-text-muted text-[11px]">·</span>
+          <span className="text-[11px] text-text-muted">{manifest.label}</span>
         </div>
         <button
           onClick={() => setSetup(null)}
@@ -275,14 +308,14 @@ export default function EduPage() {
       </header>
 
       <div className="flex-1 flex min-h-0">
-        {/* 좌측: 책 구조 — 지금은 단일 책 모드 (본문 1개). 챕터 추가는 다음 결정 후 박음. */}
-        <aside className="w-[220px] border-r border-border bg-surface flex flex-col">
-          <div className="p-4 flex-1">
+        {/* 좌측: 책 구조 — 블록 목록 + manifest 기반 추가 버튼 */}
+        <aside className="w-[260px] border-r border-border bg-surface flex flex-col">
+          <div className="p-4 flex-1 overflow-y-auto">
             <div className="text-[11px] text-text-muted font-medium mb-2 uppercase tracking-wide">
               책 구조
             </div>
 
-            {/* 본문 카드 = 업로드 영역 (단일 책 모드 디폴트) */}
+            {/* HWP 업로드 (자동 초안용 자리) */}
             <div
               role="button"
               tabIndex={0}
@@ -297,7 +330,7 @@ export default function EduPage() {
                 setDragOver(false);
                 handleFiles(e.dataTransfer.files);
               }}
-              className={`mb-3 px-3 py-3 rounded-[8px] cursor-pointer transition-colors border-[1.5px] ${
+              className={`mb-4 px-3 py-2.5 rounded-[8px] cursor-pointer transition-colors border-[1.5px] ${
                 dragOver
                   ? "border-accent border-solid bg-accent-light"
                   : uploadedFile
@@ -306,22 +339,16 @@ export default function EduPage() {
               }`}
             >
               {uploadedFile ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[14px]">📄</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-semibold text-accent">업로드됨</div>
-                      <div className="text-[10px] text-text-secondary truncate">{uploadedFile.name}</div>
-                    </div>
-                  </div>
-                  <div className="text-[10px] text-text-muted mt-2">변환 연결 전</div>
-                </>
+                <div>
+                  <div className="text-[11px] font-semibold text-accent">📄 업로드됨</div>
+                  <div className="text-[10px] text-text-secondary truncate mt-0.5">{uploadedFile.name}</div>
+                  <div className="text-[10px] text-text-muted mt-1">자동 초안 변환 연결 전</div>
+                </div>
               ) : (
-                <div className="text-center py-2">
-                  <div className="text-[18px] mb-1">📥</div>
-                  <div className="text-[12px] font-semibold text-text-primary">HWP 올리기</div>
-                  <div className="text-[10px] text-text-muted mt-1 leading-snug">
-                    본문 파일을 여기에<br />놓거나 클릭
+                <div className="text-center py-1">
+                  <div className="text-[11px] font-semibold text-text-primary">📥 HWP 자동 초안 (옵션)</div>
+                  <div className="text-[10px] text-text-muted mt-0.5">
+                    파일을 놓거나 클릭. 아래 블록 직접 복붙도 가능.
                   </div>
                 </div>
               )}
@@ -334,37 +361,51 @@ export default function EduPage() {
               />
             </div>
 
-            {/* 사용자가 직접 입력한 챕터들 */}
-            {userChapters.length > 0 && (
-              <div className="flex flex-col gap-1 mb-3">
-                {userChapters.map((c) => (
-                  <div
-                    key={c.id}
-                    className="px-3 py-2 rounded-[6px] bg-bg border border-border text-[12px]"
-                  >
-                    <div className="font-semibold text-text-primary truncate">{c.form.label}</div>
-                    {c.form.subtitle && (
-                      <div className="text-[10px] text-text-muted truncate">{c.form.subtitle}</div>
-                    )}
-                  </div>
-                ))}
+            {/* 블록 목록 (권위 데이터) */}
+            <div className="text-[10px] text-text-muted font-medium mb-1 uppercase tracking-wide">
+              블록 ({blocks.length})
+            </div>
+            {blocks.length === 0 && (
+              <div className="text-[10px] text-text-muted leading-relaxed mb-3 px-1">
+                아래 버튼으로 블록을 쌓으세요. 추가 즉시 미리보기에 반영됩니다.
               </div>
             )}
+            <div className="flex flex-col gap-1 mb-3">
+              {blocks.map((b) => (
+                <BlockCard
+                  key={b.id}
+                  block={b}
+                  onClick={() => openEditModal(b)}
+                  onDelete={() => handleDeleteBlock(b.id)}
+                />
+              ))}
+            </div>
 
-            {/* 챕터 추가 — 직접 입력 모달 */}
-            <button
-              type="button"
-              onClick={openAddChapter}
-              className="w-full px-3 py-2 rounded-[6px] text-[12px] text-text-secondary border border-dashed border-border hover:border-accent hover:text-accent transition-colors"
-            >
-              + 챕터 추가
-            </button>
-
-            {userChapters.length === 0 && (
-              <div className="text-[10px] text-text-muted mt-3 leading-relaxed">
-                챕터를 추가하면 위의 본문 샘플 대신 입력한 내용으로 미리보기가 갱신됩니다.
-              </div>
-            )}
+            {/* manifest 기반 추가 버튼 */}
+            <div className="text-[10px] text-text-muted font-medium mb-1 uppercase tracking-wide mt-2">
+              추가
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {SIDEBAR_BLOCKS.map((mb) => (
+                <button
+                  key={mb.type}
+                  type="button"
+                  disabled={!mb.enabled}
+                  onClick={() => openAddModal(mb.type)}
+                  className={`w-full px-3 py-2 rounded-[6px] text-[12px] text-left transition-colors border ${
+                    mb.enabled
+                      ? "border-dashed border-border text-text-secondary hover:border-accent hover:text-accent"
+                      : "border-border text-text-muted/50 cursor-not-allowed"
+                  }`}
+                  title={mb.note ?? ""}
+                >
+                  {mb.button}
+                  {!mb.enabled && (
+                    <span className="ml-2 text-[10px] text-text-muted">(준비 중)</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </aside>
 
@@ -379,7 +420,7 @@ export default function EduPage() {
               {state.kind === "ok" && <span>{state.elapsedMs}ms</span>}
               {state.kind === "error" && <span className="text-[#a00]">오류</span>}
             </div>
-            <div>A4 · 시험지 v0.3</div>
+            <div>{setup.size} · {manifest.label}</div>
           </div>
 
           {state.kind === "error" && (
@@ -392,11 +433,10 @@ export default function EduPage() {
             <div
               ref={svgHostRef}
               className="bg-white shadow-md w-full max-w-[760px] h-fit"
-              style={{ aspectRatio: "220 / 300" }}
+              style={{ aspectRatio: "210 / 297" }}
             />
           </div>
 
-          {/* 하단: 페이지 네비 + 다운로드 */}
           <div className="h-14 px-5 flex items-center justify-between border-t border-border bg-surface">
             <div className="flex items-center gap-4 text-[12px] text-text-muted">
               <button
@@ -431,4 +471,67 @@ export default function EduPage() {
       </div>
     </main>
   );
+}
+
+// ── 블록 카드 ─────────────────────────────────────────────────────────────
+function BlockCard({
+  block,
+  onClick,
+  onDelete,
+}: {
+  block: Block;
+  onClick: () => void;
+  onDelete: () => void;
+}) {
+  const meta = blockSummary(block);
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full px-3 py-2 rounded-[6px] bg-bg border border-border text-left hover:border-accent transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-accent uppercase tracking-wide flex-shrink-0">
+            {meta.tag}
+          </span>
+          <span className="text-[12px] text-text-primary truncate">{meta.title}</span>
+        </div>
+        {meta.sub && (
+          <div className="text-[10px] text-text-muted truncate mt-0.5">{meta.sub}</div>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        className="absolute top-1.5 right-1.5 text-[12px] text-text-muted opacity-0 group-hover:opacity-100 hover:text-[#a00] transition-opacity"
+        aria-label="블록 삭제"
+        title="삭제"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+function blockSummary(b: Block): { tag: string; title: string; sub?: string } {
+  switch (b.kind) {
+    case "part-cover":
+      return { tag: "PART", title: b.label, sub: b.subtitle || undefined };
+    case "passage": {
+      const range = b.range ? `[${b.range[0]}~${b.range[1]}]` : "";
+      const preview = b.header || b.body.slice(0, 30) || "(빈 지문)";
+      return { tag: "지문", title: `${range} ${preview}`.trim() };
+    }
+    case "questions": {
+      const n = b.questions.length;
+      const linked = b.passage_id ? ` ↔ ${b.passage_id}` : "";
+      const first = b.questions[0]?.stem.slice(0, 28) ?? "";
+      return { tag: "문제", title: `${n}개${linked}`, sub: first };
+    }
+    case "quick-answer": {
+      const n = Object.keys(b.answers).length;
+      return { tag: "정답", title: `빠른 정답 ${n}개` };
+    }
+  }
 }

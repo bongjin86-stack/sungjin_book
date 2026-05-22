@@ -1,0 +1,318 @@
+{
+  "meta": {
+    "title": "Block Engine v0 smoke test",
+    "author": "성진북스",
+    "subject": "국어",
+    "watermark": "성진북스 내부 조판"
+  },
+  "preset": "simply-classic",
+  "options": {
+    "size": "A4"
+  },
+  "chapters": [
+    {
+      "type": "part-cover",
+      "label": "PART 1",
+      "subtitle": "고전소설 진단평가"
+    },
+    {
+      "type": "passages",
+      "passages": [
+        {
+          "id": "p-1",
+          "range": [
+            1,
+            3
+          ],
+          "header": "다음 글을 읽고 물음에 답하시오.",
+          "body": "심청이 인당수에 몸을 던지매 검은 물결이 잠깐 갈라지고 황금빛 광채가 둘러쌌으니, 이는 천상의 도움이라. 용궁 시녀들이 심청을 받들어 옥교에 태우니, 옥교는 사방이 영롱하여 인간 세계의 것이 아니었다.\n심청이 정신을 차려 좌우를 살펴보니, 산호 기둥에 진주 발이 드리워져 있고 수정 문이 빛났다. 시녀가 아뢰되, '낭자께서는 효성이 지극하시므로 옥황상제께서 특별히 명하시어 이곳에 모셨나이다.'",
+          "layout_mode": "default"
+        }
+      ],
+      "questions": [
+        {
+          "number": 1,
+          "passage_id": "p-1",
+          "stem": "윗글에 대한 설명으로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "사건이 시간 순서대로 전개된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "공간 이동을 통해 사건이 진행된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "회상을 통해 과거 사건을 재구성한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "외양 묘사로 인물의 성격을 부각한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "대화를 통해 인물의 가치관을 드러낸다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        },
+        {
+          "number": 2,
+          "passage_id": "p-1",
+          "stem": "윗글의 인물에 대한 설명으로 적절하지 않은 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "심청은 자기 희생을 통해 부모를 구하려 한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "용궁 시녀들은 심청을 정중히 대한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "옥황상제는 심청의 효성을 인정한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "심청은 인당수에서 천상의 도움을 받는다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "심청은 자신의 운명을 원망하고 있다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        },
+        {
+          "number": 3,
+          "passage_id": "p-1",
+          "stem": "윗글의 서술상 특징으로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "전지적 작가 시점이 사용되었다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "1인칭 주인공 시점이 사용되었다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "독백을 통해 내면이 드러난다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "역사적 사건이 배경으로 활용된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "비유적 표현 없이 사실 위주로 서술한다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        }
+      ]
+    },
+    {
+      "type": "answer-key",
+      "answers": {
+        "1": "②",
+        "2": "⑤",
+        "3": "①"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "kind": "part-cover",
+      "id": "part-1",
+      "label": "PART 1",
+      "subtitle": "고전소설 진단평가"
+    },
+    {
+      "kind": "passage",
+      "id": "p-1",
+      "range": [
+        1,
+        3
+      ],
+      "header": "다음 글을 읽고 물음에 답하시오.",
+      "body": "심청이 인당수에 몸을 던지매 검은 물결이 잠깐 갈라지고 황금빛 광채가 둘러쌌으니, 이는 천상의 도움이라. 용궁 시녀들이 심청을 받들어 옥교에 태우니, 옥교는 사방이 영롱하여 인간 세계의 것이 아니었다.\n심청이 정신을 차려 좌우를 살펴보니, 산호 기둥에 진주 발이 드리워져 있고 수정 문이 빛났다. 시녀가 아뢰되, '낭자께서는 효성이 지극하시므로 옥황상제께서 특별히 명하시어 이곳에 모셨나이다.'"
+    },
+    {
+      "kind": "questions",
+      "id": "qs-1",
+      "passage_id": "p-1",
+      "questions": [
+        {
+          "number": 1,
+          "passage_id": "p-1",
+          "stem": "윗글에 대한 설명으로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "사건이 시간 순서대로 전개된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "공간 이동을 통해 사건이 진행된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "회상을 통해 과거 사건을 재구성한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "외양 묘사로 인물의 성격을 부각한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "대화를 통해 인물의 가치관을 드러낸다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        },
+        {
+          "number": 2,
+          "passage_id": "p-1",
+          "stem": "윗글의 인물에 대한 설명으로 적절하지 않은 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "심청은 자기 희생을 통해 부모를 구하려 한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "용궁 시녀들은 심청을 정중히 대한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "옥황상제는 심청의 효성을 인정한다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "심청은 인당수에서 천상의 도움을 받는다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "심청은 자신의 운명을 원망하고 있다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        },
+        {
+          "number": 3,
+          "passage_id": "p-1",
+          "stem": "윗글의 서술상 특징으로 가장 적절한 것은?",
+          "score": null,
+          "choices": [
+            {
+              "index": 1,
+              "glyph": "①",
+              "text": "전지적 작가 시점이 사용되었다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 2,
+              "glyph": "②",
+              "text": "1인칭 주인공 시점이 사용되었다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 3,
+              "glyph": "③",
+              "text": "독백을 통해 내면이 드러난다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 4,
+              "glyph": "④",
+              "text": "역사적 사건이 배경으로 활용된다.",
+              "has_placeholder": false
+            },
+            {
+              "index": 5,
+              "glyph": "⑤",
+              "text": "비유적 표현 없이 사실 위주로 서술한다.",
+              "has_placeholder": false
+            }
+          ],
+          "stem_has_placeholder": false,
+          "any_choice_has_placeholder": false
+        }
+      ]
+    },
+    {
+      "kind": "quick-answer",
+      "id": "ak-1",
+      "answers": {
+        "1": "②",
+        "2": "⑤",
+        "3": "①"
+      }
+    }
+  ]
+}

@@ -342,19 +342,19 @@
                      size: 18pt, weight: "bold",
                      fill: t.color.accent)[빠른 정답])
   v(1.5em)
-  // 4열 그리드 (번호 / 답)
+  // 빠른 정답은 우선 번호/답 한 쌍씩 안정적으로 놓는다.
   let pairs = answers.pairs()
   let cells = ()
   for pair in pairs {
-    cells.push(box(width: 100%, inset: 4pt,
+    cells.push(box(inset: (x: 4pt, y: 2pt),
                    text(weight: "semibold")[#pair.at(0)]))
-    cells.push(box(width: 100%, inset: 4pt,
+    cells.push(box(inset: (x: 4pt, y: 2pt),
                    text(font: t.font.serif, size: 12pt)[#pair.at(1)]))
   }
   grid(
-    columns: (auto, 1fr, auto, 1fr),
-    column-gutter: 8pt,
-    row-gutter: 4pt,
+    columns: (auto, auto),
+    column-gutter: 12pt,
+    row-gutter: 6pt,
     ..cells,
   )
 }

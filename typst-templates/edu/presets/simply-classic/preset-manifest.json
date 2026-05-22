@@ -1,0 +1,43 @@
+{
+  "id": "simply-classic",
+  "label": "Simply Classic",
+  "purpose": "내부 조판자용 지문+문제 교재 (IDML simply-classic 추출)",
+  "blocks": [
+    {
+      "type": "toc",
+      "label": "목차",
+      "button": "+ 목차",
+      "renderer": "render-toc",
+      "enabled": false,
+      "note": "1차 범위 밖. preset이 toc master 박혀있지 않음."
+    },
+    {
+      "type": "part-cover",
+      "label": "PART",
+      "button": "+ PART",
+      "renderer": "render-part-cover",
+      "enabled": true
+    },
+    {
+      "type": "passage",
+      "label": "지문",
+      "button": "+ 지문",
+      "renderer": "render-passage-block",
+      "enabled": true
+    },
+    {
+      "type": "questions",
+      "label": "문제",
+      "button": "+ 문제",
+      "renderer": "render-question-group",
+      "enabled": true
+    },
+    {
+      "type": "quick-answer",
+      "label": "빠른 정답",
+      "button": "+ 빠른 정답",
+      "renderer": "render-answer-key",
+      "enabled": true
+    }
+  ]
+}
