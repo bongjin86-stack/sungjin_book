@@ -4,9 +4,10 @@
 // 진입: EduSetupScreen (제목/저자 입력) → 시작하기 누르면 작업 화면.
 // 작업: 좌측 책 구조 패널 + 가운데 미리보기 + 하단 PDF 다운로드.
 //
-// 2026-05-22: 종목 사이드바 → 책 구조 사이드바로 변경 (사용자 결정).
-//   - 단일 책 디폴트 (본문 카드 1개)
-//   - "챕터 추가" 버튼은 placeholder (다음 결정 후 박음)
+// 2026-05-22:
+//   - 종목 사이드바 → 책 구조 사이드바로 변경
+//   - "+ 챕터 추가" 활성화 — ChapterFormModal로 직접 입력 받음 (D-022 첫 어댑터)
+//   - chapters[]가 비었을 때만 샘플 단일 책 미리보기, 추가되면 사용자 chapters로 교체
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -14,11 +15,33 @@ import {
   compileTestPaperPdf,
 } from "@/lib/typst/compiler";
 import { EduSetupScreen, type EduProjectSetup } from "@/components/onboarding/EduSetupScreen";
+import { ChapterFormModal } from "@/components/edu/ChapterFormModal";
+import {
+  type ChapterFormData,
+  formToChapters,
+  makeEmptyForm,
+} from "@/lib/adapters/direct-input";
+import type { Chapter } from "@/lib/schema/edu-book";
 
-// 샘플 데이터 — HWP 업로드 박히기 전 까지는 단일 책 샘플로 미리보기.
+// 샘플 데이터 — chapters[]가 비었을 때 사용 (단일 책 미리보기).
 const SAMPLE_DATA_SRC = "/dev/edu/sample-single-book.json";
 
-/** 사용자 setup(제목/저자)을 sample JSON의 meta에 박는다. preset은 simply-classic 고정. */
+/** 사용자 setup + chapters → EduBook 형태 JSON. preset은 simply-classic 고정. */
+function buildBookData(setup: EduProjectSetup, chapters: Chapter[]) {
+  return {
+    meta: {
+      title: setup.title,
+      author: setup.author,
+      subject: "",
+      watermark: "",
+    },
+    preset: "simply-classic",
+    options: { size: setup.size },
+    chapters,
+  };
+}
+
+/** chapters 비었을 때 — 샘플 데이터에 setup 메타만 박아 미리보기. */
 function withSetup(raw: unknown, setup: EduProjectSetup) {
   const data = raw as Record<string, unknown>;
   const existingMeta = (data.meta as Record<string, unknown> | undefined) ?? {};
@@ -40,6 +63,12 @@ type State =
   | { kind: "ok"; svg: string; elapsedMs: number }
   | { kind: "error"; message: string };
 
+// 한 사용자 챕터 = 폼 입력값 (라벨/지문/문제). EduBook chapters[]로 펼치면 part-cover + passages 2개.
+interface UserChapter {
+  id: string;
+  form: ChapterFormData;
+}
+
 export default function EduPage() {
   // setup이 null이면 진입 화면, 값 있으면 작업 화면
   const [setup, setSetup] = useState<EduProjectSetup | null>(null);
@@ -47,6 +76,9 @@ export default function EduPage() {
   const [pageIdx, setPageIdx] = useState(0);
   const [pageCount, setPageCount] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  // 사용자가 추가한 챕터들. 비어있으면 샘플 단일 책 미리보기.
+  const [userChapters, setUserChapters] = useState<UserChapter[]>([]);
+  const [modalForm, setModalForm] = useState<ChapterFormData | null>(null);
   // HWP 업로드 (UI 자리만 — 실제 변환은 4순위에서 박음)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -66,20 +98,42 @@ export default function EduPage() {
     setUploadedFile(file);
   }
 
-  // 진입 화면에서 setup 박히면 → 샘플 JSON 로드 → setup 메타 박아 컴파일.
+  function openAddChapter() {
+    setModalForm(makeEmptyForm(`PART ${userChapters.length + 1}`));
+  }
+
+  function handleSaveChapter(form: ChapterFormData) {
+    setUserChapters((prev) => [
+      ...prev,
+      { id: `c-${Date.now()}`, form },
+    ]);
+    setModalForm(null);
+  }
+
+  // setup 또는 chapters 갱신 → 데이터 재구성 → 컴파일.
+  // userChapters 비어있으면 샘플 단일 책, 있으면 사용자 입력만.
   useEffect(() => {
     if (!setup) return;
     let cancelled = false;
     (async () => {
       const t0 = performance.now();
-      setState({ kind: "loading", phase: "데이터 로드 중" });
+      setState({ kind: "loading", phase: "컴파일 중" });
       try {
-        const res = await fetch(SAMPLE_DATA_SRC);
-        if (!res.ok) throw new Error(`데이터 로드 실패 (${res.status})`);
-        const raw = await res.json();
-        const data = withSetup(raw, setup);
+        let data: unknown;
+        if (userChapters.length === 0) {
+          const res = await fetch(SAMPLE_DATA_SRC);
+          if (!res.ok) throw new Error(`샘플 로드 실패 (${res.status})`);
+          const raw = await res.json();
+          data = withSetup(raw, setup);
+        } else {
+          const allChapters: Chapter[] = userChapters.flatMap((c) => formToChapters(c.form));
+          // chapters 비었으면 typst가 거부 — 빈 passages 1개 박음
+          const safeChapters: Chapter[] = allChapters.length > 0
+            ? allChapters
+            : [{ type: "passages", passages: [], questions: [] }];
+          data = buildBookData(setup, safeChapters);
+        }
         if (cancelled) return;
-        setState({ kind: "loading", phase: "컴파일 중" });
         const svg = await compileTestPaperSvg(data);
         if (cancelled) return;
         const elapsedMs = Math.round(performance.now() - t0);
@@ -93,7 +147,7 @@ export default function EduPage() {
     return () => {
       cancelled = true;
     };
-  }, [setup]);
+  }, [setup, userChapters]);
 
   // SVG → DOM 박기 + 페이지 수 측정
   useEffect(() => {
@@ -146,10 +200,19 @@ export default function EduPage() {
     if (!setup) return;
     setDownloading(true);
     try {
-      const res = await fetch(SAMPLE_DATA_SRC);
-      if (!res.ok) throw new Error(`데이터 로드 실패 (${res.status})`);
-      const raw = await res.json();
-      const data = withSetup(raw, setup);
+      let data: unknown;
+      if (userChapters.length === 0) {
+        const res = await fetch(SAMPLE_DATA_SRC);
+        if (!res.ok) throw new Error(`샘플 로드 실패 (${res.status})`);
+        const raw = await res.json();
+        data = withSetup(raw, setup);
+      } else {
+        const allChapters: Chapter[] = userChapters.flatMap((c) => formToChapters(c.form));
+        const safeChapters: Chapter[] = allChapters.length > 0
+          ? allChapters
+          : [{ type: "passages", passages: [], questions: [] }];
+        data = buildBookData(setup, safeChapters);
+      }
       const pdf = await compileTestPaperPdf(data);
       const blob = new Blob([pdf as BlobPart], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -179,6 +242,13 @@ export default function EduPage() {
 
   return (
     <main className="min-h-screen flex flex-col bg-bg">
+      {/* 챕터 추가/편집 모달 */}
+      <ChapterFormModal
+        initial={modalForm}
+        onClose={() => setModalForm(null)}
+        onSave={handleSaveChapter}
+      />
+
       {/* 헤더 */}
       <header className="h-12 px-5 flex items-center justify-between border-b border-border bg-surface">
         <div className="flex items-center gap-3">
@@ -264,14 +334,37 @@ export default function EduPage() {
               />
             </div>
 
-            {/* 챕터 추가 (다음 결정 후 박음 — 지금은 안내) */}
+            {/* 사용자가 직접 입력한 챕터들 */}
+            {userChapters.length > 0 && (
+              <div className="flex flex-col gap-1 mb-3">
+                {userChapters.map((c) => (
+                  <div
+                    key={c.id}
+                    className="px-3 py-2 rounded-[6px] bg-bg border border-border text-[12px]"
+                  >
+                    <div className="font-semibold text-text-primary truncate">{c.form.label}</div>
+                    {c.form.subtitle && (
+                      <div className="text-[10px] text-text-muted truncate">{c.form.subtitle}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 챕터 추가 — 직접 입력 모달 */}
             <button
               type="button"
-              onClick={() => alert("챕터 추가 UI는 다음 결정 후 박힙니다.")}
-              className="w-full px-3 py-2 rounded-[6px] text-[11px] text-text-muted border border-dashed border-border hover:border-accent hover:text-accent transition-colors"
+              onClick={openAddChapter}
+              className="w-full px-3 py-2 rounded-[6px] text-[12px] text-text-secondary border border-dashed border-border hover:border-accent hover:text-accent transition-colors"
             >
-              + 챕터 추가 (준비 중)
+              + 챕터 추가
             </button>
+
+            {userChapters.length === 0 && (
+              <div className="text-[10px] text-text-muted mt-3 leading-relaxed">
+                챕터를 추가하면 위의 본문 샘플 대신 입력한 내용으로 미리보기가 갱신됩니다.
+              </div>
+            )}
           </div>
         </aside>
 
