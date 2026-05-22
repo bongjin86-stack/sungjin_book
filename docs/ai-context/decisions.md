@@ -1,5 +1,49 @@
 # 결정 기록
 
+## 2026-05-22 — 내부 조판자용 Preset Block Engine
+
+### D-024. 먼저 고객 셀프 SaaS가 아니라 내부 반자동 조판 엔진으로 간다
+
+**결정**: 교재 트랙 1차 목표를 고객 셀프 편집기가 아니라 **성진북스 내부 조판자가 HWP/복붙 콘텐츠를 받아 IDML preset 블록으로 조립하고 PDF를 납품하는 반자동 조판 엔진**으로 둔다.
+
+**이유**:
+- 상업용 품질을 만들려면 초반에는 디자인팀/조판자가 판단해야 한다.
+- 고객에게 너무 많은 선택지를 주면 한글에서 직접 꾸미는 것보다 더 어려워질 수 있다.
+- 내부에서 반복 작업을 하며 안전한 블록과 수정 권한을 먼저 정리한 뒤, 나중에 고객용 UI로 공개하는 편이 현실적이다.
+
+### D-025. preset은 스타일뿐 아니라 허용 블록도 정의한다
+
+**결정**: IDML preset은 색/폰트/마스터만이 아니라, 사용 가능한 블록 목록도 정의한다.
+
+현재 simply-classic v0:
+- `toc` — manifest에만 있고 disabled
+- `part-cover`
+- `passage`
+- `questions`
+- `quick-answer`
+
+**데이터 흐름**:
+```
+blocks[] -> chapters[] -> Typst -> PDF
+```
+
+**이유**:
+- `+ 지문`, `+ 문제`, `+ PART`, `+ 빠른 정답`은 그냥 UI 버튼이 아니라 preset에 종속된 조판 부품이어야 한다.
+- 다른 IDML preset을 넣으면 버튼/블록/렌더러가 달라질 수 있다.
+
+### D-026. 엔진 테스트도 상품형 QA 샘플을 통과해야 한다
+
+**결정**: 단순 연결용 smoke test와 별개로, `blocks[]` 엔진이 상품 품질을 유지하는지 보는 **Block Engine Product QA**를 둔다.
+
+**QA 샘플 구분**:
+- `hwp-simply-classic-debug`: HWP 변환 상품 샘플.
+- `block-engine-product`: 같은 상품 샘플을 `blocks[]`로 재구성한 엔진 상품 샘플.
+- `block-engine-smoke`: 버튼/JSON/PDF 연결 확인용.
+
+**통과 기준**:
+- 엔진 변경 후 `block-engine-product`가 상품 샘플 품질을 유지해야 한다.
+- 2026-05-22 기준 `block-engine-product`와 `hwp-simply-classic-debug` p1~p3 픽셀 diff는 0.0000.
+
 > 왜 그렇게 정했는지를 남긴다. 무엇을 정했는지가 아니라 **왜**.
 
 ## 2026-04-27 — 프로젝트 시작

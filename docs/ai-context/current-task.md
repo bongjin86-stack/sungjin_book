@@ -1,5 +1,39 @@
 # 현재 작업 상태
 
+> 최신 보호 요약: 2026-05-22 오후, 교재 트랙은 **내부 조판자용 Preset Block Engine** 방향으로 전환. 자세한 핸드오프는 `docs/ai-context/edu-block-engine-handoff-2026-05-22.md`.
+
+## 2026-05-22 오후 최신 위치 — 블록 엔진 기준 박힘
+
+지금은 고객 셀프 편집기보다 먼저 **성진북스 내부 조판자가 IDML preset 블록을 쌓아 상업용 PDF를 만드는 반자동 조판 엔진**을 만든다.
+
+핵심:
+- IDML 1개 = preset 1개 = 허용 블록 묶음 1개.
+- preset은 스타일뿐 아니라 `+ 목차`, `+ PART`, `+ 지문`, `+ 문제`, `+ 빠른 정답` 같은 허용 블록도 정의한다.
+- 내부 데이터 권위는 `blocks[]`.
+- 렌더 직전 `blocks[] -> chapters[] -> Typst -> PDF`.
+- 엔진 테스트도 최종 기준은 디자인 품질이다.
+
+최근 커밋:
+- `9948d13 feat(edu): add preset block engine`
+- `92982ae fix(edu): separate passage and question blocks`
+- `edb7f31 test(edu): add product-quality block engine sample`
+
+QA 기준:
+- `hwp-simply-classic-debug` = Product QA, HWP 변환 상품 샘플.
+- `block-engine-product` = Block Engine Product QA, 같은 상품 샘플을 blocks 엔진으로 통과시킨 기준 샘플.
+- `block-engine-smoke` = 연결 확인용. 못생겨도 되지만 깨지면 안 됨.
+
+검증:
+- `block-engine-product`와 기존 예쁜 HWP 샘플은 p1~p3 픽셀 diff 0.0000.
+- `npm run build` 통과.
+- QA 갤러리 `/dev/qa-gallery` 최신 기준은 `Block Engine Product QA`.
+
+다음 한 발:
+1. 빠른 정답 페이지를 IDML `master_5_빠른정답` 구조 기반으로 재구현.
+2. QA 갤러리를 Product QA / Engine Product QA / Smoke / Reference로 분리.
+3. HWP 변환 결과를 `blocks[]` 초안으로 바꾸는 adapter 작성.
+4. `/edu` 웹에서 블록 순서 이동과 오른쪽 블록 편집 패널을 다듬기.
+
 > 마지막 업데이트: 2026-05-22 KST 오전 (Phase Ⅳ 첫 한 발 박힘 — IDML 배경 자동 추출 + main.typ 통합 + 입력 형식 결정)
 > 단계: **Phase Ⅳ R&D 결실 + Phase Ⅰ chapters 흐름 정의 단계**
 > 작업 브랜치: `main` 단일 / `backup-pre-edu100-2026-05-22` 백업
