@@ -1,8 +1,13 @@
 # 체크리스트
 
-> 마지막 업데이트: 2026-05-22 KST 오전 (Phase Ⅳ 첫 한 발 + 연결부 봉합)
+> 마지막 업데이트: 2026-05-23 KST 오전 (HWP → blocks[] 어댑터 박힘)
 
 ## 교재 트랙 — Phase Ⅰ 끝 연결 (지금 진행 중)
+
+### 2026-05-23 오전 박힘
+- [x] HWP → blocks[] 어댑터 `web/lib/adapters/hwp-to-blocks.ts` 박음
+- [x] Python 빌더 `build-edu-book-sample.py`에 blocks 출력 추가 + 검증
+- [ ] zod v4 빌드 이슈 (BlockEditModal/page.tsx implicit any) — **다음 우선**
 
 ### 2026-05-22 오전 박힘
 - [x] IDML 배경 자동 추출기 3종 (`scout-spreads.py` / `inspect-spread.py` / `extract-decorations.py`)

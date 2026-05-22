@@ -4,6 +4,10 @@
 EduBook 스키마는 web/lib/schema/edu-book.ts와 1:1.
 체인: HWP → 이 스크립트 → EduBook JSON → render-hwp-simply-classic.py → PDF.
 
+chapters[]와 blocks[] 둘 다 출력. chapters[]는 typst 렌더용. blocks[]는
+내부 조판자 UI 권위. 어댑터 권위 코드는 web/lib/adapters/hwp-to-blocks.ts이고,
+여기는 검증용 Python 사본이다.
+
 샘플 선택 이유 (보고서에 박힘):
   - korean-questions.json
   - 14 passages / 56 questions
@@ -80,6 +84,74 @@ def add_demo_semantic_overrides(passages: list, questions: list) -> None:
             ]]
 
 
+def hwp_to_blocks(
+    passages: list,
+    questions: list,
+    part_label: str = "",
+    part_subtitle: str = "",
+) -> list:
+    """web/lib/adapters/hwp-to-blocks.ts와 동일한 변환을 Python으로 다시 박은 사본.
+
+    권위는 TS 어댑터. 여기는 PDF 렌더 검증용. 두 코드가 다른 결과를 내면 버그.
+    """
+    blocks: list = []
+
+    label = part_label.strip()
+    if label:
+        blocks.append({
+            "kind": "part-cover",
+            "id": "pc-1",
+            "label": label,
+            "subtitle": part_subtitle.strip(),
+        })
+
+    # passage_id → questions 묶기
+    by_passage: dict[str, list] = {}
+    orphans: list = []
+    for q in questions:
+        pid = q.get("passage_id")
+        if pid:
+            by_passage.setdefault(pid, []).append(q)
+        else:
+            orphans.append(q)
+
+    for p in passages:
+        pb = {
+            "kind": "passage",
+            "id": p["id"],
+            "range": p.get("range"),
+            "header": p.get("header", ""),
+            "body": p.get("body", ""),
+            "layout_mode": p.get("layout_mode", "default"),
+        }
+        if "body_rich" in p:
+            pb["body_rich"] = p["body_rich"]
+        blocks.append(pb)
+
+        qs = by_passage.pop(p["id"], None)
+        if qs:
+            blocks.append({
+                "kind": "questions",
+                "id": f"q-{p['id']}",
+                "passage_id": p["id"],
+                "questions": qs,
+            })
+
+    # HWP에서 passage 누락된 묶음 문항은 orphan으로
+    for qs in by_passage.values():
+        orphans.extend(qs)
+
+    if orphans:
+        blocks.append({
+            "kind": "questions",
+            "id": "q-standalone",
+            "passage_id": None,
+            "questions": orphans,
+        })
+
+    return blocks
+
+
 def main() -> int:
     if not HWP_JSON.exists():
         print(f"[err] HWP JSON 없음: {HWP_JSON}", file=sys.stderr)
@@ -88,6 +160,13 @@ def main() -> int:
     hwp = json.loads(HWP_JSON.read_text(encoding="utf-8"))
     passages, questions = select_sample(hwp, SAMPLE_QUESTION_COUNT)
     add_demo_semantic_overrides(passages, questions)
+
+    blocks = hwp_to_blocks(
+        passages,
+        questions,
+        part_label="PART 1",
+        part_subtitle="HWP 변환 샘플",
+    )
 
     edu_book = {
         "meta": {
@@ -100,6 +179,7 @@ def main() -> int:
         "options": {
             "size": "A4",
         },
+        "blocks": blocks,
         "chapters": [
             {
                 "type": "part-cover",
@@ -125,6 +205,7 @@ def main() -> int:
     print(f"[hwp] source: {hwp.get('source')}")
     print(f"[hwp] 전체 passages: {len(hwp['passages'])}, questions: {len(hwp['questions'])}")
     print(f"[sample] passages: {len(passages)}, questions: {len(questions)}")
+    print(f"[blocks] {len(blocks)} block(s): " + ", ".join(b["kind"] for b in blocks))
     print(f"[out] → {OUT_PATH.relative_to(ROOT)}")
     return 0
 

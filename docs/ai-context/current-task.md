@@ -2,6 +2,29 @@
 
 > 최신 보호 요약: 2026-05-22 오후, 교재 트랙은 **내부 조판자용 Preset Block Engine** 방향으로 전환. 자세한 핸드오프는 `docs/ai-context/edu-block-engine-handoff-2026-05-22.md`.
 
+## 2026-05-23 오전 박힘 — HWP → blocks[] 어댑터
+
+- `web/lib/adapters/hwp-to-blocks.ts` 신규. HWP 변환 결과(passages+questions 평탄) → `blocks[]` 초안.
+  - 룰: part-cover(옵션) → 각 passage 다음에 그에 묶인 questions block → 독립 문항은 끝에 한 묶음 → quick-answer(옵션).
+  - passage block.id = HWP passage id 그대로 (deterministic). questions block.id = `q-${passage_id}`.
+- `experiments/edu-import/scripts/build-edu-book-sample.py`에 `hwp_to_blocks()` 사본 박음. 동일 로직 검증용.
+- 출력 `hwp-simply-classic-sample.json`에 `blocks[]` 필드 추가. chapters[] 그대로 보존(렌더 회귀 없음).
+- 검증: chapters의 passages(2)/questions(9)와 blocks의 passages(2)/questions(9) 카운트 일치.
+
+### 발견 — zod v4 호환 빌드 깨짐 (이번 작업 무관)
+
+- `npm.cmd run build` 실행 시 BlockEditModal.tsx / edu/page.tsx에서 `z.infer<typeof QuestionSchema>` 추론 실패로 implicit any 오류 다수.
+- 원인 추정: zod 4.4.3에서 `default()` 가진 필드의 type 추론 동작 변화.
+- 사용자 결정: 어댑터만 박고 마무리. zod 이슈는 별도 태스크로 다음에 잡기.
+
+### 다음 한 발 후보 (재정렬)
+
+1. **zod v4 빌드 이슈 해결** ◀ 가장 우선 (다른 작업 막힘)
+2. `/edu`에서 HWP 업로드 → hwp-to-blocks 자동 변환 UI 연결
+3. 빠른 정답 페이지 IDML master 기반 재구현
+4. QA 갤러리 섹션 분리 (Product / Engine Product / Smoke / Reference)
+
+
 ## 2026-05-22 오후 최신 위치 — 블록 엔진 기준 박힘
 
 지금은 고객 셀프 편집기보다 먼저 **성진북스 내부 조판자가 IDML preset 블록을 쌓아 상업용 PDF를 만드는 반자동 조판 엔진**을 만든다.
