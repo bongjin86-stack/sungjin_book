@@ -1,13 +1,66 @@
 # 현재 작업 상태
 
-> 마지막 업데이트: 2026-05-22 KST 새벽 (STS L1 v27 + Edu100 진입 화면 + 컨셉 정리 push)
-> 단계: **Phase Ⅰ MVP 흐름 진행 중 + 내일 Phase Ⅳ IDML 배경 추출 R&D**
+> 마지막 업데이트: 2026-05-22 KST 오전 (Phase Ⅳ 첫 한 발 박힘 — IDML 배경 자동 추출 + main.typ 통합 + 입력 형식 결정)
+> 단계: **Phase Ⅳ R&D 결실 + Phase Ⅰ chapters 흐름 정의 단계**
 > 작업 브랜치: `main` 단일 / `backup-pre-edu100-2026-05-22` 백업
 
 ## 이어서 하자 트리거 — 다음 세션 첫 보고
 
 ### 한 줄 위치
-**STS L1 문제 STS 완성(v27) + Edu100 진입 화면 박힘 + preset 컨셉 정리. 내일 IDML 배경 추출(Phase Ⅳ) 시작.**
+**IDML 배경 자동 추출기 박힘 + main.typ background 통합 작동 (95.2%). preset 컨셉 + 입력 형식 결정 박힘. 다음 한 발 = 콘텐츠 JSON에 chapters 필드 + main.typ 분기.**
+
+### 2026-05-22 오전 박힌 것 (이 세션)
+
+**IDML 배경 추출 R&D — Phase Ⅳ 첫 한 발**
+- `experiments/idml-recon/scout-spreads.py` — 59 spread 한눈 정찰
+- `experiments/idml-recon/inspect-spread.py` — 한 spread 좌표/색/텍스트 dump
+- `experiments/idml-recon/extract-decorations.py` — Spread XML → decorations.typ 자동
+- 핵심 발견: **Spread 자체에 ItemTransform 큰 y offset** — 누적 좌표 계산 시 반영 필요
+
+**시각 검증 점수**
+- standalone (page 12 frame 14개): **95.8%** ✅
+- 통합 (body 1200자 + 배경 합성): **95.2%** ✅
+
+**자동 추출 카탈로그**
+- 59 spreads → 115 페이지 → 3729 frames → `decorations.typ` (3964줄)
+- main.typ pattern: `set page(background: page-decorations.at(str(pn)))`
+- typst 디테일: dict 값은 `[ ]` content block (코드블록 `{ }` 아님)
+
+**입력 형식 결정 (사용자 합의)**
+- (B) 챕터별 HWP 업로드 + (C) 단일 책 — 둘 다 지원
+- (A) HWP 1개 자동 분리 — ❌ 보류 (잘못 잡히면 책 망함)
+- 챕터 라벨/부제는 항상 폼에서 직접 입력 (HWP 안에 있어도)
+
+**preset 컨셉 박힘 (사용자 합의)**
+- IDML 1개 = 1 preset = 한 묶음 = 학원선생 카드 1장
+- L1 문제 + L2 배경 + master spread 모음 + chapter type → master 매핑 한 묶음
+- 간지/목차도 preset 안에 디자인 고정 (사용자 옵션 아님)
+- 사용자는 카드 클릭 + 콘텐츠 입력 + 메타(제목·챕터명·워터마크)만
+
+### 다음 한 발 후보
+
+**(가) 콘텐츠 JSON 스키마에 chapters 필드 추가** ◀ 가장 우선
+- 현재 content.json: passages + questions만
+- 필요: meta + preset + options + chapters[type: part-cover|passages|answer-key|toc|front]
+- 단일 책(C)도 chapters 1개로 표현 가능
+
+**(나) main.typ chapter type 분기 로직**
+- `chapter-type-to-master` dict (preset마다)
+- chapters[] for문으로 type 보고 master switch + 콘텐츠 식자
+
+**(다) EduSetupScreen 확장 — 챕터 추가 UI**
+- 챕터 추가 버튼 + 챕터마다 (라벨/부제/HWP 업로드/폼 입력)
+- 단일 책 모드 토글
+
+**(라) Polygon → typst line() 매핑** (저자)
+- [A]/[B] 라벨 좌측 검정 세로선 현재 Rectangle로 그려져 사각형
+- Polygon PathPoint 직접 line()으로 매핑하면 깔끔
+
+### 트리거 시 첫 한 발 권고
+
+**(가) 콘텐츠 JSON 스키마 박기**. (나) (다)가 모두 이걸 의존. 한 번 박으면 Phase Ⅰ 흐름 골격 완성.
+
+
 
 ### task 상태 (어제 작업 결과)
 

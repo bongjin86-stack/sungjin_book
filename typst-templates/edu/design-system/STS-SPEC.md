@@ -230,6 +230,62 @@ preset (디자이너 1명의 1 묶음)
   └─────────────┘ └────────────┘
 ```
 
+### 콘텐츠 입력 형식 (2026-05-22 결정)
+
+학원선생이 콘텐츠를 넣는 방법은 **(B) + (C) 둘 다 지원**.
+
+**(B) 챕터별 분리** — 책 안에 챕터/회차/PART가 있는 경우
+- 챕터마다 HWP 파일 1개 업로드 (또는 폼 직접 입력)
+- 챕터 라벨(`PART 1` / `1회` / `단원 1`) + 부제(`프롤로그` 등)는 **폼에서 직접 입력**
+- HWP 안에 챕터 표시가 있어도 무시 (라벨은 항상 폼이 권위)
+
+**(C) 단일 책** — 모의고사 1회·단원 1개짜리
+- HWP 1개 통째 업로드. 챕터 개념 없음
+- 간지(챕터 표지) 안 박힘. 본문만 흐름
+
+**(A) HWP 1개 통째 + 자동 챕터 분리** — ❌ 보류
+- 휴리스틱 잘못 잡히면 책 망함. 학원선생 디버깅 못함
+- Phase Ⅴ 베타 사용자 의견 받고 결정
+
+### 콘텐츠 JSON 스키마 (chapters 필드 — TODO 도입)
+
+```jsonc
+{
+  "meta":  { "title": "...", "author": "...", "subject": "...", "watermark": "..." },
+  "preset": "simply-classic",
+  "options": { "size": "A4" },     // preset이 지원하는 범위
+  "chapters": [
+    { "type": "part-cover", "label": "PART 1", "subtitle": "프롤로그" },
+    { "type": "passages",   "passages": [...], "questions": [...] },
+    { "type": "part-cover", "label": "PART 2", "subtitle": "본격" },
+    { "type": "passages",   "passages": [...], "questions": [...] },
+    { "type": "answer-key", "answers": [...] }
+  ]
+}
+```
+
+단일 책(C)는 chapters 1개만:
+```jsonc
+{ "chapters": [{ "type": "passages", "passages": [...], "questions": [...] }] }
+```
+
+### preset 안 chapter type → master 매핑 (도입 예정)
+
+각 preset이 자기 매핑 보유. 다른 preset이 같은 chapter type을 다른 master로 그림.
+
+```typst
+// simply-classic/main.typ 안
+#let chapter-type-to-master = (
+  "part-cover": master_1_파트1,
+  "passages":   master_2_파트2_같이하기,
+  "answer-key": master_5_빠른정답,
+  "toc":        master_목차,     // 추출 추가 필요
+  "front":      master_속표지,   // 추출 추가 필요
+)
+```
+
+→ 콘텐츠 JSON은 preset 무관. preset이 type → master 결정.
+
 ## 7. IDML 흡수 R&D
 
 IDML 원본을 STS preset으로 매핑하는 과정:
