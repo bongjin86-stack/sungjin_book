@@ -2,22 +2,15 @@
 import { useState } from "react";
 
 // Edu100 진입 화면 — 단행본 BookSetupScreen 패턴 차용 (좌 브랜드 + 우 패널, 1단계).
-// 입력: 교재 제목, 저자, 과목. 사이즈는 A4 고정.
+// 입력: 교재 제목, 저자. 사이즈는 A4 고정.
+//
+// 2026-05-22: 종목 칩 제거 (사용자 결정 — 종목은 표시 필요 X).
 
 export interface EduProjectSetup {
   title: string;
   author: string;
-  subjectId: string;
   size: "A4";
 }
-
-const SUBJECTS = [
-  { id: "korean", label: "국어", available: true },
-  { id: "english", label: "영어", available: false },
-  { id: "math", label: "수학", available: false },
-  { id: "social", label: "사회탐구", available: false },
-  { id: "science", label: "과학탐구", available: false },
-];
 
 const BENEFITS = [
   { icon: "📄", label: "한글 → PDF 자동 식자", sub: "STS 룰 기반" },
@@ -29,14 +22,12 @@ const BENEFITS = [
 export function EduSetupScreen({ onStart }: { onStart: (setup: EduProjectSetup) => void }) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
-  const [subjectId, setSubjectId] = useState("korean");
 
   function handleStart() {
     if (!title.trim()) return;
     onStart({
       title: title.trim(),
       author: author.trim(),
-      subjectId,
       size: "A4",
     });
   }
@@ -80,7 +71,7 @@ export function EduSetupScreen({ onStart }: { onStart: (setup: EduProjectSetup) 
         <div className="flex-1 bg-white rounded-[20px] p-9 px-8 shadow-[0_24px_64px_rgba(0,0,0,0.3)]">
           <div className="text-[20px] font-bold text-text-primary mb-1">새 교재 만들기</div>
           <div className="text-[13px] text-text-secondary mb-7">
-            제목과 과목을 입력하면 바로 작업할 수 있습니다.
+            제목을 입력하면 바로 작업할 수 있습니다.
           </div>
 
           {/* 제목 */}
@@ -109,39 +100,6 @@ export function EduSetupScreen({ onStart }: { onStart: (setup: EduProjectSetup) 
               placeholder="예: 성진북스"
               className="w-full px-[13px] py-[10px] rounded-[8px] border-[1.5px] border-border bg-bg text-[14px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent focus:bg-white"
             />
-          </div>
-
-          {/* 과목 */}
-          <div className="mb-4">
-            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-[0.6px] mb-[5px]">
-              과목 <span className="text-[#E53E3E] ml-1">*</span>
-            </label>
-            <div className="grid grid-cols-5 gap-2">
-              {SUBJECTS.map((s) => {
-                const selected = subjectId === s.id;
-                const disabled = !s.available;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setSubjectId(s.id)}
-                    className={`p-[10px_8px] rounded-[8px] border-[1.5px] text-center transition-all ${
-                      disabled
-                        ? "border-border bg-bg text-text-muted opacity-50 cursor-not-allowed"
-                        : selected
-                          ? "border-accent bg-accent-light"
-                          : "border-border bg-bg hover:border-accent"
-                    }`}
-                  >
-                    <div className={`text-[13px] font-semibold ${selected ? "text-accent" : "text-text-primary"}`}>
-                      {s.label}
-                    </div>
-                    {!s.available && <div className="text-[10px] text-text-muted mt-[2px]">준비 중</div>}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* 사이즈 (고정) */}
