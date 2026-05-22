@@ -1,10 +1,17 @@
 // presets/simply-classic/main.typ
 //
 // IDML 흡수 검증 entry — 우리 HWP→JSON 데이터를 simply-classic IDML 디자인으로 식자.
-// v21 (2026-05-22) 사용자 시각 검증으로 확정된 패턴.
+// v22 (2026-05-22 오후) chapters[] 분기 구조 도입.
 //
-// 식자 시퀀스 (한 문제):
-//   ❶ question-number  → ❷ question-stem  →  [boki-box?] →  choice-glyph + choice-text
+// 데이터 모양 (web/lib/schema/edu-book.ts와 1:1):
+//   data = { meta, preset, options, chapters: [{type: "part-cover"|"passages"|"answer-key", ...}] }
+//
+// chapter type별 master:
+//   part-cover  → 챕터 표지 (큰 청색 PART 라벨 + 부제). pagebreak 후 가운데 식자.
+//   passages    → 본문 (지문 + 문제 묶음). 기본 master_2_파트2_같이하기.
+//   answer-key  → 답안 표. 기본 master_5_빠른정답.
+//
+// 하위 호환: data.chapters 없고 data.passages/data.questions 있으면 단일 passages 챕터로 자동 wrap.
 //
 // 명명·간격·정렬 룰은 design-tokens.typ. 이 파일은 시퀀스만.
 
@@ -162,9 +169,82 @@
   groups
 }
 
-#for g in group-by-passage(data.questions) {
-  let p = none
-  for pp in data.passages { if pp.id == g.pid { p = pp } }
-  if p != none { render-passage(p) }
-  for q in g.qs { render-question(q) }
+
+// ── chapter 핸들러 ──────────────────────────────────────────────────────────
+
+// part-cover: 챕터 표지. pagebreak + 가운데 청색 PART 라벨 + 부제.
+#let render-part-cover(label, subtitle) = {
+  pagebreak(weak: true)
+  v(1fr)
+  align(center, text(font: ("Pretendard", "Noto Sans KR"),
+                     size: 36pt, weight: "extrabold",
+                     fill: t.color.accent)[#label])
+  if subtitle != none and subtitle != "" {
+    v(1em)
+    align(center, text(font: ("Pretendard", "Noto Sans KR"),
+                       size: 14pt, fill: t.color.muted)[#subtitle])
+  }
+  v(2fr)
+  pagebreak(weak: true)
+}
+
+// passages: 지문 + 문제 묶음.
+#let render-passages-chapter(passages, questions) = {
+  let _passages = passages
+  for g in group-by-passage(questions) {
+    let p = none
+    for pp in _passages { if pp.id == g.pid { p = pp } }
+    if p != none { render-passage(p) }
+    for q in g.qs { render-question(q) }
+  }
+}
+
+// answer-key: 빠른 정답 표.
+#let render-answer-key(answers) = {
+  pagebreak(weak: true)
+  align(center, text(font: ("Pretendard", "Noto Sans KR"),
+                     size: 18pt, weight: "bold",
+                     fill: t.color.accent)[빠른 정답])
+  v(1.5em)
+  // 4열 그리드 (번호 / 답)
+  let pairs = answers.pairs()
+  let cells = ()
+  for pair in pairs {
+    cells.push(box(width: 100%, inset: 4pt,
+                   text(weight: "semibold")[#pair.at(0)]))
+    cells.push(box(width: 100%, inset: 4pt,
+                   text(font: t.font.serif, size: 12pt)[#pair.at(1)]))
+  }
+  grid(
+    columns: (auto, 1fr, auto, 1fr),
+    column-gutter: 8pt,
+    row-gutter: 4pt,
+    ..cells,
+  )
+}
+
+
+// ── chapters 정규화 (하위 호환) ─────────────────────────────────────────────
+//
+// 옛 data 형태(passages + questions 직결)면 단일 passages 챕터로 자동 wrap.
+#let _chapters = if "chapters" in data {
+  data.chapters
+} else {
+  ((
+    type: "passages",
+    passages: data.at("passages", default: ()),
+    questions: data.at("questions", default: ()),
+  ),)
+}
+
+// ── 디스패치 ────────────────────────────────────────────────────────────────
+#for c in _chapters {
+  if c.type == "part-cover" {
+    render-part-cover(c.label, c.at("subtitle", default: ""))
+  } else if c.type == "passages" {
+    render-passages-chapter(c.at("passages", default: ()),
+                            c.at("questions", default: ()))
+  } else if c.type == "answer-key" {
+    render-answer-key(c.at("answers", default: (:)))
+  }
 }
