@@ -89,6 +89,52 @@
 
 
 // ── 컴포넌트: 한 문제 (윗단 + boki? + 아랫단) ────────────────────────────────
+#let render-inline-run(run) = {
+  let out = run.at("text", default: "")
+  let marks = run.at("marks", default: ())
+  if "strong" in marks {
+    out = text(weight: "bold")[#out]
+  }
+  if "underline" in marks {
+    out = underline(out)
+  }
+  out
+}
+
+#let render-rich(inlines) = {
+  if type(inlines) == str {
+    inlines
+  } else {
+    for run in inlines {
+      render-inline-run(run)
+    }
+  }
+}
+
+#let render-rich-paragraphs(style, paragraphs) = {
+  if type(paragraphs) == str {
+    for para in paragraphs.split("\n") {
+      if para.trim() != "" {
+        apply-para-style(style, para)
+      }
+    }
+  } else {
+    for para in paragraphs {
+      if type(para) == str {
+        if para.trim() != "" {
+          apply-para-style(style, para)
+        }
+      } else if para.len() > 0 {
+        apply-para-style(style, [
+          #for run in para {
+            render-inline-run(run)
+          }
+        ])
+      }
+    }
+  }
+}
+
 #let _pad2(n) = if n < 10 { "0" + str(n) } else { str(n) }
 
 // 한 문제를 1개 block(breakable: false)로 박는다 — 번호만 column 바닥에 떨어지거나
@@ -105,7 +151,7 @@
     #v(t.space.number-to-stem, weak: true)
     #apply-para-style(
       pick("문제명조") + t.typography.question-stem,
-      q.stem,
+      if "stem_rich" in q { render-rich(q.stem_rich.at(0)) } else { q.stem },
     )
     #v(t.space.stem-to-choices, weak: true)
 
@@ -117,7 +163,7 @@
 
     // 아랫단
     #for c in q.choices {
-      render-choice(c.glyph, c.text)
+      render-choice(c.glyph, if "text_rich" in c { render-rich(c.text_rich.at(0)) } else { c.text })
       v(t.space.between-choices, weak: true)
     }
   ]
@@ -169,10 +215,13 @@
     below: t.passage-body-box.below,
     breakable: t.passage-body-box.breakable,
   )[
-    #for para in p.body.split("\n") {
+    #for para in (if "body_rich" in p { () } else { p.body.split("\n") }) {
       if para.trim() != "" {
         apply-para-style(pick("지문:지문"), para)
       }
+    }
+    #if "body_rich" in p {
+      render-rich-paragraphs(t.typography.passage-body, p.body_rich)
     }
     #if "source" in p {
       align(right)[#text(size: 9pt, fill: t.color.muted)[#p.source]]
@@ -249,6 +298,9 @@
     let p = none
     for pp in _passages { if pp.id == g.pid { p = pp } }
     if p != none { render-passage(p) }
+    if p != none and p.at("layout_mode", default: "default") == "question-split" {
+      colbreak(weak: true)
+    }
     for q in g.qs { render-question(q) }
   }
 }

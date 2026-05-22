@@ -46,6 +46,7 @@ export function formToChapters(form: ChapterFormData): Chapter[] {
           range: null,
           header: "",
           body: passageBody,
+          layout_mode: "default" as const,
         }]
       : [];
 

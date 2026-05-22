@@ -36,10 +36,30 @@ export type BookOptions = z.infer<typeof OptionsSchema>;
 // ── 문제/지문 (기존 edu-import/v0 키 그대로) ─────────────────────────────
 //   has_placeholder는 표/그림이 본문에 끼었음을 표시 (실제 placeholder kind는 텍스트 안 마커).
 
+export const InlineMarkSchema = z.enum(["strong", "underline"]);
+export const InlineRunSchema = z.object({
+  text: z.string(),
+  marks: z.array(InlineMarkSchema).default([]),
+});
+export const RichParagraphSchema = z.array(InlineRunSchema);
+export const RichTextSchema = z.array(RichParagraphSchema);
+export type InlineMark = z.infer<typeof InlineMarkSchema>;
+export type InlineRun = z.infer<typeof InlineRunSchema>;
+export type RichText = z.infer<typeof RichTextSchema>;
+
+export const PassageLayoutModeSchema = z.enum([
+  "default",
+  "question-split",
+  "memo",
+  "wide",
+]);
+export type PassageLayoutMode = z.infer<typeof PassageLayoutModeSchema>;
+
 export const ChoiceSchema = z.object({
   index: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
   glyph: z.enum(["①", "②", "③", "④", "⑤"]),
   text: z.string(),
+  text_rich: RichTextSchema.optional(),
   has_placeholder: z.boolean().default(false),
 });
 export type Choice = z.infer<typeof ChoiceSchema>;
@@ -50,6 +70,8 @@ export const PassageGroupSchema = z.object({
   range: z.tuple([z.number().int(), z.number().int()]).nullable(),
   header: z.string().default(""),
   body: z.string(),
+  body_rich: RichTextSchema.optional(),
+  layout_mode: PassageLayoutModeSchema.default("default"),
 });
 export type PassageGroup = z.infer<typeof PassageGroupSchema>;
 
@@ -58,6 +80,7 @@ export const QuestionSchema = z.object({
   /** 묶음 지문 ID. 독립 문항이면 null. */
   passage_id: z.string().nullable(),
   stem: z.string(),
+  stem_rich: RichTextSchema.optional(),
   /** [3점] 표기에서 추출. 없으면 null (= 평가원 기본 2점). */
   score: z.number().int().nullable().default(null),
   choices: z.array(ChoiceSchema).default([]),

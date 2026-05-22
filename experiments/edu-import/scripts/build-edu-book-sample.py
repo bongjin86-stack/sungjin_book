@@ -40,6 +40,46 @@ def select_sample(hwp: dict, n_questions: int) -> tuple[list, list]:
     return passages, questions
 
 
+def _rich_paragraph(text: str) -> list[dict]:
+    """데모용: 첫 구절은 굵게+밑줄, 나머지는 일반 run."""
+    head = text[:18]
+    tail = text[18:]
+    runs = []
+    if head:
+        runs.append({"text": head, "marks": ["strong", "underline"]})
+    if tail:
+        runs.append({"text": tail, "marks": []})
+    return runs
+
+
+def add_demo_semantic_overrides(passages: list, questions: list) -> None:
+    """블록 출력 모드 + 의미 강조가 Typst까지 관통하는지 보는 최소 샘플."""
+    if passages:
+        first = passages[0]
+        body = first.get("body", "")
+        first["layout_mode"] = "question-split"
+        first["body_rich"] = [
+            _rich_paragraph(para)
+            for para in body.splitlines()
+            if para.strip()
+        ]
+
+    if questions:
+        q = questions[0]
+        stem = q.get("stem", "")
+        q["stem_rich"] = [[
+            {"text": stem[:8], "marks": ["strong"]},
+            {"text": stem[8:], "marks": []},
+        ]]
+        if q.get("choices"):
+            choice = q["choices"][0]
+            text = choice.get("text", "")
+            choice["text_rich"] = [[
+                {"text": text[:12], "marks": ["underline"]},
+                {"text": text[12:], "marks": []},
+            ]]
+
+
 def main() -> int:
     if not HWP_JSON.exists():
         print(f"[err] HWP JSON 없음: {HWP_JSON}", file=sys.stderr)
@@ -47,6 +87,7 @@ def main() -> int:
 
     hwp = json.loads(HWP_JSON.read_text(encoding="utf-8"))
     passages, questions = select_sample(hwp, SAMPLE_QUESTION_COUNT)
+    add_demo_semantic_overrides(passages, questions)
 
     edu_book = {
         "meta": {

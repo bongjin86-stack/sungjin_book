@@ -216,6 +216,12 @@
     weight: "medium",
     fill: rgb("#222222"),
   ),
+  passage-body: (
+    font: ("Source Han Serif KR", "Batang", "Noto Serif KR"),
+    size: 10.5pt,
+    weight: "regular",
+    fill: rgb("#222222"),
+  ),
 )
 
 
