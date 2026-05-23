@@ -130,10 +130,9 @@ export function hwpToBlocks(hwp: HwpExport, options: HwpToBlocksOptions = {}): B
   }
 
   // 4) passage가 없는데 passage_id를 단 questions (예: HWP에서 passage 누락) — orphan으로 합침
-  for (const [pid, qs] of byPassage) {
+  byPassage.forEach((qs) => {
     orphans.push(...qs);
-    void pid;
-  }
+  });
 
   // 5) 독립 문항 묶음
   if (orphans.length > 0) {

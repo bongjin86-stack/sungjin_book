@@ -1,13 +1,18 @@
 # 체크리스트
 
-> 마지막 업데이트: 2026-05-23 KST 오전 (HWP → blocks[] 어댑터 박힘)
+> 마지막 업데이트: 2026-05-24 KST (zod 빌드 이슈 해결 — 빌드 통과)
 
 ## 교재 트랙 — Phase Ⅰ 끝 연결 (지금 진행 중)
+
+### 2026-05-24 박힘
+- [x] zod 빌드 이슈 해결. 원인은 둘:
+  - node_modules에 zod 미설치 (package.json엔 ^4.4.3) → `npm install`로 회복
+  - `hwp-to-blocks.ts` Map `for...of` → `forEach`로 교체 (target 미지정 tsconfig에서 iteration 불가)
+- [x] `npm.cmd run build` 통과 확인
 
 ### 2026-05-23 오전 박힘
 - [x] HWP → blocks[] 어댑터 `web/lib/adapters/hwp-to-blocks.ts` 박음
 - [x] Python 빌더 `build-edu-book-sample.py`에 blocks 출력 추가 + 검증
-- [ ] zod v4 빌드 이슈 (BlockEditModal/page.tsx implicit any) — **다음 우선**
 
 ### 2026-05-22 오전 박힘
 - [x] IDML 배경 자동 추출기 3종 (`scout-spreads.py` / `inspect-spread.py` / `extract-decorations.py`)

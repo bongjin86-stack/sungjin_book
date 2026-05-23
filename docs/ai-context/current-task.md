@@ -2,6 +2,22 @@
 
 > 최신 보호 요약: 2026-05-22 오후, 교재 트랙은 **내부 조판자용 Preset Block Engine** 방향으로 전환. 자세한 핸드오프는 `docs/ai-context/edu-block-engine-handoff-2026-05-22.md`.
 
+## 2026-05-24 박힘 — zod 빌드 이슈 해소
+
+- 증상: `npm.cmd run build`가 타입체크 단계에서 줄줄이 implicit any + module not found.
+- 진단: 실제 원인은 zod implicit any가 아니라 **node_modules에 zod 자체가 빠져 있었음** (package.json엔 ^4.4.3). zod 미설치 → 모든 `z.infer` 결과가 any → 줄줄이 추론 실패 → 줄줄이 implicit any. blockSummary 'lacks ending return'도 같은 뿌리(추론 실패 → discriminated union 좁히기 실패).
+  - 추가 한 건: `lib/adapters/hwp-to-blocks.ts` Map `for...of` iterator가 tsconfig target 미지정(=es3) 환경에서 막힘. 같은 파일 안 `forEach`로 교체.
+- 조치:
+  1. `npm install` (zod 1 package 추가)
+  2. `for (const [pid, qs] of byPassage)` → `byPassage.forEach((qs) => { ... })`
+- 검증: `npx tsc --noEmit` 0 에러, `npm.cmd run build` 통과.
+
+### 다음 한 발 후보 (재정렬)
+
+1. `/edu`에서 HWP 업로드 → hwp-to-blocks 자동 변환 UI 연결 ◀ 다음
+2. 빠른 정답 페이지 IDML master 기반 재구현
+3. QA 갤러리 섹션 분리 (Product / Engine Product / Smoke / Reference)
+
 ## 2026-05-23 오전 박힘 — HWP → blocks[] 어댑터
 
 - `web/lib/adapters/hwp-to-blocks.ts` 신규. HWP 변환 결과(passages+questions 평탄) → `blocks[]` 초안.
